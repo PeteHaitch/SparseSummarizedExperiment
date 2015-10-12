@@ -1,0 +1,25 @@
+Package: SparseSummarizedExperiment
+Title: SparseSummarizedExperiment Container
+Version: 0.0.0.9000
+Authors@R: c(person("Peter", "Hickey", role = c("aut", "cre"),
+    email = "peter.hickey@gmail.com"))
+Description: An experimental implementation of a container modeled on the
+    SummarizedExperiment class for storing sparse genomic data.
+Depends:
+    R (>= 3.2.1),
+    SummarizedExperiment (>= 0.3.9)
+Imports:
+    methods,
+    S4Vectors (>= 0.7.18),
+    BiocGenerics (>= 0.15.6),
+    digest,
+    GenomicRanges
+License: MIT + file LICENSE
+LazyData: true
+Collate:
+    'AllGenerics.R'
+    'HashedSparseAssays-class.R'
+    'SparseAssays-class.R'
+    'RangedSparseSummarizedExperiment-class.R'
+    'SparseSummarizedExperiment.R'
+    'SparseSummarizedExperiment0-class.R'
