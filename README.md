@@ -9,7 +9,7 @@
 
 This is an __experimental__ package that defines S4 classes and methods for 
 sparse genomic data. The API (and, indeed, much of the infrastructure) is based 
-on the `SummarizedExperiment` class in the [_SummarizedExperiment_ Bioconductor package](http://bioconductor.org/packages/SummarizedExperiment/).
+on the [_SummarizedExperiment_ Bioconductor package](http://bioconductor.org/packages/SummarizedExperiment/).
 
 Fair warning, there is currently zero documentation or unit tests for this 
 package (I will add these if I think the experiment is a success).
