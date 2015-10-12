@@ -13,9 +13,8 @@ before_install:
 install:
   - ./pkg-build.sh install_bioc_deps
 
-# TODO: Uncomment once test infrastructure is in place.
-# script:
-#   - ./pkg-build.sh run_tests
+script:
+   - ./pkg-build.sh run_tests
 
 after_failure:
   - ./pkg-build.sh dump_logs
