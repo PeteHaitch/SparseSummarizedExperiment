@@ -610,5 +610,9 @@ setMethod("cbind", "RangedSparseSummarizedExperiment",
                               check = FALSE)
 }
 
+# TODO: A general combine method for combining RangedSparseSummarizedExperiment
+#       objects with different ranges and different samples. Should be built
+#       upon a general method for SummarizedExperiment objects.
+
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Miscellaneous NOTEs

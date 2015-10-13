@@ -18,4 +18,5 @@
 #' @importFrom GenomicRanges GRangesList
 #' @import digest
 #' @importFrom stats setNames
+#' @import data.table
 NULL

@@ -754,13 +754,62 @@ setAs("SparseAssays", "Assays",
   })
 }
 
+# Convert a matrix, data.frame, or data.table into a 'map' and 'data'
+# elements. Basically, convert 'x' to a data.table object, use all columns as
+# the keys, identify the unique rows of the data.table and map each row of
+# 'x' to these unique rows.
+#
+# NOTE: The following should be TRUE when 'x' is matrix:
+#       identical(.expand.SparseAssays.sample(.sparsify(x)), x)
+.sparsify <- function(x, data_class = c("matrix", "data.frame", "data.table")) {
+
+  # Convert input to data.table
+  if (is(x, "data.frame")) {
+    # Modifiy by reference
+    data.table::setDT(x)
+  } else if (is(x, "matrix")) {
+    x <- data.table::as.data.table(x, keep.rownames = FALSE)
+  } else if (is(x, "data.table")) {
+    # Nothing to do
+  } else {
+    stop("'x' must be a 'matrix', 'data.frame', or 'data.table' object")
+  }
+
+  data_class <- match.arg(data_class)
+
+  # Add an index for the original row number
+  if (any(c(".myI", ".myMap")  %in% colnames(x))) {
+    stop("'x' must not have a column named '.myI' or '.myMap'")
+  }
+  x[, .myI := .I]
+
+  # Set the key (kind of like hashing the rows of the data.table since we use all columns)
+  my_key <- grep(".myI", colnames(x), value = TRUE, invert = TRUE)
+  data.table::setkeyv(x, cols = my_key)
+
+  # Create the map and data
+  x[, .myMap := .GRP, by = key(x)]
+  map <- data.table::setkey(x[, .(.myI, .myMap)], .myI)[, .myMap]
+  data <- unique(x)[, c(".myI", ".myMap") := NULL]
+  if (identical(data_class, "matrix")) {
+    data <- as.matrix(data)
+  } else if (identical(data_class, "data.frame")) {
+    data <- as.data.frame(data)
+  }
+
+  # Return the result
+  SimpleList(map = map,
+             data = data)
+}
+
 # Convert a matrix into 'map' and 'data' elements.
 # Basically hash each row of the matrix, check for duplicates amongst the
 # hashes, and, if there are any, find the matches using the hashes.
-# TODO: An Rcpp solution?
 # NOTE: The following should be TRUE:
 # identical(.expand.SparseAssays.sample(.sparsify(m)), m)
-.sparsify <- function(m, data_class = class(m)) {
+# WARNING: This is **much** slower than .sparsify(), especially as nrow(m)
+#          grows. It will ultimately be removed from the package.
+.sparsify_old <- function(m, data_class = class(m)) {
 
   if (!is.matrix(m) && !is.data.frame(m)) {
     stop("'m' must be a matrix or data.frame.")
@@ -783,7 +832,7 @@ setAs("SparseAssays", "Assays",
         # NOTE: as(data, "data.frame") doesn't work
         data <- as.data.frame.matrix(data)
       } else {
-      data <- unname(as(data, data_class))
+      data <- as(data, data_class)
       }
     }
   } else {
