@@ -9,6 +9,9 @@
 #' @docType package
 #' @name SparseSummarizedExperiment-package
 #' @import methods
+#  May need to be more selecting when importing from data.table since it
+#  defines some functions that may clobber Bioconductor ones, e.g., shift()
+#' @import data.table
 #' @import BiocGenerics
 #' @importFrom S4Vectors SimpleList setValidity2 endoapply mendoapply
 #'             normalizeSingleBracketSubscript
@@ -18,5 +21,4 @@
 #' @importFrom GenomicRanges GRangesList
 #' @import digest
 #' @importFrom stats setNames
-#' @import data.table
 NULL

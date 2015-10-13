@@ -19,7 +19,7 @@ License: MIT + file LICENSE
 LazyData: true
 Collate:
     'AllGenerics.R'
-    'HashedSparseAssays-class.R'
+    'JointSparseAssays.R'
     'SparseAssays-class.R'
     'RangedSparseSummarizedExperiment-class.R'
     'SparseSummarizedExperiment.R'

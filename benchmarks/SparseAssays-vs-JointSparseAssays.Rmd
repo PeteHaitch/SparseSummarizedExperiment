@@ -1,0 +1,87 @@
+---
+title: "`SparseAssays` vs. `JointSparseAssays`"
+author: "Peter Hickey"
+date: "13 October 2015"
+output: 
+  html_document: 
+    keep_md: yes
+---
+
+## Overview
+
+I need to benchmark the `SparseAssays` class with the `JointSparseAssays` class using WGBS data for various sized m-tuples, with $NIL = 0$ and $NIL \geq 0$. I use the _ADS_ sample from the _Lister_ dataset.
+
+## Installation
+
+To install _SparseSummarizedExperiment_, we need to use the development version of Bioconductor. We use [_packrat_](https://cran.r-project.org/web/packages/packrat/index.html) to avoid polluting the general R library:
+
+```{r packrat-setup}
+if (!("packrat" %in% installed.packages())) {
+  install.packages("packrat")
+}
+library(packrat)
+packrat::init()
+```
+
+Now, install the development version of Bioconductor:
+
+```{r bioc-setup}
+source("http://bioconductor.org/biocLite.R")
+useDevel()
+```
+
+Now, install _SparseSummarizedExperiment_:
+
+```{r sse-setup}
+install.packages("devtools")
+devtools::install_github("PeteHaitch/SparseSummarizedExperiment")
+library(SparseSummarizedExperiment)
+```
+
+Also use 
+
+- [_data.table_](https://cran.r-project.org/web/packages/data.table/index.html) for reading in files
+- [_pryr_](https://cran.r-project.org/web/packages/data.table/index.html) for inspecting R objects
+- [_GenomicTuples_](http://bioconductor.org/packages/GenomicTuples/) for storing genomic co-ordinates
+
+```{r data.table}
+install.packages(c("data.table", "pryr"))
+library(data.table)
+library(pryr)
+```
+
+## Read in some data
+
+```{r ingest}
+ADS_2 <- fread("DM_ADS.CG.2.tsv")
+pryr::object_size(ADS_2)
+
+ADS_2ac <- fread("DM_ADS.CG.2ac.tsv")
+pryr::object_size(ADS_2ac)
+
+ADS_4 <- fread("DM_ADS.CG.4.tsv")
+pryr::object_size(ADS_4)
+```
+
+## Convert counts into `SparseAssays` object
+
+```{r dt2sa}
+sa_ADS_2 <- SparseAssays(
+  SimpleList(counts = 
+               SimpleList(ADS = SparseSummarizedExperiment:::.sparsify(ADS_2[, .(MM, MU, UM, UU)]))))
+pryr::object_size(sa_ADS_2)
+
+sa_ADS_2ac <- SparseAssays(
+  SimpleList(counts = 
+               SimpleList(ADS = SparseSummarizedExperiment:::.sparsify(ADS_2ac[, .(MM, MU, UM, UU)]))))
+pryr::object_size(sa_ADS_2ac)
+
+sa_ADS_4 <- SparseAssays(
+  SimpleList(counts = 
+               SimpleList(ADS = SparseSummarizedExperiment:::.sparsify(ADS_4[, .(MMMM, MMMU, MMUM, MMUU, MUMM, MUMU, MUUM, MUUU, UMMM, UMMU, UMUM, UMUU, UUMM, UUMU, UUUM, UUUU)]))))
+pryr::object_size(sa_ADS_4)
+```
+
+## Convert counts into `JointSparseAssays` objects
+
+__UP TO HERE__: The `JointSparseAssays` class is rather fiddly for which to define `[` and `[<-` methods. Working on this is a low priority, but I will try to make methods for `RangedSummarizedExperiment` object agnostic to whether the `SparseAssays` slot is a `SparseAssays` or `JointSparseAssays` object.

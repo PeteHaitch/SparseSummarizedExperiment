@@ -47,7 +47,6 @@
 ### simpler implementation, at least while this package is in the experimental
 ### stage.
 ###
-###
 ### NOTE: SparseAssays only payoff when you get more than one measurement
 ### per-feature, per-sample. The payoff is greater if there are lots of
 ### features with the same measurement within a sample and/or lots of NAs
@@ -177,6 +176,9 @@ setClass("SparseAssays",
                     "element."))
     }
   }
+
+  # TODO: Check each sparse assay has the same number of samples
+
   NULL
 }
 
@@ -263,11 +265,11 @@ SparseAssays <- function(sparse_assays = SimpleList()) {
 ###   - dim
 ###   - NROW
 ###   - [
-###   -
+###   - [<-
 ###
 
 
-### [[
+### [[<-
 
 # NOTE: Can't defer to [[<-,SimpleList-method because it doesn't validate
 # the modified object.
@@ -761,6 +763,7 @@ setAs("SparseAssays", "Assays",
 #
 # NOTE: The following should be TRUE when 'x' is matrix:
 #       identical(.expand.SparseAssays.sample(.sparsify(x)), x)
+# NOTE: Returned object is stripped of dimnames
 .sparsify <- function(x, data_class = c("matrix", "data.frame", "data.table")) {
 
   # Convert input to data.table
@@ -792,9 +795,9 @@ setAs("SparseAssays", "Assays",
   map <- data.table::setkey(x[, .(.myI, .myMap)], .myI)[, .myMap]
   data <- unique(x)[, c(".myI", ".myMap") := NULL]
   if (identical(data_class, "matrix")) {
-    data <- as.matrix(data)
+    data <- unname(as.matrix(data))
   } else if (identical(data_class, "data.frame")) {
-    data <- as.data.frame(data)
+    data <- unname(as.data.frame(data))
   }
 
   # Return the result
