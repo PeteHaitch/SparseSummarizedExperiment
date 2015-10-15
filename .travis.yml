@@ -29,4 +29,5 @@ env:
     - BOOTSTRAP_LATEX=true # Required to build pdf vignettes (+ manual); slower
     - R_CHECK_ARGS="--no-vignettes --timings" # Mimic BioC build machines
   matrix:
-    - RVERSION=3.2.2 # BioC 3.2 uses R 3.2.x. Needs to be manually updated upon new BioC version
+    - RVERSION=devel # BioC 3.3 uses R 3.3.x (R-devel at the time of writing).
+                     # This needs to be manually updated upon new BioC version.
