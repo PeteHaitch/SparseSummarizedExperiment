@@ -42,10 +42,13 @@ Also use
 
 - [_data.table_](https://cran.r-project.org/web/packages/data.table/index.html) for reading in files
 - [_pryr_](https://cran.r-project.org/web/packages/data.table/index.html) for inspecting R objects
-- [_GenomicTuples_](http://bioconductor.org/packages/GenomicTuples/) for storing genomic co-ordinates
+- [_GenomicTuples (devel)_](http://bioconductor.org/packages/GenomicTuples/) for storing genomic co-ordinates
+- [_MethylationTuples_](http://bioconductor.org/packages/MethylationTuples/) for storing methylation patterns as `MethPat` objects (based on `SummarizedExperiment` objects).
 
 ```{r data.table}
 install.packages(c("data.table", "pryr"))
+devtools::install_github("PeteHaitch/GenomicTuples@devel")
+devtools::install_github("PeteHaitch/MethylationTuples")
 library(data.table)
 library(pryr)
 library(GenomicTuples)
@@ -88,20 +91,13 @@ mt_ADS_4 <- MTuples(gtuples = GTuples(seqnames = ADS_4[, chr],
 ### Convert counts into `SparseAssays` object
 
 ```{r dt2sa}
-sa_ADS_2 <- SparseAssays(
-  SimpleList(counts = 
-               SimpleList(ADS = SparseSummarizedExperiment:::.sparsify(ADS_2[, .(MM, MU, UM, UU)]))))
+counts <- SparseSummarizedExperiment:::.sparsify(ADS_2[, .(MM, MU, UM, UU)])
+# TODO: Setting colnames shouldn't be necessary, I thought?
+colnames(counts[["data"]]) <- c("MM", "MU", "UM", "UU")
+sa_ADS_2 <- SparseAssays(SimpleList(counts =  SimpleList(ADS = counts)))
 pryr::object_size(sa_ADS_2)
 
-sa_ADS_2ac <- SparseAssays(
-  SimpleList(counts = 
-               SimpleList(ADS = SparseSummarizedExperiment:::.sparsify(ADS_2ac[, .(MM, MU, UM, UU)]))))
-pryr::object_size(sa_ADS_2ac)
-
-sa_ADS_4 <- SparseAssays(
-  SimpleList(counts = 
-               SimpleList(ADS = SparseSummarizedExperiment:::.sparsify(ADS_4[, .(MMMM, MMMU, MMUM, MMUU, MUMM, MUMU, MUUM, MUUU, UMMM, UMMU, UMUM, UMUU, UUMM, UUMU, UUUM, UUUU)]))))
-pryr::object_size(sa_ADS_4)
+# TODO: 2ac, 4
 ```
 
 
@@ -116,12 +112,5 @@ smp_ADS_2 <- SparseMethPat(sparseAssays = sa_ADS_2,
                            rowTuples = mt_ADS_2,
                            colData = DataFrame(row.names = "ADS"))
 pryr::object_size(smp_ADS_2)
-smp_ADS_2ac <- SparseMethPat(sparseAssays = sa_ADS_2ac, 
-                             rowTuples = mt_ADS_2ac,
-                             colData = DataFrame(row.names = "ADS"))
-pryr::object_size(smp_ADS_2ac)
-smp_ADS_4 <- SparseMethPat(sparseAssays = sa_ADS_4, 
-                           rowTuples = mt_ADS_4,
-                           colData = DataFrame(row.names = "ADS"))
-pryr::object_size(smp_ADS_4)
+# TODO: 2ac, 4
 ```
