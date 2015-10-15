@@ -113,7 +113,6 @@ setValidity2("RangedSparseSummarizedExperiment",
 #' x <- rsse
 #' y <- new("RangedSparseSummarizedExperiment")
 #'
-#'
 #' @export
 setMethod("SparseSummarizedExperiment", "SparseAssays",
           function(sparseAssays,
@@ -610,9 +609,27 @@ setMethod("cbind", "RangedSparseSummarizedExperiment",
                               check = FALSE)
 }
 
-# TODO: A general combine method for combining RangedSparseSummarizedExperiment
-#       objects with different ranges and different samples. Should be built
-#       upon a general method for SummarizedExperiment objects.
+combineSSE <- function(x, y, ..., nomatch = NA, use.mcols = FALSE) {
+  # UP TO HERE
+  NULL
+}
+
+# TODO: Rename if/when combine2 generic is added to SummarizedExperiment
+#' @rdname RangedSparseSummarizedExperiment
+#'
+#' @export
+setMethod("combine2",
+          c("RangedSparseSummarizedExperiment",
+            "RangedSparseSummarizedExperiment"),
+          function(x, y, ..., nomatch = NA, use.mcols = FALSE) {
+            combineSSE(x, y, ..., nomatch = nomatch, use.mcols = use.mcols)
+          }
+)
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Miscellaneous NOTEs
+
+# NOTE: granges,RangedSummarizedExperiment doesn't honour its contract to
+#       return a GRanges object, e.g., the rowRanges slot could be a
+#       GenomicTuples::GTuples object. A better definition might be
+#       granges <- function(x) granges(rowRanges(x)).
