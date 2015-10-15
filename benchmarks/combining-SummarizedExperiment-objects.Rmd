@@ -1,0 +1,271 @@
+---
+title: "Combining SummarizedExperiment objects"
+author: "Peter Hickey"
+date: "15 October 2015"
+output: 
+  html_document: 
+    keep_md: yes
+---
+
+# Motivation
+
+I often find myself with multiple `SE` objects (I'm using `SE` as a shorthand for the `SummarizedExperiment0` and `RangedSummarizedExeriment` classes), each with different samples but possibly non-overlapping features/ranges. Currently, it is difficult to combine these objects;  `rbind()` can only combine objects with the same samples but different features/ranges and `cbind()` can only combine objects with the same features/ranges but different samples. I think it would be useful to have a "combine" method for `SE` objects that handles the situation where each object has different samples but with possibly non-overlapping features/ranges.
+
+# Methods
+
+## `combineSE()`
+
+This is a first pass at addressing this need.
+
+```{r setup}
+suppressPackageStartupMessages(library(SummarizedExperiment))
+```
+
+`combineSE()` is the workhorse function for combining `SE` objects. There are a few things I want to point out:
+
+1. `colnames` (which I think of as sample names) must be unique across all objects.
+2. All objects must have the same `assays`.
+3. If the objects are `SummarizedExperiment0` objects, then the `NAMES` slot must be non-NULL. This is because matching of features across objects is done using the `NAMES`.
+4. The value of the `nomatch` argument is used to fill in missing values, e.g, where a sample does not have a value for that particular feature/range in that assay.
+5. Combining the `elementMetadata` is pretty rough. Firstly, for `SummarizedExperiment0` objects, combining `elementMetadata` is pretty inefficient since it calls the `unique,DataFrame-method`. Secondly, for `RangedSummarizedExperiment` objects, there's a clunky call to `granges(rowRanges(x))` since `granges,RangedSummarizedExperiment-method` does not allow `use.mcols = TRUE` (why?). Therefore the default is to drop the metadata columns (`use.mcols = FALSE`). There may well be a better method for combining the `elementMetadata` of `SE` objects.
+
+```{r combineSE}
+combineSE <- function(x, y, ..., nomatch = NA, use.mcols = FALSE) {
+            
+            args <- unname(list(x, y, ...))
+            
+            # Check that each object has unique colnames
+            colnames <- unlist(lapply(args, colnames))
+            if (anyDuplicated(colnames)) {
+              stop(paste0("Cannot combine ", class(args[[1]]), " objects with ", 
+                          "duplicate 'colnames'"))
+            }
+            
+            # Check that each object has the same assays
+            an <- lapply(args, assayNames)
+            if (any(sapply(an, function(x, y) any(is.na(match(x, y))), 
+                           y = an[[1]]))) {
+              stop(paste0("All ", class(args[[1]]), " objects must have ", 
+                          "identical 'assayNames'"))
+            }
+            
+            # Combine rowRanges or NAMES slot
+            if (is(args[[1L]], "RangedSummarizedExperiment")) {
+              all_rowRanges <- do.call(c, lapply(args, function(x) {
+                # NOTE: granges,RangedSummarizedExperiment-method doesn't 
+                #       support use.mcols argument so have to force is by 
+                #       working directly on the rowRanges.
+                granges(rowRanges(x), use.mcols = use.mcols)
+              }))
+              rowRanges <- unique(all_rowRanges)
+              nr <- length(rowRanges)
+            } else {
+              if (any(vapply(args, function(x) is.null(x@NAMES), logical(1)))) {
+                stop("Cannot combine ", class(args[[1]]), " objects with ", 
+                     "'NAMES' set to NULL")
+              }
+              all_NAMES <- do.call(c, lapply(args, function(x) x@NAMES))
+              NAMES <- unique(all_NAMES)
+              nr <- length(NAMES)
+            }
+            
+            # Combine colData
+            colData <- do.call(rbind, lapply(args, colData))
+            
+            # WARNING: This will be slow for large SummarizedExperiment0 
+            #          objects
+            if (!is(args[[1L]], "RangedSummarizedExperiment")) {
+              if (use.mcols == TRUE) {
+                # IDEA: Create DataFrame with all_NAMES/all_rowRanges in one 
+                #       column and elementMetadata in others, unique-ify, and 
+                #       check that the number of unique rows equals nr.
+                elementMetadata <- unique(
+                  cbind(DataFrame(all_NAMES), 
+                        do.call(rbind, lapply(args, elementMetadata))))
+                # Now drop the all_NAMES column (assumes it is the first column)
+                elementMetadata <- elementMetadata[, -c(1L), drop = FALSE]
+                # Sanity check
+                if (nrow(elementMetadata) != nr) {
+                  stop(paste0("'elementMetadata' must match across ", 
+                              class(args[[1]]), " objects"))
+                }
+              } else {
+                elementMetadata <- DataFrame()
+                elementMetadata@nrows <- nr
+              }
+            }
+            
+            # Create assays of the correct dimension (fill with 'nomatch')
+            # First, create the empty combined assay using the appropriate 
+            # storage.mode (guessed from the storage.mode of the assay in the 
+            # first sample).
+            nomatch <- lapply(seq_along(an[[1]]), function(i) {
+              storage.mode(nomatch) <- storage.mode(assay(args[[1]], 
+                                                          i, 
+                                                          withDimnames = FALSE))
+              nomatch
+            })
+            assays <- lapply(nomatch, function(nm) {
+              matrix(nm, nrow = nr, ncol = length(colnames))
+            })
+            names(assays) <- an[[1]]
+            
+            # NOTE: I suspect that there are faster and more efficient ways to 
+            # combine the assays, perhaps at the C-level.
+            if (is(args[[1L]], "RangedSummarizedExperiment")) {
+              for (j in seq_along(args)) {
+                ol <- findOverlaps(args[[j]], rowRanges, type = "equal")
+                for (i in seq_along(assays)) {
+                  assays[[i]][subjectHits(ol),
+                              match(colnames(args[[j]]), colnames)] <- 
+                    assay(args[[j]], i, withDimnames = FALSE)
+                }
+              }
+            } else {
+              for (j in seq_along(args)) {
+                ol <- match(args[[j]]@NAMES, NAMES)
+                for (i in seq_along(assays)) {
+                  assays[[i]][ol, match(colnames(args[[j]]), colnames)] <- 
+                    assay(args[[j]], i, withDimnames = FALSE)
+                }
+              }
+            }
+            assays <- Assays(assays)
+            
+            # Combine metadata
+            metadata <- do.call(c, lapply(args, metadata))
+            
+            if (is(args[[1L]], "RangedSummarizedExperiment")) {
+              # No need to replace elementMetadata slot since it is part of 
+              # rowRanges.
+              BiocGenerics:::replaceSlots(args[[1L]], 
+                                          rowRanges = rowRanges,
+                                          colData = colData, 
+                                          assays = assays,
+                                          metadata = metadata)
+            } else {
+              BiocGenerics:::replaceSlots(args[[1L]],
+                                          NAMES = NAMES,
+                                          colData = colData,
+                                          assays = assays,
+                                          metadata = metadata,
+                                          elementMetadata = elementMetadata)
+            }
+          }
+```
+
+## The need for a new generic
+
+Unfortunately, the `BiocGenerics::combine` generic will not work for with `combineSE()` (I think it's because of the use of the `nomatch` and `use.mcols` arguments in `combineSE()`). Also, `BiocGenerics::combine` works recursively, which unnecessarily slows things down since `combineSE()` can work on all arguments in the one function call.
+
+```{r combine_generic}
+BiocGenerics::combine
+```
+
+I therefore define a new generic, which for now I call `combine2`
+
+```{r combine2}
+setGeneric("combine2", function(x, y, ...) {
+  standardGeneric("combine2")
+})
+
+# NOTE: Also defined for RangedSummarizedExperiment via inheritance
+setMethod("combine2", c("SummarizedExperiment0", "SummarizedExperiment0"),
+          function(x, y, ..., nomatch = NA, use.mcols = FALSE) {
+            combineSE(x, y, ..., nomatch = nomatch, use.mcols = use.mcols)
+          }
+)
+```
+
+## Examples
+
+I use data from the `SummarizedExperiment::SummarizedExeriment` and `SummarizedExperimentRangedSummarizedExperiment` man pages.
+
+### `SummarizedExperiment0` objects
+
+```{r se0_examples}
+# Get some example data
+example("SummarizedExperiment", echo = FALSE)
+
+# NOTE: SummarizedExperiment0 objects must have non-NULL NAMES slot in order 
+#       to combine
+se0@NAMES <- as.character(1:200)
+
+# Create data to combine
+A <- se0[1:4, "A"]
+B <- se0[3:6, "B"]
+C <- se0[5:8, "C"]
+D <- se0[7:10, "D"]
+E <- se0[9:12, "E"]
+F <- se0[11:14, "F"]
+
+# Sanity check: identical to cbind when given compatible arguments
+all.equal(cbind(se0[, 1], se[, 2], se[, 3]),
+          combine2(se0[, 1], se0[, 2], se0[, 3], use.mcols = TRUE))
+
+# The default
+x <- combine2(A, B, C, D, E, F)
+x
+assay(x)
+
+# Using mcols
+y <- combine2(A, B, C, D, E, F, use.mcols = TRUE)
+y
+mcols(y)
+
+# Using -99 for nomatch
+z <- combine2(A, B, C, D, E, F, nomatch = -99)
+assay(z)
+```
+
+### `RangedSummarizedExperiment` objects
+
+```{r rse_examples}
+# Get some example data
+example("RangedSummarizedExperiment", echo = FALSE)
+
+# Create 
+A <- rse[1:4, "A"]
+B <- rse[3:6, "B"]
+C <- rse[5:8, "C"]
+D <- rse[7:10, "D"]
+E <- rse[9:12, "E"]
+F <- rse[11:14, "F"]
+
+# Sanity check: identical to cbind when given compatible arguments
+all.equal(cbind(rse[, 1], rse[, 2], rse[, 3]),
+          combine2(rse[, 1], rse[, 2], rse[, 3], use.mcols = TRUE))
+
+# The default
+x <- combine2(A, B, C, D, E, F)
+x
+assay(x)
+
+# Using mcols
+y <- combine2(A, B, C, D, E, F, use.mcols = TRUE)
+y
+mcols(y)
+
+# Using -99 for nomatch
+z <- combine2(A, B, C, D, E, F, nomatch = -99)
+assay(z)
+```
+
+# Summary
+
+The `combine2()` method for `SE` objects address my initial aim of being able to combine multiple `SE` objects when they have different samples but possibly non-overlapping features/ranges.
+
+## Futher work
+
+- A better name than `combine2`. Can we use `combine` (I couldn't get it to be compatible with the `BiocGenerics::combine` generic)?
+- Unit tests
+- Documentation
+- A more informative error message if the user tries to combine `RangedSummarizedExperiment` and `SummarizedExperiment0` objects together.
+- [__low priority__] Extending `combine2` to work with objects that contain data from the same samples and possibly non-overlapping features/ranges? It will require a check that "overlapping" measurements are identical and doing something appropriate if they aren't.
+- A general method for "combining" `SE` objects, e.g., you don't need to know whether you should be doing a `rbind()`/`cbind()`/`combine2()`, the "combining" method dispatches to the appropriate sub-method automagically.
+
+# Session info
+
+```{r session_info, include=TRUE, echo=TRUE, results='markup'}
+devtools::session_info()
+```
