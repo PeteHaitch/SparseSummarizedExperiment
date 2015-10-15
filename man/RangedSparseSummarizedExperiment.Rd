@@ -8,6 +8,7 @@
 \alias{[,RangedSparseSummarizedExperiment,ANY-method}
 \alias{[<-,RangedSparseSummarizedExperiment,ANY,ANY,RangedSparseSummarizedExperiment-method}
 \alias{cbind,RangedSparseSummarizedExperiment-method}
+\alias{combine2,RangedSparseSummarizedExperiment,RangedSparseSummarizedExperiment-method}
 \alias{rbind,RangedSparseSummarizedExperiment-method}
 \alias{show,RangedSparseSummarizedExperiment-method}
 \alias{sparseAssay,RangedSparseSummarizedExperiment,character-method}
@@ -55,6 +56,10 @@
 \S4method{rbind}{RangedSparseSummarizedExperiment}(..., deparse.level = 1)
 
 \S4method{cbind}{RangedSparseSummarizedExperiment}(..., deparse.level = 1)
+
+
+  \S4method{combine2}{RangedSparseSummarizedExperiment,RangedSparseSummarizedExperiment}(x,
+  y, ..., nomatch = NA, use.mcols = FALSE)
 }
 \description{
 RangedSparseSummarizedExperiment objects

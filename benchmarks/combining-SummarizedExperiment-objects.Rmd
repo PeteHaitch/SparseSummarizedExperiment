@@ -7,6 +7,10 @@ output:
     keep_md: yes
 ---
 
+```{r comment_char, echo = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
 # Motivation
 
 I often find myself with multiple `SE` objects (I'm using `SE` as a shorthand for the `SummarizedExperiment0` and `RangedSummarizedExeriment` classes), each with different samples but possibly non-overlapping features/ranges. Currently, it is difficult to combine these objects;  `rbind()` can only combine objects with the same samples but different features/ranges and `cbind()` can only combine objects with the same features/ranges but different samples. I think it would be useful to have a "combine" method for `SE` objects that handles the situation where each object has different samples but with possibly non-overlapping features/ranges.
@@ -19,6 +23,9 @@ This is a first pass at addressing this need.
 
 ```{r setup}
 suppressPackageStartupMessages(library(SummarizedExperiment))
+# Need to set seed because example("RangedSumamrizedExperiment") and 
+# example("SummarizedExperiment") both call runif().
+set.seed(666)
 ```
 
 `combineSE()` is the workhorse function for combining `SE` objects. There are a few things I want to point out:
@@ -27,7 +34,7 @@ suppressPackageStartupMessages(library(SummarizedExperiment))
 2. All objects must have the same `assays`.
 3. If the objects are `SummarizedExperiment0` objects, then the `NAMES` slot must be non-NULL. This is because matching of features across objects is done using the `NAMES`.
 4. The value of the `nomatch` argument is used to fill in missing values, e.g, where a sample does not have a value for that particular feature/range in that assay.
-5. Combining the `elementMetadata` is pretty rough. Firstly, for `SummarizedExperiment0` objects, combining `elementMetadata` is pretty inefficient since it calls the `unique,DataFrame-method`. Secondly, for `RangedSummarizedExperiment` objects, there's a clunky call to `granges(rowRanges(x))` since `granges,RangedSummarizedExperiment-method` does not allow `use.mcols = TRUE` (why?). Therefore the default is to drop the metadata columns (`use.mcols = FALSE`). There may well be a better method for combining the `elementMetadata` of `SE` objects.
+5. Combining the `elementMetadata` is pretty rough. For `SummarizedExperiment0` objects, combining `elementMetadata` is pretty inefficient since it calls the `unique,DataFrame-method`. Therefore the default is to drop the metadata columns (`use.mcols = FALSE`). There is probably a better method for combining the `elementMetadata` of `SE` objects.
 
 ```{r combineSE}
 combineSE <- function(x, y, ..., nomatch = NA, use.mcols = FALSE) {
@@ -51,12 +58,18 @@ combineSE <- function(x, y, ..., nomatch = NA, use.mcols = FALSE) {
             
             # Combine rowRanges or NAMES slot
             if (is(args[[1L]], "RangedSummarizedExperiment")) {
-              all_rowRanges <- do.call(c, lapply(args, function(x) {
-                # NOTE: granges,RangedSummarizedExperiment-method doesn't 
-                #       support use.mcols argument so have to force is by 
-                #       working directly on the rowRanges.
-                granges(rowRanges(x), use.mcols = use.mcols)
-              }))
+              # NOTE: rowRanges(x) includes elementMetadata(x) since 
+              #       elementMetadata(x) = elementMetadata(rowRanges(x)).
+              #       This is the reason for the use.mcols if-else block.
+              if (use.mcols) {
+                all_rowRanges <- do.call(c, lapply(args, rowRanges))
+              } else {
+                all_rowRanges <- do.call(c, lapply(args, function(x) {
+                  rr <- rowRanges(x)
+                  elementMetadata(rr) <- NULL
+                  rr
+                  }))
+              }
               rowRanges <- unique(all_rowRanges)
               nr <- length(rowRanges)
             } else {
@@ -72,13 +85,16 @@ combineSE <- function(x, y, ..., nomatch = NA, use.mcols = FALSE) {
             # Combine colData
             colData <- do.call(rbind, lapply(args, colData))
             
-            # WARNING: This will be slow for large SummarizedExperiment0 
-            #          objects
-            if (!is(args[[1L]], "RangedSummarizedExperiment")) {
-              if (use.mcols == TRUE) {
+            # Combine elementMetadata
+            if (use.mcols) {
+              if (is(args[[1L]], "RangedSummarizedExperiment")) {
+                elementMetadata <- mcols(rowRanges)
+              } else {
                 # IDEA: Create DataFrame with all_NAMES/all_rowRanges in one 
                 #       column and elementMetadata in others, unique-ify, and 
                 #       check that the number of unique rows equals nr.
+                # WARNING: This will be slow for large SummarizedExperiment0 
+                #          objects
                 elementMetadata <- unique(
                   cbind(DataFrame(all_NAMES), 
                         do.call(rbind, lapply(args, elementMetadata))))
@@ -89,10 +105,10 @@ combineSE <- function(x, y, ..., nomatch = NA, use.mcols = FALSE) {
                   stop(paste0("'elementMetadata' must match across ", 
                               class(args[[1]]), " objects"))
                 }
-              } else {
-                elementMetadata <- DataFrame()
-                elementMetadata@nrows <- nr
               }
+            } else {
+              elementMetadata <- DataFrame()
+              elementMetadata@nrows <- nr
             }
             
             # Create assays of the correct dimension (fill with 'nomatch')
@@ -218,6 +234,15 @@ z <- combine2(A, B, C, D, E, F, nomatch = -99)
 assay(z)
 ```
 
+The error message is pretty ugly and uninformative if the `elementMetadata` aren't compatible across `SE`.
+
+```{r se0_em_error, error = TRUE}
+# An ugly error due to incompatible elementMetadata
+a <- A
+elementMetadata(a) <- DataFrame(J = seq_len(nrow(a)))
+combine2(a, B, use.mcols = TRUE)
+```
+
 ### `RangedSummarizedExperiment` objects
 
 ```{r rse_examples}
@@ -251,6 +276,15 @@ z <- combine2(A, B, C, D, E, F, nomatch = -99)
 assay(z)
 ```
 
+The error message is pretty ugly and uninformative if the `elementMetadata` aren't compatible across `SE`.
+
+```{r rse_em_error, error = TRUE}
+# An ugly error due to incompatible elementMetadata
+a <- A
+elementMetadata(a) <- DataFrame(J = seq_len(nrow(a)))
+combine2(a, B, use.mcols = TRUE)
+```
+
 # Summary
 
 The `combine2()` method for `SE` objects address my initial aim of being able to combine multiple `SE` objects when they have different samples but possibly non-overlapping features/ranges.
@@ -261,6 +295,7 @@ The `combine2()` method for `SE` objects address my initial aim of being able to
 - Unit tests
 - Documentation
 - A more informative error message if the user tries to combine `RangedSummarizedExperiment` and `SummarizedExperiment0` objects together.
+- A more informative error message if `elementMetadata` aren't compatible across `SE` objects.
 - [__low priority__] Extending `combine2` to work with objects that contain data from the same samples and possibly non-overlapping features/ranges? It will require a check that "overlapping" measurements are identical and doing something appropriate if they aren't.
 - A general method for "combining" `SE` objects, e.g., you don't need to know whether you should be doing a `rbind()`/`cbind()`/`combine2()`, the "combining" method dispatches to the appropriate sub-method automagically.
 
