@@ -1,7 +1,7 @@
 ---
 title: "Combining SummarizedExperiment objects"
 author: "Peter Hickey"
-date: "15 October 2015"
+date: "20 October 2015"
 output: 
   html_document: 
     keep_md: yes
@@ -13,9 +13,50 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 
 # Motivation
 
-I often find myself with multiple `SE` objects (I'm using `SE` as a shorthand for the `SummarizedExperiment0` and `RangedSummarizedExeriment` classes), each with different samples but possibly non-overlapping features/ranges. Currently, it is difficult to combine these objects;  `rbind()` can only combine objects with the same samples but different features/ranges and `cbind()` can only combine objects with the same features/ranges but different samples. I think it would be useful to have a "combine" method for `SE` objects that handles the situation where each object has different samples but with possibly non-overlapping features/ranges.
+I often find myself with multiple `SE` objects (I'm using `SE` as a shorthand for the `SummarizedExperiment0` and `RangedSummarizedExeriment` classes), each with possibly non-distinct samples and possibly non-overlapping features/ranges. Currently, it is difficult to combine these objects; `rbind()` can only combine objects with the same samples but different features/ranges and `cbind()` can only combine objects with the same features/ranges but different samples. I think it would be useful to have a "combine" method for `SE` objects that handles the most general situation where each object has potentially non-distinct samples and possibly non-overlapping features/ranges.
 
 # Methods
+
+An initial attempt was posted to [https://gist.github.com/PeteHaitch/8993b096cfa7ccd08c13/2c82a279ee7d56cec3e9dadb8024cbb9183da576](https://gist.github.com/PeteHaitch/8993b096cfa7ccd08c13/2c82a279ee7d56cec3e9dadb8024cbb9183da576 and cross-posted to the Bioconductor development mailing list ([https://stat.ethz.ch/pipermail/bioc-devel/2015-October/008128.html](https://stat.ethz.ch/pipermail/bioc-devel/2015-October/008128.html)). Following feedback from Martin Morgan ([https://stat.ethz.ch/pipermail/bioc-devel/2015-October/008144.html](https://stat.ethz.ch/pipermail/bioc-devel/2015-October/008144.html)), I revised to make the following major changes:
+
+1. Write a `combine()` method for each component of the `SE` object. This means I wrote: `combine,DataFrame,DataFrame-method` (for the `colData` and `elementMetadata` slots), `combine,GRanges,GRanges-method` (for the `rowRanges` slot), `combine,GRangesList,GRangesList-method` (for the `rowRanges` slot), and `combine,SimpleList,SimpleList-method` (for the `assays` slot). There is also a helper function `.combine.NAMES()` to combine the `NAMES` slot of a non-ranged `SE`.
+2. All `combine()` methods are designed to combine based on the `names`/`rownames`/`dimnames` of the objects. This follows the existing `combine,data.frame,data.frame-method` and `combine,matrix,matrix-method` from the _BiocGenerics_ package.
+
+In my experience, it is common for a `RangedSummarizedExperiment` to have `NULL` names, i.e. `identical(names(x), NULL)` is `TRUE` where `x` is a `RangedSummarizedExperiment` (note that `names(x)` calls `names(rowRanges(x))` and so it is the `rowRanges(x)` that commonly have `NULL` names). A consequence of (2) is that we cannot combine these `NULL`-named `RangedSummarizedExperiment` objects. However, there is an obvious way to construct meaningful names by a `findOverlaps()`-based naming scheme, which is implemented in `combine,SummarizedExperiment0,SummarizedExperiment0-method` for `RangedSummarizedExperiment` objects with `NULL` names.
+
+__UP TO HERE__: Document all `combine` methods.
+
+## `combine,DataFrame,DataFrame-method`
+
+## `combine,GRanges,GRanges-method`
+
+## `combine,GRangesList,GRangesList-method`
+
+## `combine,SimpleList,SimpleList-method`
+
+## `combine,SummarizedExperiment0,SummarizedExperiment0-method`
+
+## Discuss the signature of the `combine` generic
+
+- Might be useful to be able to pass `ignore.mcols` to `GRanges` and `GRangesList` methods.
+
+# Examples
+
+## `SummarizedExperiment0`
+
+## `RangedSummarizedExperiment`
+
+## `DESeq2`
+
+# Summary
+
+
+
+
+
+------- OLD WORK BELOW THIS LINE -----------
+
+
 
 ## `combineSE()`
 
