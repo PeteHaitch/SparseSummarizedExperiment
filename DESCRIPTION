@@ -24,4 +24,4 @@ Collate:
     'RangedSparseSummarizedExperiment-class.R'
     'SparseSummarizedExperiment.R'
     'SparseSummarizedExperiment0-class.R'
-    'combine2.R'
+    'combine.R'

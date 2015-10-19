@@ -609,22 +609,22 @@ setMethod("cbind", "RangedSparseSummarizedExperiment",
                               check = FALSE)
 }
 
-combineSSE <- function(x, y, ..., nomatch = NA, use.mcols = FALSE) {
-  # UP TO HERE
-  NULL
-}
-
-# TODO: Rename if/when combine2 generic is added to SummarizedExperiment
-#' @rdname RangedSparseSummarizedExperiment
+#' combineSSE <- function(x, y, ..., nomatch = NA, use.mcols = FALSE) {
+#'   # UP TO HERE
+#'   NULL
+#' }
 #'
-#' @export
-setMethod("combine2",
-          c("RangedSparseSummarizedExperiment",
-            "RangedSparseSummarizedExperiment"),
-          function(x, y, ..., nomatch = NA, use.mcols = FALSE) {
-            combineSSE(x, y, ..., nomatch = nomatch, use.mcols = use.mcols)
-          }
-)
+#' # TODO: Rename if/when combine generic is added to SummarizedExperiment
+#' #' @rdname RangedSparseSummarizedExperiment
+#' #'
+#' #' @export
+#' setMethod("combine",
+#'           c("RangedSparseSummarizedExperiment",
+#'             "RangedSparseSummarizedExperiment"),
+#'           function(x, y, ..., ignore.mcols = FALSE) {
+#'             combineSSE(x, y, ..., ignore.mcols = ignore.mcols)
+#'           }
+#' )
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Miscellaneous NOTEs

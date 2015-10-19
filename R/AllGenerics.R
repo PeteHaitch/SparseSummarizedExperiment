@@ -50,14 +50,3 @@ setGeneric("SparseSummarizedExperiment",
            function(sparseAssays, ...) {
              standardGeneric("SparseSummarizedExperiment")
 })
-
-### -------------------------------------------------------------------------
-### combine2
-###
-
-# TODO: Remove if/when a similar method is added to SummarizedExperiment
-#       (see https://stat.ethz.ch/pipermail/bioc-devel/2015-October/008128.html)
-#' @export
-setGeneric("combine2", function(x, y, ...) {
-  standardGeneric("combine2")
-})
