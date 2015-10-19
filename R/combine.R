@@ -38,8 +38,13 @@ setMethod("combine", c("GRanges", "GRanges"),
           function(x, y, ...) {
             if (is.null(names(x)) || is.null(names(y))) {
               stop("'names' of 'x' and 'y' must be non-NULL")
-              # TODO: Could combine GRanges objects and unique-ify instead of
-              #       erroring.
+              # NOTE: A more general method that works whether the names are
+              #       NULL or non-NULL is to concatenate and unique-ify the
+              #       GRanges objects. This gives identical results *up to
+              #       names* and is approximately 2x faster than the
+              #       names-based method, with the bonus that it also works
+              #       when the GRanges have NULL names. The only fly in the
+              #       ointment is the value of names in the returned object.
               unique(c(x, y, ignore.mcols = FALSE))
             }
 
@@ -119,6 +124,33 @@ setMethod("combine", c("GRangesList", "GRangesList"),
           }
 )
 
+#' @rdname NULL
+#'
+#' @export
+setMethod("combine", c("SimpleList", "SimpleList"),
+          function(x, y, ...) {
+
+            if (length(y) == 0L) {
+              return(x)
+            } else if (length(x) == 0L) {
+              return(y)
+            }
+
+            if (length(names(x)) != length(names(y))) {
+              stop("'SimpleList' objects have different number of elements:",
+                   "\n\t", paste(names(x), collapse = " "), "\n\t",
+                   paste(names(y), collapse = " "))
+            }
+
+            if (!all(names(x) == names(y))) {
+              stop("'SimpleList' objects have different element names:\n\t",
+                   paste(names(x), collapse = " "), "\n\t",
+                   paste(names(y), collapse = " "))
+            }
+
+            mendoapply(combine, x, y)
+          }
+)
 
 
 # NOTE: Not a method since NAMES is just a character vector.
@@ -142,6 +174,9 @@ setMethod("combine", c("SummarizedExperiment0", "SummarizedExperiment0"),
             # Give a helpful error message if the user tries to combine a
             # RangedSummarizedExperiment object to an non-ranged
             # SummarizedExperiment.
+            # TODO: Should this be the more restrictive
+            #       if(class(x) != class(y)) {stop()} like
+            #       combine,eSet,eSet-method?
             # NOTE: Can't simply check if object is SumamrizedExperiment0
             #       object since all RangedSummarizedExperiments are
             #       SummarizedExperiment0 objects but not all
@@ -175,28 +210,18 @@ setMethod("combine", c("SummarizedExperiment0", "SummarizedExperiment0"),
             # Combine colData
             colData <- combine(colData(x), colData(y))
 
-            # Check that each object has the same assays
-            if (!identical(assayNames(x), assayNames(y))) {
-              stop("All '", x, "' objects must have identical 'assayNames'")
-            }
-
             # Combine assays
+            # NOTE: If a combine,SimpleList,SimpleList-method was used to
+            #       combine(assays(x), assays(y)) then this might be too
+            #       general?
             # NOTE: This applies combine() to each element of the assays slot
             #       in each object (e.g., combine,matrix-method if all elements
             #       are matrix objects).
             # TODO: Are non-matrix objects allowed as elements in an Assays
             #       object? If so, will need a combine() method for each of
             #       the allowed classes.
-            # TODO: Use this 2-step process or should I define a
-            #       combine,ShallowSimpleListAssays-method and use
-            #       combine(slot(x, "assays"), slot(y, "assays"))? The trouble
-            #       with the latter approach is that the rownames aren't added
-            #       when using slot(x, "assays") whereas
-            #       assays(x, withDimanmes = TRUE) does this  (albeit requiring
-            #       a copy).
-            assays <- mendoapply(combine, assays(x, withDimnames = TRUE),
-                                 assays(y, withDimnames = TRUE))
-            assays <- Assays(assays)
+            assays <- Assays(combine(assays(x, withDimnames = TRUE),
+                                     assays(y, withDimnames = TRUE)))
 
             # Combine elementMetadata
             if (is(x, "RangedSummarizedExperiment")) {
@@ -206,7 +231,7 @@ setMethod("combine", c("SummarizedExperiment0", "SummarizedExperiment0"),
               elementMetadata@nrows <- length(rowRanges)
             } else {
               # NOTE: Using mcols() rather than slot(x, "elementMetadata") so
-              #       rownames are added to the returned DataFrame.
+              #       that the combined objects have rownames on which to match.
               elementMetadata <- combine(mcols(x, use.names = TRUE),
                                          mcols(y, use.names = TRUE))
               # NOTE: Drop rownames of elementMetadata since these are given by
