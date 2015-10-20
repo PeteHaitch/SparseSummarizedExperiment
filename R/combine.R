@@ -82,19 +82,7 @@ setMethod("combine", c("GRanges", "GRanges"),
 #'
 #' @export
 setMethod("combine", c("GRangesList", "GRangesList"),
-          function(x, y, ..., ignore.mcols = FALSE) {
-            if (is.null(names(x)) || is.null(names(y))) {
-              stop("'names' of 'x' and 'y' must be non-NULL")
-              # TODO: Could combine GRangesList objects and unique-ify instead
-              #       of erroring.
-              # NOTE: unique,GRangesList-method doesn't work do what I want. It
-              #       checks for duplicates *within* each element of the
-              #       GRangesList. What I want is to identify duplicate
-              #       elements, hence this construction.
-              # WARNING: This is potentially slow since it uses unique for
-              #          lists (see ?unique) and a clunky set of coercions
-              GRangesList(unique(as(c(x, y, ignore.mcols = FALSE), "list")))
-            }
+          function(x, y, ...) {
 
             if (length(y) == 0L) {
               return(x)
@@ -102,25 +90,14 @@ setMethod("combine", c("GRangesList", "GRangesList"),
               return(y)
             }
 
-            shared_elements <- intersect(names(x), names(y))
-            # TODO: If ignore.mcols can never be TRUE remove this conditional
-            # If ignore.mcols = TRUE then don't check equality of mcols
-            # if (!ignore.mcols) {
-            #   ok <- all.equal(x[shared_elements], y[shared_elements])
-            # } else {
-            #   xx <- x[shared_elements]
-            #   mcols(xx) <- NULL
-            #   yy <- y[shared_elements]
-            #   mcols(yy) <- NULL
-            #   ok <- all.equal(xx, yy)
-            # }
-            ok <- all.equal(x[shared_ranges], y[shared_ranges])
-
-            if (!isTRUE(ok)) {
-              stop("'GRangesList' shared elements differ: ", ok)
+            if (is.null(names(x)) || is.null(names(y))) {
+              stop("'names' of 'x' and 'y' must be non-NULL")
             }
 
-            c(x, y[setdiff(names(y), shared_elements)], ignore.mcols = FALSE)
+            shared_elements <- intersect(names(x), names(y))
+            x[shared_elements] <- mendoapply(combine, x[shared_elements],
+                                             y[shared_elements])
+            c(x, y[setdiff(names(y), shared_elements)])
           }
 )
 
