@@ -39,7 +39,8 @@ setMethod("combine", c("GRangesList", "GRangesList"),
             }
 
             if (is.null(names(x)) || is.null(names(y))) {
-              stop("'names' of 'x' and 'y' must be non-NULL")
+              stop("'names' of 'x' and 'y' must be non-NULL when combining '",
+                   class(x), "' objects")
             }
 
             shared_elements <- intersect(names(x), names(y))
