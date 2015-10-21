@@ -9,7 +9,7 @@
 ### S4Vectors package. Therefore, the functionality in this file probably
 ### belongs in the S4Vectors package.
 
-#' @rdname S4Vectors
+#' @rdname S4Vectors-pkg
 #'
 #' @export
 setMethod("combine", c("DataFrame", "DataFrame"),
@@ -31,7 +31,7 @@ setMethod("combine", c("DataFrame", "DataFrame"),
 )
 
 # TODO: How should elements unique to x or y be handled?
-#' @rdname S4Vectors
+#' @rdname S4Vectors-pkg
 #'
 #' @export
 setMethod("combine", c("SimpleList", "SimpleList"),

@@ -15,7 +15,7 @@
   c(x, setdiff(y, shared_names))
 }
 
-#' @rdname SummarizedExperiment
+#' @rdname SummarizedExperiment-pkg
 #'
 #' @export
 setMethod("combine", c("SummarizedExperiment0", "SummarizedExperiment0"),

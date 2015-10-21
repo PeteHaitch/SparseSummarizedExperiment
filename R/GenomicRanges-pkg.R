@@ -9,7 +9,7 @@
 ### GenomicRanges package. Therefore, the functionality in this file probably
 ### belongs in the GenomicRanges package.
 
-#' @rdname GenomicRanges
+#' @rdname GenomicRanges-pkg
 #'
 #' @export
 setMethod("combine", c("GRanges", "GRanges"),
@@ -26,7 +26,7 @@ setMethod("combine", c("GRanges", "GRanges"),
 )
 
 # NOTE: Errors if any of the GRangesList objects have NULL names().
-#' @rdname GenomicRanges
+#' @rdname GenomicRanges-pkg
 #'
 #' @export
 setMethod("combine", c("GRangesList", "GRangesList"),
