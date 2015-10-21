@@ -179,32 +179,46 @@ setMethod("SparseSummarizedExperiment", "missing",
 ### Getters and setters
 ###
 
-# NOTE: withDimnames = TRUE only adds colnames(x) [i.e, sample names] unless
-#       expand = TRUE
 # NOTE: Following assays(), sparseAssays() will not strip the dimnames if
 #       withDimnames = FALSE but will simply fail to add them.
+# NOTE: The expand = TRUE argument returns a SimpleList, not a SparseAssays
+#       object.
+# NOTE: If the user wants sparseAssays as a ShallowSimpleListAssays object then
+#       they should run as(sparseAssays(x), "ShallowSimpleListAssays"). The
+#       returned object will not have rownames regardless of the value of
+#       withDimnames. Note also that expand must be FALSE; the coercion to a
+#       ShallowSimpleListAssays object automatically expands the
+#       sparseAssays.
 #' @rdname RangedSparseSummarizedExperiment
 #'
 #' @export
 setMethod("sparseAssays", "RangedSparseSummarizedExperiment",
           function(x, ..., withDimnames = TRUE, expand = FALSE) {
 
+            val <- x@sparseAssays
+
             if (expand) {
-              expanded_sparse_assays <- as(x@sparseAssays, "Assays")
+              val <- SimpleList(.expand(val))
               if (withDimnames) {
-                endoapply(as(expanded_sparse_assays, "SimpleList"),
-                          "dimnames<-",
-                          dimnames(x))
-              } else {
-                expanded_sparse_assays
+                val <- endoapply(val, function(e) {
+                  names(e) <- colnames(x)
+                  endoapply(e, "rownames<-", rownames(x))
+                })
               }
             } else {
               if (withDimnames) {
-                endoapply(x@sparseAssays, "names<-", colnames(x))
-              } else {
-                x@sparseAssays
+                val <- endoapply(val, function(sparse_assay) {
+                  sparse_assay <- endoapply(sparse_assay, function(sample) {
+                    names(sample[["map"]]) <- names(x)
+                    sample
+                  })
+                  names(sparse_assay) <- colnames(x)
+                  sparse_assay
+                })
               }
             }
+
+            val
           }
 )
 
@@ -237,7 +251,7 @@ setMethod("sparseAssay", c("RangedSparseSummarizedExperiment", "missing"),
             if (expand) {
               val <- stats::setNames(SparseAssays(SimpleList(val)),
                                      sparseAssayNames(x)[1])
-              val <- as(val, "Assays")[[1]]
+              val <- as(val, "ShallowSimpleListAssays")[[1]]
               if (withDimnames) {
                 dimnames(val) <- dimnames(x)
               }
@@ -267,7 +281,7 @@ setMethod("sparseAssay", c("RangedSparseSummarizedExperiment", "numeric"),
                                      sparseAssayNames(x)[i])
               # extract first element, not i-th element, because this only has
               # length 1.
-              val <- as(val, "Assays")[[1]]
+              val <- as(val, "ShallowSimpleListAssays")[[1]]
               if (withDimnames) {
                 dimnames(val) <- dimnames(x)
               }
@@ -301,7 +315,7 @@ setMethod("sparseAssay", c("RangedSparseSummarizedExperiment", "character"),
                                      sparseAssayNames(x)[i])
               # extract first element, not i-th element, because this only has
               # length 1.
-              val <- as(val, "Assays")[[1]]
+              val <- as(val, "ShallowSimpleListAssays")[[1]]
               if (withDimnames) {
                 dimnames(val) <- dimnames(x)
               }
@@ -609,22 +623,6 @@ setMethod("cbind", "RangedSparseSummarizedExperiment",
                               check = FALSE)
 }
 
-#' combineSSE <- function(x, y, ..., nomatch = NA, use.mcols = FALSE) {
-#'   # UP TO HERE
-#'   NULL
-#' }
-#'
-#' # TODO: Rename if/when combine generic is added to SummarizedExperiment
-#' #' @rdname RangedSparseSummarizedExperiment
-#' #'
-#' #' @export
-#' setMethod("combine",
-#'           c("RangedSparseSummarizedExperiment",
-#'             "RangedSparseSummarizedExperiment"),
-#'           function(x, y, ..., ignore.mcols = FALSE) {
-#'             combineSSE(x, y, ..., ignore.mcols = ignore.mcols)
-#'           }
-#' )
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Miscellaneous NOTEs

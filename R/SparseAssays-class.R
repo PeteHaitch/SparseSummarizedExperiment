@@ -815,13 +815,13 @@ setMethod("combine", c("SparseAssays", "SparseAssays"),
 
 # NOTE: Not a method for the time being; also cannot be called expand() because
 # of IRanges::expand().
-.expand <- function(x, na.rm = FALSE, assays = FALSE) {
+.expand <- function(x, ShallowSimpleListAssays = FALSE, na.rm = FALSE) {
 
   if (na.rm) {
     stop("'na.rm = TRUE' not yet implemented.")
   }
 
-  if (assays) {
+  if (ShallowSimpleListAssays) {
     l <- lapply(x, function(sparse_assay) {
       # A kludge to guess whether the data are integer or numeric. If multiple
       # data storage modes are found then assume numeric.
@@ -865,9 +865,9 @@ setMethod("combine", c("SparseAssays", "SparseAssays"),
 #' @name as
 #'
 #' @export
-setAs("SparseAssays", "Assays",
+setAs("SparseAssays", "ShallowSimpleListAssays",
       function(from) {
-        .expand(from, na.rm = FALSE, assays = TRUE)
+        .expand(from, na.rm = FALSE, ShallowSimpleListAssays = TRUE)
       }
 )
 
