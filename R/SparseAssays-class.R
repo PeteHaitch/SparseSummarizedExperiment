@@ -671,6 +671,137 @@ setMethod("cbind", "SparseAssays",
           }
 )
 
+### combine
+
+# Combine sample-level map and data elements
+# NOTE: Not-exported
+# TODO (longterm): Combine without an expand-then-sparsify operation.
+.combine.sample <- function(x, y) {
+
+  xe <- .expand.SparseAssays.sample(x)
+  dimnames(xe) <- list(names(x[["map"]]), paste0("V", seq_len(ncol(xe))))
+  ye <- .expand.SparseAssays.sample(y)
+  dimnames(ye) <- list(names(y[["map"]]), paste0("V", seq_len(ncol(ye))))
+  # NOTE: If the map is all NAs then the 'expanded' data are logical NA,
+  #       which will cause problems when we try to combine this with a
+  #       non-logical matrix.
+  if (storage.mode(xe) == "logical") {
+    storage.mode(xe) <- storage.mode(ye)
+  }
+  if (storage.mode(ye) == "logical") {
+    storage.mode(ye) <- storage.mode(xe)
+  }
+
+  sparsified <- .sparsify(combine(xe, ye))
+
+  map <- sparsified[["map"]]
+  data <- sparsified[["data"]]
+  NA_idx <- which(!complete.cases(data))
+  if (length(NA_idx)) {
+    # Take care of NA rows
+    stopifnot(length(NA_idx) == 1L)
+    # Update data element by dropping NA row
+    data <- data[-NA_idx, , drop = FALSE]
+    # Update map element to replace index by NA for NA rows
+    # TODO: Probably more efficient ways to do this
+    map[map == NA_idx] <- NA
+    map[!is.na(map) & map > NA_idx] <- map[!is.na(map) & map > NA_idx] - 1L
+  }
+
+  SimpleList(map = map, data = data)
+}
+
+# NOTE: Can't defer to combine,SimpleList,SimpleList-method because
+#       SparseAssays objects may have a different number of elements at the
+#       second level (corresponding to different sampels).
+# NOTE: Requires that both x and y have the identical number of sparse assays
+#       with identical names.
+#' @rdname SparseAssays
+#'
+#' @examples
+#' identical(.expand(rbind(sparseAssays(rsse[1:5, ]), sparseAssays(rsse[6:10, ]))),
+#'           .expand(sparseAssays(rsse)))
+#' identical(.expand(rbind(sparseAssays(rsse[1:5, ]), sparseAssays(rsse[6:10, ]))),
+#'           .expand(combine(sparseAssays(rsse[1:5, ]), sparseAssays(rsse[6:10, ]))))
+#'
+#' identical(.expand(cbind(sparseAssays(rsse[, 1]), sparseAssays(rsse[, 2]))),
+#'           .expand(sparseAssays(rsse)))
+#' identical(.expand(cbind(sparseAssays(rsse[, 1]), sparseAssays(rsse[, 2]))),
+#'           .expand(combine(sparseAssays(rsse[, 1]), sparseAssays(rsse[, 2]))))
+#'
+#' identical(.expand(combine(sparseAssays(rsse[1:7, ]), sparseAssays(rsse[2:10, ]))),
+#'           .expand(sparseAssays(rsse)))
+#'
+#' identical(.expand(combine(sparseAssays(rsse[1:7, ]), sparseAssays(rsse[10:7, ]))),
+#'           .expand(sparseAssays(rsse[c(1:7, 10:8)])))
+#'
+#' @export
+setMethod("combine", c("SparseAssays", "SparseAssays"),
+          function(x, y, ...) {
+
+            if (length(y) == 0L) {
+              return(x)
+            } else if (length(x) == 0L) {
+              return(y)
+            }
+
+            mendoapply(function(x_sa, y_sa) {
+
+              if (is.null(names(x_sa)) || is.null(names(y_sa))) {
+                stop("sample names must be non-NULL when combining '", class(x),
+                     "' objects")
+              }
+
+              # Identify shared samples
+              shared_samples <- intersect(names(x_sa), names(y_sa))
+              rownames <- unique(unlist(c(lapply(x_sa, function(sample) {
+                names(sample[["map"]])}),
+                lapply(y_sa, function(sample) {
+                  names(sample[["map"]])})
+                ), use.names = FALSE))
+
+              # Update shared samples
+              x_sa[shared_samples] <- mendoapply(.combine.sample,
+                                              x_sa[shared_samples],
+                                              y_sa[shared_samples])
+              # Update samples unique to x
+              x_u <- setdiff(names(x_sa), shared_samples)
+              fake <- endoapply(x_sa[x_u], function(e) {
+                missing_rownames <- setdiff(rownames, names(e[["map"]]))
+                map <- rep(NA_integer_, length(missing_rownames))
+                names(map) <- missing_rownames
+                data <- matrix(ncol = ncol(e[["data"]]),
+                               dimnames =
+                                 list(NULL,
+                                      paste0("V", seq_len(ncol(e[["data"]])))))
+                storage.mode(data) <- storage.mode(e[["data"]])
+                SimpleList(map = map, data = data)
+              })
+              x_sa[x_u] <- mendoapply(.combine.sample,
+                                      x_sa[x_u],
+                                      fake)
+
+              # Update samples unique to y
+              y_u <- setdiff(names(y_sa), shared_samples)
+              fake <- endoapply(y_sa[y_u], function(e) {
+                missing_rownames <- setdiff(rownames, names(e[["map"]]))
+                map <- rep(NA_integer_, length(missing_rownames))
+                names(map) <- missing_rownames
+                data <- matrix(ncol = ncol(e[["data"]]),
+                               dimnames =
+                                 list(NULL,
+                                      paste0("V", seq_len(ncol(e[["data"]])))))
+                storage.mode(data) <- storage.mode(e[["data"]])
+                SimpleList(map = map, data = data)
+              })
+              # NOTE: Append to x_sa
+              x_sa <- c(x_sa, mendoapply(.combine.sample, y_sa[y_u], fake))
+
+              x_sa
+            }, x, y)
+          }
+)
+
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Coercion
 ###
@@ -720,7 +851,7 @@ setMethod("cbind", "SparseAssays",
       }
       val
     })
-    SummarizedExperiment::Assays(l)
+    return(SummarizedExperiment::Assays(l))
 
   } else {
     lapply(x, function(sparse_assay) {
@@ -761,8 +892,9 @@ setAs("SparseAssays", "Assays",
 # the keys, identify the unique rows of the data.table and map each row of
 # 'x' to these unique rows.
 #
-# NOTE: The following should be TRUE when 'x' is matrix:
-#       identical(.expand.SparseAssays.sample(.sparsify(x)), x)
+# WARNING: The relative row-order of 'x' is not preserved in the returned 'data'.
+#          However, the following should be TRUE when 'x' is
+#          matrix: identical(.expand.SparseAssays.sample(.sparsify(x)), x)
 # NOTE: Returned object is stripped of dimnames
 .sparsify <- function(x, data_class = c("matrix", "data.frame", "data.table")) {
 
@@ -786,7 +918,8 @@ setAs("SparseAssays", "Assays",
   }
   x[, .myI := .I]
 
-  # Set the key (kind of like hashing the rows of the data.table since we use all columns)
+  # Set the key (kind of like hashing the rows of the data.table since we use
+  # all columns)
   my_key <- grep(".myI", colnames(x), value = TRUE, invert = TRUE)
   data.table::setkeyv(x, cols = my_key)
 

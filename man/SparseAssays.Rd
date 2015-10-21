@@ -10,6 +10,7 @@
 \alias{[[<-,SparseAssays,ANY,ANY-method}
 \alias{as}
 \alias{cbind,SparseAssays-method}
+\alias{combine,SparseAssays,SparseAssays-method}
 \alias{dim,SparseAssays-method}
 \alias{rbind,SparseAssays-method}
 \title{SparseAssays objects}
@@ -29,6 +30,8 @@ SparseAssays(sparse_assays = SimpleList())
 \S4method{rbind}{SparseAssays}(..., deparse.level = 1)
 
 \S4method{cbind}{SparseAssays}(..., deparse.level = 1)
+
+\S4method{combine}{SparseAssays,SparseAssays}(x, y, ...)
 }
 \description{
 SparseAssays objects
@@ -102,5 +105,20 @@ sa[11, ] <- value[1, ]
 
 # Rightfully fails validObject(val)
 \dontrun{sa[11, 1] <- value[1, 1]}
+identical(.expand(rbind(sparseAssays(rsse[1:5, ]), sparseAssays(rsse[6:10, ]))),
+          .expand(sparseAssays(rsse)))
+identical(.expand(rbind(sparseAssays(rsse[1:5, ]), sparseAssays(rsse[6:10, ]))),
+          .expand(combine(sparseAssays(rsse[1:5, ]), sparseAssays(rsse[6:10, ]))))
+
+identical(.expand(cbind(sparseAssays(rsse[, 1]), sparseAssays(rsse[, 2]))),
+          .expand(sparseAssays(rsse)))
+identical(.expand(cbind(sparseAssays(rsse[, 1]), sparseAssays(rsse[, 2]))),
+          .expand(combine(sparseAssays(rsse[, 1]), sparseAssays(rsse[, 2]))))
+
+identical(.expand(combine(sparseAssays(rsse[1:7, ]), sparseAssays(rsse[2:10, ]))),
+          .expand(sparseAssays(rsse)))
+
+identical(.expand(combine(sparseAssays(rsse[1:7, ]), sparseAssays(rsse[10:7, ]))),
+          .expand(sparseAssays(rsse[c(1:7, 10:8)])))
 }
 
