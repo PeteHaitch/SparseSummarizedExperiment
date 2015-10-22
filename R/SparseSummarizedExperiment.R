@@ -9,19 +9,10 @@
 #' @docType package
 #' @name SparseSummarizedExperiment-package
 #'
-# TODO: Try to be more selective about imports of methods and BiocGenerics and
-#       include within the .R files
-#' @importFrom methods setClass setGeneric setMethod callNextMethod validObject
-# NOTE: Import the entire BiocGenerics package for simplicity
+# NOTE: For simplicity, just import the entire BiocGenerics package
 #' @import BiocGenerics
 #'
-# Below this line are old imports that I'm in the process of moving to the
-# relevant .R files
-# TODO: What's the correct way to import the C-routines from digest (if digest
-#       is still required)?
 NULL
 
-# To avoid WARNINGs about "Undefined global functions or variables" in
-# R CMD check
-#' @importFrom utils globalVariables
-globalVariables(c(".myI", ".myMap"))
+# TODO: What's the correct way to import the C-routines from digest (if digest
+#       is still required)?

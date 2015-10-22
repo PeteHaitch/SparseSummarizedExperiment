@@ -13,6 +13,8 @@
 #'
 #' @rdname S4Vectors-pkg
 #'
+#' @importFrom methods as setMethod
+#'
 #' @export
 setMethod("combine", c("DataFrame", "DataFrame"),
           function(x, y, ...) {
@@ -35,7 +37,8 @@ setMethod("combine", c("DataFrame", "DataFrame"),
 # TODO: How should elements unique to x or y be handled?
 #' @rdname S4Vectors-pkg
 #'
-#' @importFrom S4Vectors mendoapply
+#' @importFrom methods setMethod
+#' @importMethodsFrom S4Vectors mendoapply
 #'
 #' @export
 setMethod("combine", c("SimpleList", "SimpleList"),

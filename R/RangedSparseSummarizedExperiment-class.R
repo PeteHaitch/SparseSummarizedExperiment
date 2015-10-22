@@ -14,6 +14,7 @@
 #' @include SparseAssays-class.R
 #'
 #' @importClassesFrom SummarizedExperiment RangedSummarizedExperiment
+#' @importFrom methods setClass
 #'
 #' @export
 setClass("RangedSparseSummarizedExperiment",
@@ -30,6 +31,7 @@ setClass("RangedSparseSummarizedExperiment",
 ### Validity
 ###
 
+#' @importFrom methods is
 .valid.RangedSparseSummarizedExperiment.sparseAssays_class <- function(x) {
 
   if (!is(x@sparseAssays, "SparseAssays")) {
@@ -120,8 +122,9 @@ setValidity2("RangedSparseSummarizedExperiment",
 #'                                         RangedSummarizedExperiment
 #'
 #' @importFrom GenomicRanges GRangesList
-#' @importFrom S4Vectors DataFrame endoapply SimpleList
+#' @importFrom S4Vectors DataFrame SimpleList
 #' @importFrom SummarizedExperiment SummarizedExperiment
+#' @importMethodsFrom S4Vectors endoapply
 #'
 #' @export
 setMethod("SparseSummarizedExperiment", "SparseAssays",
@@ -198,7 +201,8 @@ setMethod("SparseSummarizedExperiment", "missing",
 #       sparseAssays.
 #' @rdname RangedSparseSummarizedExperiment
 #'
-#' @importFrom S4Vectors endoapply SimpleList
+#' @importFrom S4Vectors SimpleList
+#' @importMethodsFrom S4Vectors endoapply
 #'
 #' @export
 setMethod("sparseAssays", "RangedSparseSummarizedExperiment",
@@ -245,6 +249,8 @@ setReplaceMethod("sparseAssays", "RangedSparseSummarizedExperiment",
 
 #' @rdname RangedSparseSummarizedExperiment
 #'
+#' @importClassesFrom GenomicRanges ShallowSimpleListAssays
+#' @importFrom methods as
 #' @importFrom stats setNames
 #'
 #' @export
@@ -273,6 +279,8 @@ setMethod("sparseAssay", c("RangedSparseSummarizedExperiment", "missing"),
 
 #' @rdname RangedSparseSummarizedExperiment
 #'
+#' @importClassesFrom GenomicRanges ShallowSimpleListAssays
+#' @importFrom methods as
 #' @importFrom S4Vectors SimpleList
 #' @importFrom stats setNames
 #'
@@ -306,6 +314,8 @@ setMethod("sparseAssay", c("RangedSparseSummarizedExperiment", "numeric"),
 
 #' @rdname RangedSparseSummarizedExperiment
 #'
+#' @importClassesFrom GenomicRanges ShallowSimpleListAssays
+#' @importFrom methods as
 #' @importFrom S4Vectors SimpleList
 #' @importFrom stats setNames
 #'
@@ -388,6 +398,8 @@ setReplaceMethod("sparseAssayNames", "RangedSparseSummarizedExperiment",
 
 #' @rdname RangedSparseSummarizedExperiment
 #'
+#' @importFrom methods callNextMethod
+#'
 #' @export
 setMethod("[", "RangedSparseSummarizedExperiment",
           function(x, i, j, ..., drop = TRUE) {
@@ -430,6 +442,7 @@ setMethod("[", "RangedSparseSummarizedExperiment",
 #' @rdname RangedSparseSummarizedExperiment
 #'
 #' @importClassesFrom SummarizedExperiment RangedSummarizedExperiment
+#' @importFrom methods as
 #'
 #' @export
 setReplaceMethod("[",
@@ -517,6 +530,7 @@ setReplaceMethod("[",
 # NOTE: Based on show,SummarizedExperiment0-method
 #' @rdname RangedSparseSummarizedExperiment
 #'
+#' @importFrom methods is
 #' @importMethodsFrom S4Vectors mcols metadata
 #' @importMethodsFrom SummarizedExperiment assayNames assays colData
 #'
@@ -544,7 +558,8 @@ setMethod("show", "RangedSparseSummarizedExperiment",
             # sparseAssays()
             nms <- sparseAssayNames(object)
             if (is.null(nms)) {
-              nms <- character(length(sparseAssays(object, withDimnames = FALSE)))
+              nms <- character(length(sparseAssays(object,
+                                                   withDimnames = FALSE)))
             }
             scat("sparseAssays(%d): %s\n", nms)
 
@@ -622,6 +637,8 @@ setMethod("rbind", "RangedSparseSummarizedExperiment",
 # NOTE: Appropriate for objects with same ranges and different samples.
 #' @rdname RangedSparseSummarizedExperiment
 #'
+#' @importFrom methods as
+#'
 #' @export
 setMethod("cbind", "RangedSparseSummarizedExperiment",
           function(..., deparse.level = 1) {
@@ -659,6 +676,7 @@ setMethod("cbind", "RangedSparseSummarizedExperiment",
 #' @importClassesFrom SummarizedExperiment RangedSummarizedExperiment
 #'                                         SummarizedExperiment0
 #' @importMethodsFrom IRanges findOverlaps
+#' @importFrom methods as is
 #' @importMethodsFrom S4Vectors endoapply subjectHits
 #' @importMethodsFrom SummarizedExperiment rowRanges
 #'

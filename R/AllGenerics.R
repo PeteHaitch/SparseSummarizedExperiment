@@ -2,11 +2,15 @@
 ### sparseAssays
 ###
 
+#' @importFrom methods setGeneric
+#'
 #' @export
 setGeneric("sparseAssays", function(x, ..., withDimnames = TRUE, expand = FALSE) {
   standardGeneric("sparseAssays")
 }, signature = "x")
 
+#' @importFrom methods setGeneric
+#'
 #' @export
 setGeneric("sparseAssays<-", function(x, ..., withDimnames = TRUE, value) {
   standardGeneric("sparseAssays<-")
@@ -16,12 +20,16 @@ setGeneric("sparseAssays<-", function(x, ..., withDimnames = TRUE, value) {
 ### sparseAssay
 ###
 
+#' @importFrom methods setGeneric
+#'
 #' @export
 setGeneric("sparseAssay", function(x, i, ..., withDimnames = TRUE,
                                    expand = FALSE) {
   standardGeneric("sparseAssay")
 })
 
+#' @importFrom methods setGeneric
+#'
 #' @export
 setGeneric("sparseAssay<-", function(x, i, ..., withDimnames = TRUE, value) {
   standardGeneric("sparseAssay<-")
@@ -31,11 +39,15 @@ setGeneric("sparseAssay<-", function(x, i, ..., withDimnames = TRUE, value) {
 ### sparseAssayNames
 ###
 
+#' @importFrom methods setGeneric
+#'
 #' @export
 setGeneric("sparseAssayNames", function(x, ...) {
   standardGeneric("sparseAssayNames")
 })
 
+#' @importFrom methods setGeneric
+#'
 #' @export
 setGeneric("sparseAssayNames<-", function(x, ..., value) {
   standardGeneric("sparseAssayNames<-")
@@ -45,6 +57,8 @@ setGeneric("sparseAssayNames<-", function(x, ..., value) {
 ### SparseSummarizedExperiment
 ###
 
+#' @importFrom methods setGeneric
+#'
 #' @export
 setGeneric("SparseSummarizedExperiment",
            function(sparseAssays, ...) {

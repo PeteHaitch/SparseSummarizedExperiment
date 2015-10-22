@@ -61,6 +61,8 @@
 #'
 #' @rdname SparseAssays
 #'
+#' @importFrom methods setClass
+#'
 #' @export
 setClass("SparseAssays",
          contains = "SimpleList"
@@ -245,6 +247,8 @@ setValidity2("SparseAssays", .valid.SparseAssays)
 #'                         )
 #' )
 #'
+#' @importFrom methods validObject
+#'
 #' @export
 SparseAssays <- function(sparse_assays = SimpleList()) {
   ans <- new("SparseAssays", sparse_assays)
@@ -276,6 +280,7 @@ SparseAssays <- function(sparse_assays = SimpleList()) {
 # the modified object.
 #' @rdname SparseAssays
 #'
+#' @importFrom methods validObject
 #' @importMethodsFrom S4Vectors setListElement
 #'
 #' @export
@@ -291,6 +296,8 @@ setReplaceMethod("[[", "SparseAssays",
 
 # NOTE: dim is defined by nrow = length of map and ncol = number of samples
 #' @rdname SparseAssays
+#'
+#' @importFrom methods setMethod
 #'
 #' @export
 setMethod("dim", "SparseAssays",
@@ -310,6 +317,8 @@ setMethod("dim", "SparseAssays",
 # which calls length(). This matters because otherwise NROW(x) != nrow(x) when
 # x is a SparseAssays object.
 #' @rdname SparseAssays
+#'
+#' @importFrom methods setMethod
 #'
 #' @export
 setMethod("NROW", "SparseAssays",
@@ -391,6 +400,8 @@ setMethod("NROW", "SparseAssays",
 
 #' @rdname SparseAssays
 #'
+#' @importFrom methods setMethod
+#'
 #' @export
 setMethod("[", "SparseAssays",
           function(x, i, j, ..., drop = FALSE) {
@@ -421,6 +432,7 @@ setMethod("[", "SparseAssays",
 #
 # IDEA (when missing(i)):
 # (1) Simply replace the j-th sample(s) (map, data)-pair by that given in value.
+#' @importFrom methods validObject
 #' @importFrom S4Vectors SimpleList
 #' @importFrom stats na.omit
 #' @importMethodsFrom S4Vectors mendoapply
@@ -539,6 +551,7 @@ setReplaceMethod("[", "SparseAssays",
 
 ### rbind/cbind
 
+#' @importFrom methods as
 #' @importFrom S4Vectors SimpleList
 #' @importFrom stats setNames
 .bind_SparseAssays <- function(lst, bind) {
@@ -661,6 +674,8 @@ setReplaceMethod("[", "SparseAssays",
 # make sense).
 #' @rdname SparseAssays
 #'
+#' @importFrom methods setMethod
+#'
 #' @export
 setMethod("rbind", "SparseAssays",
           function(..., deparse.level = 1) {
@@ -674,6 +689,8 @@ setMethod("rbind", "SparseAssays",
 # WARNING: Not really a cbind. It adds new elements to the 'sparse_assay'-level
 # SimpleList.
 #' @rdname SparseAssays
+#'
+#' @importFrom methods setMethod
 #'
 #' @export
 setMethod("cbind", "SparseAssays",
@@ -777,6 +794,7 @@ setMethod("cbind", "SparseAssays",
 #' identical(.expand(combine(sparseAssays(rsse[1:7, ]), sparseAssays(rsse[10:7, ]))),
 #'           .expand(sparseAssays(rsse[c(1:7, 10:8)])))
 #'
+#' @importFrom methods setMethod
 #' @importFrom S4Vectors SimpleList
 #' @importMethodsFrom S4Vectors endoapply mendoapply
 #'
@@ -911,7 +929,7 @@ setMethod("combine", c("SparseAssays", "SparseAssays"),
 #'
 #' @name as
 #'
-#' @importFrom methods as setAs
+#' @importFrom methods setAs
 #'
 #' @export
 setAs("SparseAssays", "ShallowSimpleListAssays",
@@ -988,6 +1006,10 @@ setAs("SparseAssays", "ShallowSimpleListAssays",
   SimpleList(map = map,
              data = data)
 }
+# To avoid WARNINGs about "Undefined global functions or variables" in
+# R CMD check caused by the .sparsify() function.
+#' @importFrom utils globalVariables
+globalVariables(c(".myI", ".myMap"))
 
 # Convert a matrix into 'map' and 'data' elements.
 # Basically hash each row of the matrix, check for duplicates amongst the
@@ -998,6 +1020,7 @@ setAs("SparseAssays", "ShallowSimpleListAssays",
 #          grows. It will ultimately be removed from the package.
 # NOTE: Don't actually know whether using the `::` operator is any faster
 #       in this function.
+#' @importFrom methods as
 #' @importFrom S4Vectors SimpleList
 .sparsify_old <- function(m, data_class = class(m)) {
 
