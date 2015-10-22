@@ -135,8 +135,8 @@ setMethod("SparseSummarizedExperiment", "SparseAssays",
             if (missing(colData) && length(sparseAssays) != 0L) {
               nms <- names(sparseAssays[[1]])
               if (is.null(nms) && length(sparseAssays[[1]]) != 0L)
-                stop(paste0("'SparseSummarizedExperiment' sparse assay names ",
-                            "must not be NULL"))
+                stop("'SparseSummarizedExperiment' sparse assay names must ", "
+                     not be NULL")
               colData <- DataFrame(row.names = nms)
             }
 

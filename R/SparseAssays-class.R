@@ -608,9 +608,8 @@ setReplaceMethod("[", "SparseAssays",
     same_ncol <- unlist(same_ncol, use.names = FALSE)
     ncol <- unlist(ncol, use.names = FALSE)
     if (any(!same_ncol)) {
-      stop(paste0("Can only rbind 'SparseAssays' objects where the data ",
-                  "elements within each sparse assay have the same number of ",
-                  "columns."))
+      stop("Can only rbind 'SparseAssays' objects where the data elements ",
+           "within each sparse assay have the same number of columns.")
     }
 
     # rbind,SparseAssays-method uses the SparseAssays,`[<-`-method to
@@ -643,8 +642,8 @@ setReplaceMethod("[", "SparseAssays",
     same_length <- unlist(same_length, use.names = FALSE)
     length <- unlist(length, use.names = FALSE)
     if (any(!same_length)) {
-      stop(paste0("Can only cbind 'SparseAssays' objects where the map ",
-                  "elements within each sparse assay have the same length."))
+      stop("Can only cbind 'SparseAssays' objects where the map elements ",
+           "within each sparse assay have the same length.")
     }
     val <- lapply(sparse_assay_names, function(san) {
       l_sparse_assay <- lapply(lst, "[[", san)
