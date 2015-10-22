@@ -35,6 +35,11 @@
 #'
 #' @rdname SummarizedExperiment-pkg
 #'
+#' @importFrom IRanges findOverlaps
+#' @importFrom S4Vectors DataFrame metadata subjectHits
+#' @importFrom SummarizedExperiment assays Assays mcols rowRanges
+#' @importMethodsFrom S4Vectors "mcols<-"
+#'
 #' @export
 setMethod("combine", c("SummarizedExperiment0", "SummarizedExperiment0"),
           function(x, y, ...) {

@@ -30,6 +30,8 @@ setMethod("combine", c("GRanges", "GRanges"),
 # NOTE: Errors if any of the GRangesList objects have NULL names().
 #' @rdname GenomicRanges-pkg
 #'
+#' @importFrom S4Vectors mendoapply
+#'
 #' @export
 setMethod("combine", c("GRangesList", "GRangesList"),
           function(x, y, ...) {

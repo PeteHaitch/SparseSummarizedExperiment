@@ -124,7 +124,7 @@ setClass("SparseAssays",
     })
     if (any(vapply(sample_names, function(sn, sn1) {
       !identical(sn, sn1)
-    }, logical(1), sn1 = sample_names[[1]]))) {
+    }, logical(1L), sn1 = sample_names[[1L]]))) {
       return("All sparse assays must have identical sample names.")
     }
 
@@ -150,7 +150,7 @@ setClass("SparseAssays",
     })
     if (any(vapply(data_ncol, function(sparse_assay_ncol) {
       length(unique(unlist(sparse_assay_ncol))) != 1L
-    }, logical(1)))) {
+    }, logical(1L)))) {
       return(paste0("All 'data' elements within each sparse assay must have ",
                     "the same number of columns."))
     }
@@ -182,7 +182,8 @@ setClass("SparseAssays",
   NULL
 }
 
-S4Vectors::setValidity2("SparseAssays", .valid.SparseAssays)
+#' @importFrom S4Vectors setValidity2
+setValidity2("SparseAssays", .valid.SparseAssays)
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Constructor
@@ -275,10 +276,12 @@ SparseAssays <- function(sparse_assays = SimpleList()) {
 # the modified object.
 #' @rdname SparseAssays
 #'
+#' @importMethodsFrom S4Vectors setListElement
+#'
 #' @export
 setReplaceMethod("[[", "SparseAssays",
                  function(x, i, j, ..., value) {
-                   sparse_assays <- S4Vectors::setListElement(x, i, value)
+                   sparse_assays <- setListElement(x, i, value)
                    validObject(sparse_assays)
                    sparse_assays
                  }
@@ -319,12 +322,15 @@ setMethod("NROW", "SparseAssays",
 
 # NOTE: Subsetting a SparseAssays object requires mapping the i to a new
 # coordinate specified by the map element.
+#' @importFrom S4Vectors normalizeSingleBracketSubscript SimpleList
+#' @importFrom stats na.omit
+#' @importMethodsFrom S4Vectors endoapply
 .extract_SparseAssays_subset <- function(x, i, j) {
 
   if (!missing(i) && !missing(j)) {
 
     # normalize i
-    i <- S4Vectors::normalizeSingleBracketSubscript(i, x, as.NSBS = FALSE)
+    i <- normalizeSingleBracketSubscript(i, x, as.NSBS = FALSE)
 
     fun <- function(sparse_assay) {
       endoapply(sparse_assay[j], function(sample) {
@@ -351,7 +357,7 @@ setMethod("NROW", "SparseAssays",
   } else if (!missing(i)) {
 
     # normalize i
-    i <- S4Vectors::normalizeSingleBracketSubscript(i, x, as.NSBS = FALSE)
+    i <- normalizeSingleBracketSubscript(i, x, as.NSBS = FALSE)
 
     fun <- function(sparse_assay) {
       endoapply(sparse_assay, function(sample) {
@@ -415,6 +421,10 @@ setMethod("[", "SparseAssays",
 #
 # IDEA (when missing(i)):
 # (1) Simply replace the j-th sample(s) (map, data)-pair by that given in value.
+#' @importFrom S4Vectors SimpleList
+#' @importFrom stats na.omit
+#' @importMethodsFrom S4Vectors mendoapply
+#'                              normalizeSingleBracketReplacementValue
 .replace_SparseAssays_subset <- function(x, i, j, value) {
 
   if (!missing(i) && !missing(j)) {
@@ -485,7 +495,7 @@ setMethod("[", "SparseAssays",
   }
 
   # Normalize value
-  value <- S4Vectors::normalizeSingleBracketReplacementValue(value, x, i)
+  value <- normalizeSingleBracketReplacementValue(value, x, i)
 
   # Loop over each sparse assay and do replacement
   val <- mendoapply(fun, x, value)
@@ -529,6 +539,8 @@ setReplaceMethod("[", "SparseAssays",
 
 ### rbind/cbind
 
+#' @importFrom S4Vectors SimpleList
+#' @importFrom stats setNames
 .bind_SparseAssays <- function(lst, bind) {
   # This is copied from SummarizedExperiment:::.bind_Assays(). I'm not sure
   # how this could be passed a zero-length list, but I keep it here until I
@@ -539,7 +551,7 @@ setReplaceMethod("[", "SparseAssays",
 
   # If the list has only a single element then just return that element.
   if (length(lst) == 1L) {
-    return(lst[[1]])
+    return(lst[[1L]])
   }
 
   lens <- sapply(lst, length)
@@ -555,19 +567,19 @@ setReplaceMethod("[", "SparseAssays",
   sample_names <- lapply(lst, function(e) {
     lapply(e, names)
   })
-  # Don't need check the first against itself
-  sample_names_identical <- vapply(sample_names[-1], function(sn, sn1) {
+  # Don't need check the first element against itself
+  sample_names_identical <- vapply(sample_names[-1L], function(sn, sn1) {
     identical(sn, sn1)
-  }, FUN.VALUE = logical(1L), sn1 = sample_names[[1]])
+  }, FUN.VALUE = logical(1L), sn1 = sample_names[[1L]])
   if (identical(bind, cbind)) {
     if (any(sample_names_identical)) {
-      stop(paste0("Sample names (if present) must be unique when calling ",
-                  "cbind() on 'SparseAssays'"))
+      stop("Sample names (if present) must be unique when calling 'cbind()' ",
+           "on 'SparseAssays'")
     }
   } else {
     if (!all(sample_names_identical)) {
-      stop(paste0("Sample names (if present) must be identical when calling ",
-                  "rbind() on 'SparseAssays'"))
+      stop("Sample names (if present) must be unique when calling 'rbind()' ",
+           "on 'SparseAssays'")
     }
   }
 
@@ -575,10 +587,10 @@ setReplaceMethod("[", "SparseAssays",
   sparse_assay_names <- lapply(lst, names)
   if (any(vapply(sparse_assay_names, function(san, san1) {
     !identical(san, san1)
-  }, logical(1), san1 = sparse_assay_names[[1]]))) {
+  }, logical(1L), san1 = sparse_assay_names[[1L]]))) {
     stop("All 'SparseAssay' objects must have the same sparse assay names.")
   }
-  sparse_assay_names <- sparse_assay_names[[1]]
+  sparse_assay_names <- sparse_assay_names[[1L]]
 
   if (identical(bind, rbind)) {
     # If rbind-ing, need to check that all data elements within each sparse
@@ -591,7 +603,7 @@ setReplaceMethod("[", "SparseAssays",
         })
       })
       ncol <- unlist(ncol, use.names = FALSE)
-      all(ncol == ncol[1])
+      all(ncol == ncol[1L])
     })
     same_ncol <- unlist(same_ncol, use.names = FALSE)
     ncol <- unlist(ncol, use.names = FALSE)
@@ -676,6 +688,8 @@ setMethod("cbind", "SparseAssays",
 # Combine sample-level map and data elements
 # NOTE: Not-exported
 # TODO (longterm): Combine without an expand-then-sparsify operation.
+#' @importFrom S4Vectors SimpleList
+#' @importFrom stats complete.cases
 .combine.sample <- function(x, y) {
 
   xe <- .expand.SparseAssays.sample(x)
@@ -764,6 +778,9 @@ setMethod("cbind", "SparseAssays",
 #' identical(.expand(combine(sparseAssays(rsse[1:7, ]), sparseAssays(rsse[10:7, ]))),
 #'           .expand(sparseAssays(rsse[c(1:7, 10:8)])))
 #'
+#' @importFrom S4Vectors SimpleList
+#' @importMethodsFrom S4Vectors endoapply mendoapply
+#'
 #' @export
 setMethod("combine", c("SparseAssays", "SparseAssays"),
           function(x, y, ...) {
@@ -844,6 +861,8 @@ setMethod("combine", c("SparseAssays", "SparseAssays"),
 
 # NOTE: Not a method for the time being; also cannot be called expand() because
 # of IRanges::expand().
+#' @importClassesFrom GenomicRanges ShallowSimpleListAssays
+#' @importFrom SummarizedExperiment Assays
 .expand <- function(x, ShallowSimpleListAssays = FALSE, na.rm = FALSE) {
 
   if (na.rm) {
@@ -880,7 +899,7 @@ setMethod("combine", c("SparseAssays", "SparseAssays"),
       }
       val
     })
-    return(SummarizedExperiment::Assays(l))
+    return(Assays(l))
 
   } else {
     lapply(x, function(sparse_assay) {
@@ -925,14 +944,16 @@ setAs("SparseAssays", "ShallowSimpleListAssays",
 #          However, the following should be TRUE when 'x' is
 #          matrix: identical(.expand.SparseAssays.sample(.sparsify(x)), x)
 # NOTE: Returned object is stripped of dimnames
+#' @importFrom data.table := .I as.data.table key setDT setkey setkeyv
+#' @importFrom S4Vectors SimpleList
 .sparsify <- function(x, data_class = c("matrix", "data.frame", "data.table")) {
 
   # Convert input to data.table
   if (is(x, "data.frame")) {
     # Modifiy by reference
-    data.table::setDT(x)
+    setDT(x)
   } else if (is(x, "matrix")) {
-    x <- data.table::as.data.table(x, keep.rownames = FALSE)
+    x <- as.data.table(x, keep.rownames = FALSE)
   } else if (is(x, "data.table")) {
     # Nothing to do
   } else {
@@ -950,11 +971,11 @@ setAs("SparseAssays", "ShallowSimpleListAssays",
   # Set the key (kind of like hashing the rows of the data.table since we use
   # all columns)
   my_key <- grep(".myI", colnames(x), value = TRUE, invert = TRUE)
-  data.table::setkeyv(x, cols = my_key)
+  setkeyv(x, cols = my_key)
 
   # Create the map and data
   x[, .myMap := .GRP, by = key(x)]
-  map <- data.table::setkey(x[, .(.myI, .myMap)], .myI)[, .myMap]
+  map <- setkey(x[, .(.myI, .myMap)], .myI)[, .myMap]
   data <- unique(x)[, c(".myI", ".myMap") := NULL]
   if (identical(data_class, "matrix")) {
     data <- unname(as.matrix(data))
@@ -974,6 +995,9 @@ setAs("SparseAssays", "ShallowSimpleListAssays",
 # identical(.expand.SparseAssays.sample(.sparsify(m)), m)
 # WARNING: This is **much** slower than .sparsify(), especially as nrow(m)
 #          grows. It will ultimately be removed from the package.
+# NOTE: Don't actually know whether using the `::` operator is any faster
+#       in this function.
+#' @importFrom S4Vectors SimpleList
 .sparsify_old <- function(m, data_class = class(m)) {
 
   if (!is.matrix(m) && !is.data.frame(m)) {

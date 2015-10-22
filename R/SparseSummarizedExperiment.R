@@ -8,17 +8,15 @@
 #'
 #' @docType package
 #' @name SparseSummarizedExperiment-package
-#' @import methods
-#  May need to be more selecting when importing from data.table since it
-#  defines some functions that may clobber Bioconductor ones, e.g., shift()
-#' @import data.table
+#'
+# TODO: Try to be more selective about imports of methods and BiocGenerics and
+#       include within the .R files
+#' @importFrom methods setClass setGeneric setMethod callNextMethod validObject
+# NOTE: Import the entire BiocGenerics package for simplicity
 #' @import BiocGenerics
-#' @importFrom S4Vectors SimpleList setValidity2 endoapply mendoapply
-#'             normalizeSingleBracketSubscript
-#'             normalizeSingleBracketReplacementValue DataFrame metadata
-#' @import SummarizedExperiment
-#  TODO: How to just "import" the C-routines of digest?
-#' @importFrom GenomicRanges GRangesList
-#' @import digest
-#' @importFrom stats setNames
+#'
+# Below this line are old imports that I'm in the process of moving to the
+# relevant .R files
+# TODO: What's the correct way to import the C-routines from digest (if digest
+#       is still required)?
 NULL

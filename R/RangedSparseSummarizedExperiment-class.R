@@ -13,6 +13,8 @@
 #'
 #' @include SparseAssays-class.R
 #'
+#' @importClassesFrom SummarizedExperiment RangedSummarizedExperiment
+#'
 #' @export
 setClass("RangedSparseSummarizedExperiment",
          contains = "RangedSummarizedExperiment",
@@ -69,6 +71,7 @@ setClass("RangedSparseSummarizedExperiment",
     .valid.RangedSparseSummarizedExperiment.sparseAssays_dim(x))
 }
 
+#' @importFrom S4Vectors setValidity2
 setValidity2("RangedSparseSummarizedExperiment",
              .valid.RangedSparseSummarizedExperiment)
 
@@ -113,6 +116,13 @@ setValidity2("RangedSparseSummarizedExperiment",
 #' x <- rsse
 #' y <- new("RangedSparseSummarizedExperiment")
 #'
+#' @importClassesFrom SummarizedExperiment SummarizedExperiment0
+#'                                         RangedSummarizedExperiment
+#'
+#' @importFrom GenomicRanges GRangesList
+#' @importFrom S4Vectors DataFrame endoapply SimpleList
+#' @importFrom SummarizedExperiment SummarizedExperiment
+#'
 #' @export
 setMethod("SparseSummarizedExperiment", "SparseAssays",
           function(sparseAssays,
@@ -127,7 +137,7 @@ setMethod("SparseSummarizedExperiment", "SparseAssays",
               if (is.null(nms) && length(sparseAssays[[1]]) != 0L)
                 stop(paste0("'SparseSummarizedExperiment' sparse assay names ",
                             "must not be NULL"))
-              colData <- S4Vectors::DataFrame(row.names = nms)
+              colData <- DataFrame(row.names = nms)
             }
 
             # NOTE: The cannonical location for dimnames, including sample
@@ -136,10 +146,8 @@ setMethod("SparseSummarizedExperiment", "SparseAssays",
             sparseAssays <- endoapply(sparseAssays, unname)
 
             # Construct the SummarizedExperiment
-            se <- SummarizedExperiment::SummarizedExperiment(assays,
-                                                             rowRanges,
-                                                             colData,
-                                                             metadata)
+            se <- SummarizedExperiment(assays, rowRanges, colData, metadata)
+
             if (missing(rowRanges)) {
               stop("'SparseSummarizedExperiment0' class not yet implemented")
               new("SparseSummarizedExperiment0",
@@ -149,7 +157,6 @@ setMethod("SparseSummarizedExperiment", "SparseAssays",
               new("RangedSparseSummarizedExperiment",
                   se,
                   sparseAssays = sparseAssays)
-
             }
           }
 )
@@ -190,6 +197,8 @@ setMethod("SparseSummarizedExperiment", "missing",
 #       ShallowSimpleListAssays object automatically expands the
 #       sparseAssays.
 #' @rdname RangedSparseSummarizedExperiment
+#'
+#' @importFrom S4Vectors endoapply SimpleList
 #'
 #' @export
 setMethod("sparseAssays", "RangedSparseSummarizedExperiment",
@@ -236,6 +245,8 @@ setReplaceMethod("sparseAssays", "RangedSparseSummarizedExperiment",
 
 #' @rdname RangedSparseSummarizedExperiment
 #'
+#' @importFrom stats setNames
+#'
 #' @export
 setMethod("sparseAssay", c("RangedSparseSummarizedExperiment", "missing"),
           function(x, i, ..., withDimnames = TRUE, expand = FALSE) {
@@ -249,8 +260,8 @@ setMethod("sparseAssay", c("RangedSparseSummarizedExperiment", "missing"),
             val <- sparse_assays[[1]]
 
             if (expand) {
-              val <- stats::setNames(SparseAssays(SimpleList(val)),
-                                     sparseAssayNames(x)[1])
+              val <- setNames(SparseAssays(SimpleList(val)),
+                              sparseAssayNames(x)[1])
               val <- as(val, "ShallowSimpleListAssays")[[1]]
               if (withDimnames) {
                 dimnames(val) <- dimnames(x)
@@ -261,6 +272,9 @@ setMethod("sparseAssay", c("RangedSparseSummarizedExperiment", "missing"),
 )
 
 #' @rdname RangedSparseSummarizedExperiment
+#'
+#' @importFrom S4Vectors SimpleList
+#' @importFrom stats setNames
 #'
 #' @export
 setMethod("sparseAssay", c("RangedSparseSummarizedExperiment", "numeric"),
@@ -277,8 +291,8 @@ setMethod("sparseAssay", c("RangedSparseSummarizedExperiment", "numeric"),
             })
 
             if (expand) {
-              val <- stats::setNames(SparseAssays(SimpleList(val)),
-                                     sparseAssayNames(x)[i])
+              val <- setNames(SparseAssays(SimpleList(val)),
+                              sparseAssayNames(x)[i])
               # extract first element, not i-th element, because this only has
               # length 1.
               val <- as(val, "ShallowSimpleListAssays")[[1]]
@@ -291,6 +305,9 @@ setMethod("sparseAssay", c("RangedSparseSummarizedExperiment", "numeric"),
 )
 
 #' @rdname RangedSparseSummarizedExperiment
+#'
+#' @importFrom S4Vectors SimpleList
+#' @importFrom stats setNames
 #'
 #' @export
 setMethod("sparseAssay", c("RangedSparseSummarizedExperiment", "character"),
@@ -311,8 +328,8 @@ setMethod("sparseAssay", c("RangedSparseSummarizedExperiment", "character"),
             }
 
             if (expand) {
-              val <- stats::setNames(SparseAssays(SimpleList(val)),
-                                     sparseAssayNames(x)[i])
+              val <- setNames(SparseAssays(SimpleList(val)),
+                              sparseAssayNames(x)[i])
               # extract first element, not i-th element, because this only has
               # length 1.
               val <- as(val, "ShallowSimpleListAssays")[[1]]
@@ -385,6 +402,9 @@ setMethod("[", "RangedSparseSummarizedExperiment",
             }
 
             # Subset the sparseAssays slot
+            # NOTE: Don't use the sparseAssays() accessor since can modify
+            #       the returned object under its default settings (e.g.,
+            #       withDimnames = TRUE).
             if (!missing(i) && !missing(j)) {
               ans_sparseAssays <- x@sparseAssays[i, j, drop = FALSE]
             } else if (!missing(i)) {
@@ -408,6 +428,8 @@ setMethod("[", "RangedSparseSummarizedExperiment",
 )
 
 #' @rdname RangedSparseSummarizedExperiment
+#'
+#' @importClassesFrom SummarizedExperiment RangedSummarizedExperiment
 #'
 #' @export
 setReplaceMethod("[",
@@ -495,6 +517,9 @@ setReplaceMethod("[",
 # NOTE: Based on show,SummarizedExperiment0-method
 #' @rdname RangedSparseSummarizedExperiment
 #'
+#' @importMethodsFrom S4Vectors mcols metadata
+#' @importMethodsFrom SummarizedExperiment assayNames assays colData
+#'
 #' @export
 setMethod("show", "RangedSparseSummarizedExperiment",
           function(object) {
@@ -512,7 +537,7 @@ setMethod("show", "RangedSparseSummarizedExperiment",
             # metadata()
             expt <- names(metadata(object))
             if (is.null(expt)) {
-              expt <- character(length(S4Vectors::metadata(object)))
+              expt <- character(length(metadata(object)))
             }
             scat("metadata(%d): %s\n", expt)
 
@@ -574,6 +599,7 @@ setMethod("rbind", "RangedSparseSummarizedExperiment",
           }
 )
 
+#' @importClassesFrom SummarizedExperiment RangedSummarizedExperiment
 .rbind.RangedSparseSummarizedExperiment <- function(args) {
 
   # rbind sparseAssays slot
@@ -604,6 +630,7 @@ setMethod("cbind", "RangedSparseSummarizedExperiment",
           }
 )
 
+#' @importClassesFrom SummarizedExperiment RangedSummarizedExperiment
 .cbind.RangedSparseSummarizedExperiment <- function(args) {
 
   # cbind sparseAssays slot
@@ -628,6 +655,12 @@ setMethod("cbind", "RangedSparseSummarizedExperiment",
 # TODO: There's quite a bit of room for optimising this, e.g., there's a lot of
 #       coercion and validity checking that likely adds a fair bit of overhead.
 #' @rdname RangedSparseSummarizedExperiment
+#'
+#' @importClassesFrom SummarizedExperiment RangedSummarizedExperiment
+#'                                         SummarizedExperiment0
+#' @importMethodsFrom IRanges findOverlaps
+#' @importMethodsFrom S4Vectors endoapply subjectHits
+#' @importMethodsFrom SummarizedExperiment rowRanges
 #'
 #' @export
 setMethod("combine",
