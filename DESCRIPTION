@@ -20,7 +20,6 @@ LazyData: true
 Collate:
     'AllGenerics.R'
     'GenomicRanges-pkg.R'
-    'JointSparseAssays.R'
     'SparseAssays-class.R'
     'RangedSparseSummarizedExperiment-class.R'
     'S4Vectors-pkg.R'
