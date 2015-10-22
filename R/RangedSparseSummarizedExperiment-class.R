@@ -366,6 +366,8 @@ setReplaceMethod("sparseAssayNames", "RangedSparseSummarizedExperiment",
 
 # TODO: Why aren't I replacing the metadata slot (I don't think the [,SE-method
 #       does this either)
+# TODO: There are data.table-related warnings when length(i) == 1L; follow
+#       these up.
 
 #' @rdname RangedSparseSummarizedExperiment
 #'
@@ -623,6 +625,8 @@ setMethod("cbind", "RangedSparseSummarizedExperiment",
                               check = FALSE)
 }
 
+# TODO: There's quite a bit of room for optimising this, e.g., there's a lot of
+#       coercion and validity checking that likely adds a fair bit of overhead.
 #' @rdname RangedSparseSummarizedExperiment
 #'
 #' @export
@@ -636,17 +640,59 @@ setMethod("combine",
               return(y)
             }
 
-            # NOTE: Have to first update "additional" slots before calling
-            #       callNextMethod() because
-            #       combine,SummarizedExperiment0,SummarizedExperiment0-method
-            #       will attempt to validate the object and fail due to the
-            #       sparseAssays slot otherwise not having yet been updated.
-            sparseAssays <- combine(sparseAssays(x, withDimnames = TRUE),
-                                    sparseAssays(y, withDimnames = TRUE))
-            # NOTE: x is generally made into an invalid object by this
-            #       update of the sparseAssays slot.
-            x@sparseAssays <- sparseAssays
-            callNextMethod()
+            # Update the part of the object that are derived from
+            # SummarizedExperiment0/RangedSummarizedExperiment.
+            if (is(x, "RangedSparseSummarizedExperiment")) {
+              rse <- combine(as(x, "RangedSummarizedExperiment"),
+                             as(y, "RangedSummarizedExperiment"))
+            } else {
+              se0 <- combine(as(x, "SummarizedExperiment0"),
+                             as(y, "SummarizedExperiment0"))
+            }
+
+            # Update the sparseAssays slot
+            x_ol <- findOverlaps(rowRanges(x), rowRanges(rse),
+                                 type = "equal", minoverlap = 0L)
+            y_ol <- findOverlaps(rowRanges(y), rowRanges(rse),
+                                 type = "equal", minoverlap = 0L)
+            x_sa <- sparseAssays(x, withDimnames = TRUE)
+            y_sa <- sparseAssays(y, withDimnames = TRUE)
+            # A kludge to update the "rownames" of the sparseAssays objects
+            # so that they are combined using the findOverlaps()-based
+            # rownames.
+            x_sa <- endoapply(x_sa, function(sparse_assay) {
+              endoapply(sparse_assay, function(sample) {
+                names(sample[["map"]]) <- subjectHits(x_ol)
+                sample
+              })
+            })
+            y_sa <- endoapply(y_sa, function(sparse_assay) {
+              endoapply(sparse_assay, function(sample) {
+                names(sample[["map"]]) <- subjectHits(y_ol)
+                sample
+              })
+            })
+            sparseAssays <- combine(x_sa, y_sa)
+
+            # Construct the combined SSE
+            if (is(x, "RangedSparseSummarizedExperiment")) {
+              BiocGenerics:::replaceSlots(x,
+                                          sparseAssays = sparseAssays,
+                                          rowRanges = rse@rowRanges,
+                                          colData = rse@colData,
+                                          assays = rse@assays,
+                                          NAMES = rse@NAMES,
+                                          elementMetadata = rse@elementMetadata,
+                                          metadata = rse@metadata)
+            } else {
+              BiocGenerics:::replaceSlots(x,
+                                          sparseAssays = sparseAssays,
+                                          colData = rse@colData,
+                                          assays = rse@assays,
+                                          NAMES = rse@NAMES,
+                                          elementMetadata = rse@elementMetadata,
+                                          metadata = rse@metadata)
+            }
           }
 )
 
