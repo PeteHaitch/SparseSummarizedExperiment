@@ -4,9 +4,13 @@
 \name{combine,GRanges,GRanges-method}
 \alias{combine,GRanges,GRanges-method}
 \alias{combine,GRangesList,GRangesList-method}
+\title{Code for GenomicRanges package}
 \usage{
 \S4method{combine}{GRanges,GRanges}(x, y, ...)
 
 \S4method{combine}{GRangesList,GRangesList}(x, y, ...)
+}
+\description{
+Code for GenomicRanges package
 }
 

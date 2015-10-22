@@ -3,7 +3,11 @@
 \docType{methods}
 \name{combine,SummarizedExperiment0,SummarizedExperiment0-method}
 \alias{combine,SummarizedExperiment0,SummarizedExperiment0-method}
+\title{Code for SummarizedExperiment package}
 \usage{
 \S4method{combine}{SummarizedExperiment0,SummarizedExperiment0}(x, y, ...)
+}
+\description{
+Code for SummarizedExperiment package
 }
 

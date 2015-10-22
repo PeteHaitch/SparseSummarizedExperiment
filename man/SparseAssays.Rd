@@ -105,6 +105,35 @@ sa[11, ] <- value[1, ]
 
 # Rightfully fails validObject(val)
 \dontrun{sa[11, 1] <- value[1, 1]}
+sa <- SparseAssays(sparse_assays =
+                     SimpleList(a1 =
+                                  SimpleList(
+                                    s1 = SimpleList(map =
+                                                      as.integer(c(NA, 1, NA, NA, 2, NA, 3, NA, 4, 5)),
+                                                    data =
+                                                      matrix(1:10, ncol = 2)),
+                                    s2 = SimpleList(map =
+                                                      as.integer(c(NA, NA, 1, 2, NA, NA, 3, 4, NA, NA)),
+                                                    data =
+                                                      matrix(8:1, ncol = 2))),
+                                a2 =
+                                  SimpleList(
+                                    s1 = SimpleList(map =
+                                                      as.integer(c(NA, 1, NA, 2, 2, NA, 1, NA, NA, 1)),
+                                                    data = matrix(1:2, ncol = 1)),
+                                    s2 = SimpleList(map =
+                                                      as.integer(c(1, 1, 1, 2, NA, NA, NA, NA, NA, NA)),
+                                                    data = matrix(4:3, ncol = 1)))
+
+                     )
+)
+rse <- SummarizedExperiment(rowRanges = GRanges('chr1', IRanges(1:10, 2:11)),
+                            colData = DataFrame(row.names = c("s1", "s2")))
+rsse <- SparseSummarizedExperiment(sparseAssays = sa,
+                                   rowRanges = rowRanges(rse),
+                                   colData = colData(rse))
+names(rsse) <- LETTERS[10:1]
+.expand <- SparseSummarizedExperiment:::.expand
 identical(.expand(rbind(sparseAssays(rsse[1:5, ]), sparseAssays(rsse[6:10, ]))),
           .expand(sparseAssays(rsse)))
 identical(.expand(rbind(sparseAssays(rsse[1:5, ]), sparseAssays(rsse[6:10, ]))),

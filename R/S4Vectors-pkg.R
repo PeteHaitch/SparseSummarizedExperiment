@@ -9,6 +9,8 @@
 ### S4Vectors package. Therefore, the functionality in this file probably
 ### belongs in the S4Vectors package.
 
+#' Code for S4Vectors package
+#'
 #' @rdname S4Vectors-pkg
 #'
 #' @export

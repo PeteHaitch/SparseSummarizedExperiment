@@ -18,21 +18,21 @@
 
 # NOTE: Any class that extends the SummarizedExperiment0 or
 #       RangedSummarizedExperiment class by adding additional slots will need
-#       to be careful when defining a combine() method for the new class.
-#       Specifically, the combine() method will need to first update these
-#       additional slots, update the corresponding slots in 'x' (thus likely
-#       making 'x' an invalid object), and then calling callNextMethod(). An
-#       example of this behaviour is given by the
-#       combine,RangedSparseSummarizedExperiment,
-#       RangedSparseSummarizedExperiment-method in the
-#       SparseSummarizedExperiment package. An alternative would be to set
-#       'check = FALSE' when replacing the slots in the
+#       to be careful when defining a combine() method for the new class if it
+#       wants to call combine,SummarizedExperiment0-method by inheritance
+#       through callNextMethod(). Specifically, the combine() method will need
+#       to first update these additional slots, update the corresponding slots
+#       in 'x' (thus likely making 'x' an invalid object), and then calling
+#       callNextMethod(). An alternative would be to set 'check = FALSE' when
+#       replacing the slots in the
 #       combine,SummarizedExperiment0,SummarizedExperiment0-method, but this
 #       would require that the validity of each slot was checked in some other
-#       way to guard against the general returning of invalid
+#       way to guard against generally returning of unvalidated
 #       SummarizedExperiment0 or RangedSummarizedExperiment objects.
 # TODO: Avoid unnecessary (and possibly costly) object validation where
 #       possible to safely do so.
+#' Code for SummarizedExperiment package
+#'
 #' @rdname SummarizedExperiment-pkg
 #'
 #' @export

@@ -9,6 +9,8 @@
 ### GenomicRanges package. Therefore, the functionality in this file probably
 ### belongs in the GenomicRanges package.
 
+#' Code for GenomicRanges package
+#'
 #' @rdname GenomicRanges-pkg
 #'
 #' @export

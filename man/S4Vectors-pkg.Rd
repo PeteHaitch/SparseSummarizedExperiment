@@ -4,9 +4,13 @@
 \name{combine,DataFrame,DataFrame-method}
 \alias{combine,DataFrame,DataFrame-method}
 \alias{combine,SimpleList,SimpleList-method}
+\title{Code for S4Vectors package}
 \usage{
 \S4method{combine}{DataFrame,DataFrame}(x, y, ...)
 
 \S4method{combine}{SimpleList,SimpleList}(x, y, ...)
+}
+\description{
+Code for S4Vectors package
 }
 
