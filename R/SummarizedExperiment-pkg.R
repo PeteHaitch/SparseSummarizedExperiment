@@ -15,6 +15,24 @@
   c(x, setdiff(y, shared_names))
 }
 
+
+# NOTE: Any class that extends the SummarizedExperiment0 or
+#       RangedSummarizedExperiment class by adding additional slots will need
+#       to be careful when defining a combine() method for the new class.
+#       Specifically, the combine() method will need to first update these
+#       additional slots, update the corresponding slots in 'x' (thus likely
+#       making 'x' an invalid object), and then calling callNextMethod(). An
+#       example of this behaviour is given by the
+#       combine,RangedSparseSummarizedExperiment,
+#       RangedSparseSummarizedExperiment-method in the
+#       SparseSummarizedExperiment package. An alternative would be to set
+#       'check = FALSE' when replacing the slots in the
+#       combine,SummarizedExperiment0,SummarizedExperiment0-method, but this
+#       would require that the validity of each slot was checked in some other
+#       way to guard against the general returning of invalid
+#       SummarizedExperiment0 or RangedSummarizedExperiment objects.
+# TODO: Avoid unnecessary (and possibly costly) object validation where
+#       possible to safely do so.
 #' @rdname SummarizedExperiment-pkg
 #'
 #' @export

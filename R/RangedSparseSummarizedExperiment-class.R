@@ -623,6 +623,32 @@ setMethod("cbind", "RangedSparseSummarizedExperiment",
                               check = FALSE)
 }
 
+#' @rdname RangedSparseSummarizedExperiment
+#'
+#' @export
+setMethod("combine",
+          c("RangedSparseSummarizedExperiment", "RangedSparseSummarizedExperiment"),
+          function(x, y, ...) {
+
+            if (any(dim(y) == 0L)) {
+              return(x)
+            } else if (any(dim(x) == 0L)) {
+              return(y)
+            }
+
+            # NOTE: Have to first update "additional" slots before calling
+            #       callNextMethod() because
+            #       combine,SummarizedExperiment0,SummarizedExperiment0-method
+            #       will attempt to validate the object and fail due to the
+            #       sparseAssays slot otherwise not having yet been updated.
+            sparseAssays <- combine(sparseAssays(x, withDimnames = TRUE),
+                                    sparseAssays(y, withDimnames = TRUE))
+            # NOTE: x is generally made into an invalid object by this
+            #       update of the sparseAssays slot.
+            x@sparseAssays <- sparseAssays
+            callNextMethod()
+          }
+)
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Miscellaneous NOTEs
