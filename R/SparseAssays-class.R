@@ -912,6 +912,8 @@ setMethod("combine", c("SparseAssays", "SparseAssays"),
 #'
 #' @name as
 #'
+#' @importFrom methods as setAs
+#'
 #' @export
 setAs("SparseAssays", "ShallowSimpleListAssays",
       function(from) {
@@ -944,7 +946,7 @@ setAs("SparseAssays", "ShallowSimpleListAssays",
 #          However, the following should be TRUE when 'x' is
 #          matrix: identical(.expand.SparseAssays.sample(.sparsify(x)), x)
 # NOTE: Returned object is stripped of dimnames
-#' @importFrom data.table := .I as.data.table key setDT setkey setkeyv
+#' @importFrom data.table := .GRP .I as.data.table key setDT setkey setkeyv
 #' @importFrom S4Vectors SimpleList
 .sparsify <- function(x, data_class = c("matrix", "data.frame", "data.table")) {
 
@@ -975,7 +977,7 @@ setAs("SparseAssays", "ShallowSimpleListAssays",
 
   # Create the map and data
   x[, .myMap := .GRP, by = key(x)]
-  map <- setkey(x[, .(.myI, .myMap)], .myI)[, .myMap]
+  map <- setkey(x[, list(.myI, .myMap)], .myI)[, .myMap]
   data <- unique(x)[, c(".myI", ".myMap") := NULL]
   if (identical(data_class, "matrix")) {
     data <- unname(as.matrix(data))

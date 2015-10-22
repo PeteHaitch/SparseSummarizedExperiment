@@ -20,3 +20,8 @@
 # TODO: What's the correct way to import the C-routines from digest (if digest
 #       is still required)?
 NULL
+
+# To avoid WARNINGs about "Undefined global functions or variables" in
+# R CMD check
+#' @importFrom utils globalVariables
+globalVariables(c(".myI", ".myMap"))
