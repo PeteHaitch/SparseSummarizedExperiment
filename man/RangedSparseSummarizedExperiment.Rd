@@ -87,11 +87,10 @@ sa <- SparseAssays(sparse_assays =
 
                      )
 )
-rse <- SummarizedExperiment(rowRanges = GRanges('chr1', IRanges(1:10, 2:11)),
-                            colData = DataFrame(row.names = c("s1", "s2")))
+sse <- SparseSummarizedExperiment(sparseAssays = sa)
+rr <- GRanges('chr1', IRanges(1:10, 2:11))
 rsse <- SparseSummarizedExperiment(sparseAssays = sa,
-                                   rowRanges = rowRanges(rse),
-                                   colData = colData(rse))
+                                   rowRanges = rr)
 x <- rsse
 y <- new("RangedSparseSummarizedExperiment")
 }

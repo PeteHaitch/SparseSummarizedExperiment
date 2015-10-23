@@ -2,6 +2,11 @@
 ### RangedSparseSummarizedExperiment objects
 ### -------------------------------------------------------------------------
 ###
+### NOTE: The class hierarchy is as follows:
+###       SummarizedExperiment0
+###       ├── RangedSummarizedExperiment
+###       │   ├── RangedSparseSummarizedExperiment
+###       ├── SparseSummarizedExperiment
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### RangedSparseSummarizedExperiment class
@@ -31,48 +36,16 @@ setClass("RangedSparseSummarizedExperiment",
 ### Validity
 ###
 
-#' @importFrom methods is
-.valid.RangedSparseSummarizedExperiment.sparseAssays_class <- function(x) {
-
-  if (!is(x@sparseAssays, "SparseAssays")) {
-    return("'sparseAssays' slot must contain a 'SparseAssays' object.")
-  }
-  NULL
-}
-
-.valid.RangedSparseSummarizedExperiment.sparseAssays_nrow <- function(x) {
-
-  if (length(x@sparseAssays) == 0L) {
-    return(NULL)
-  }
-
-  if (nrow(x@sparseAssays) != length(x)) {
-    return("'sparseAssays' nrow differs from 'mcols' nrow")
-  }
-  NULL
-}
-
-.valid.RangedSparseSummarizedExperiment.sparseAssays_ncol <- function(x) {
-  if (length(x@sparseAssays) == 0L) {
-    return(NULL)
-  }
-
-  if (ncol(x@sparseAssays) != nrow(colData(x))) {
-    return("'sparseAssays' ncol differs from 'colData' nrow")
-  }
-  NULL
-}
-
-.valid.RangedSparseSummarizedExperiment.sparseAssays_dim <- function(x) {
-  c(.valid.RangedSparseSummarizedExperiment.sparseAssays_nrow(x),
-    .valid.RangedSparseSummarizedExperiment.sparseAssays_ncol(x))
-}
-
+# NOTE: Can re-use validity functions for SparseSummarizedExperiment objects.
+#       If it is later determined that special checks of the rowRanges slot
+#       are necessary then these can be added here (they shouldn't be since the
+#       RangedSummarizedExperiment validity method should capture such issues).
 .valid.RangedSparseSummarizedExperiment <- function(x) {
-  c(.valid.RangedSparseSummarizedExperiment.sparseAssays_class(x),
-    .valid.RangedSparseSummarizedExperiment.sparseAssays_dim(x))
+  c(.valid.SSE.sparseAssays_class(x),
+    .valid.SSE.sparseAssays_dim(x))
 }
 
+#' @include SparseSummarizedExperiment-class.R
 #' @importFrom S4Vectors setValidity2
 setValidity2("RangedSparseSummarizedExperiment",
              .valid.RangedSparseSummarizedExperiment)
@@ -80,6 +53,13 @@ setValidity2("RangedSparseSummarizedExperiment",
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Constructor
 ###
+
+get_rownames_from_sparse_assays <- function(sparse_assays) {
+  if (length(sparse_assays) == 0L) {
+    return(NULL)
+  }
+  names(sparse_assays[[1L]][[1L]][["map"]])
+}
 
 # TODO: Think about meaningful ways in which a RangedSparseSummarizedExperiment
 # might be constructed. Note how SummarizedExperiment has several different
@@ -110,18 +90,17 @@ setValidity2("RangedSparseSummarizedExperiment",
 #'
 #'                      )
 #' )
-#' rse <- SummarizedExperiment(rowRanges = GRanges('chr1', IRanges(1:10, 2:11)),
-#'                             colData = DataFrame(row.names = c("s1", "s2")))
+#' sse <- SparseSummarizedExperiment(sparseAssays = sa)
+#' rr <- GRanges('chr1', IRanges(1:10, 2:11))
 #' rsse <- SparseSummarizedExperiment(sparseAssays = sa,
-#'                                    rowRanges = rowRanges(rse),
-#'                                    colData = colData(rse))
+#'                                    rowRanges = rr)
 #' x <- rsse
 #' y <- new("RangedSparseSummarizedExperiment")
 #'
 #' @importClassesFrom SummarizedExperiment SummarizedExperiment0
 #'                                         RangedSummarizedExperiment
-#'
 #' @importFrom GenomicRanges GRangesList
+#' @importFrom methods setMethod
 #' @importFrom S4Vectors DataFrame SimpleList
 #' @importFrom SummarizedExperiment SummarizedExperiment
 #' @importMethodsFrom S4Vectors endoapply
@@ -149,22 +128,58 @@ setMethod("SparseSummarizedExperiment", "SparseAssays",
             sparseAssays <- endoapply(sparseAssays, unname)
 
             # Construct the SummarizedExperiment
-            se <- SummarizedExperiment(assays, rowRanges, colData, metadata)
+            if (missing(rowRanges)) {
+              se <- SummarizedExperiment(assays = assays,
+                                         colData = colData,
+                                         metadata = metadata)
+            } else {
+              se <- SummarizedExperiment(assays = assays,
+                                         rowRanges = rowRanges,
+                                         colData = colData,
+                                         metadata = metadata)
+            }
+
+            # Check that dimensions of assays and sparseAssays are compatible
+            if (nrow(se) && nrow(sparseAssays)) {
+              if (!identical(dim(se), dim(sparseAssays))) {
+                stop("dimensions of 'assays' (", nrow(se), " x ", ncol(se),
+                     ") and 'sparseAssays' (", nrow(sparseAssays), " x ",
+                     ncol(sparseAssays), ") are not compatible")
+              }
+            } else {
+              if (ncol(se) != ncol(sparseAssays)) {
+                stop("ncol of 'assays' (", ncol(se), ") and 'sparseAssays' (",
+                     ncol(sparseAssays), ") are not compatible")
+              }
+            }
 
             if (missing(rowRanges)) {
-              stop("'SparseSummarizedExperiment0' class not yet implemented")
-              new("SparseSummarizedExperiment0",
-                  se,
-                  sparseAssays = sparseAssays)
-            } else {
-              new("RangedSparseSummarizedExperiment",
-                  se,
-                  sparseAssays = sparseAssays)
+              # Need to update elementMetadata slot to have the valid dimensions
+              se@elementMetadata <- DataFrame()
+              se@elementMetadata@nrows <- nrow(sparseAssays)
             }
+
+            if (missing(rowRanges)) {
+              val <- new("SparseSummarizedExperiment",
+                         se,
+                         sparseAssays = sparseAssays)
+            } else {
+              val <- new("RangedSparseSummarizedExperiment",
+                         se,
+                         sparseAssays = sparseAssays)
+            }
+
+            # NOTE: rownames are taken from sparseAssays.
+            # WARNING: This will override rownames present in assays argument
+            #          and used by the SummarizedExperiment constructor.
+            rownames(val) <- get_rownames_from_sparse_assays(sparseAssays)
+            val
           }
 )
 
 #' @rdname RangedSparseSummarizedExperiment
+#'
+#' @importFrom methods setMethod
 #'
 #' @export
 setMethod("SparseSummarizedExperiment", "missing",
@@ -189,59 +204,27 @@ setMethod("SparseSummarizedExperiment", "missing",
 ### Getters and setters
 ###
 
-# NOTE: Following assays(), sparseAssays() will not strip the dimnames if
-#       withDimnames = FALSE but will simply fail to add them.
-# NOTE: The expand = TRUE argument returns a SimpleList, not a SparseAssays
-#       object.
-# NOTE: If the user wants sparseAssays as a ShallowSimpleListAssays object then
-#       they should run as(sparseAssays(x), "ShallowSimpleListAssays"). The
-#       returned object will not have rownames regardless of the value of
-#       withDimnames. Note also that expand must be FALSE; the coercion to a
-#       ShallowSimpleListAssays object automatically expands the
-#       sparseAssays.
 #' @rdname RangedSparseSummarizedExperiment
 #'
-#' @importFrom S4Vectors SimpleList
-#' @importMethodsFrom S4Vectors endoapply
+#' @importFrom methods setMethod
 #'
 #' @export
 setMethod("sparseAssays", "RangedSparseSummarizedExperiment",
           function(x, ..., withDimnames = TRUE, expand = FALSE) {
-
-            val <- x@sparseAssays
-
-            if (expand) {
-              val <- SimpleList(.expand(val))
-              if (withDimnames) {
-                val <- endoapply(val, function(e) {
-                  names(e) <- colnames(x)
-                  endoapply(e, "rownames<-", rownames(x))
-                })
-              }
-            } else {
-              if (withDimnames) {
-                val <- endoapply(val, function(sparse_assay) {
-                  sparse_assay <- endoapply(sparse_assay, function(sample) {
-                    names(sample[["map"]]) <- names(x)
-                    sample
-                  })
-                  names(sparse_assay) <- colnames(x)
-                  sparse_assay
-                })
-              }
-            }
-
-            val
+            .sparseAssays.SSE(x, ..., withDimnames = withDimnames, expand = expand)
           }
 )
 
 # TODO
 #' @rdname RangedSparseSummarizedExperiment
 #'
+#' @importFrom methods setReplaceMethod
+#'
 #' @export
 setReplaceMethod("sparseAssays", "RangedSparseSummarizedExperiment",
                  function(x, ..., value) {
                    stop("Not yet implemented")
+                   .sparseAssaysReplace.SSE(x, ..., value)
                  }
 )
 
@@ -249,141 +232,86 @@ setReplaceMethod("sparseAssays", "RangedSparseSummarizedExperiment",
 
 #' @rdname RangedSparseSummarizedExperiment
 #'
-#' @importClassesFrom GenomicRanges ShallowSimpleListAssays
-#' @importFrom methods as
-#' @importFrom stats setNames
+#' @importFrom methods setMethod
 #'
 #' @export
 setMethod("sparseAssay", c("RangedSparseSummarizedExperiment", "missing"),
           function(x, i, ..., withDimnames = TRUE, expand = FALSE) {
-            # Don't want to expand all the sparseAssays, just the one being
-            # extracted, so don't expand just yet.
-            sparse_assays <- sparseAssays(x, ..., withDimnames = withDimnames,
-                                          expand = FALSE)
-            if (length(sparse_assays) == 0L)
-              stop("'sparseAssay(<", class(x), ">, i=\"missing\", ...) ",
-                   "length(sparseAssays(<", class(x), ">)) is 0'")
-            val <- sparse_assays[[1]]
-
-            if (expand) {
-              val <- setNames(SparseAssays(SimpleList(val)),
-                              sparseAssayNames(x)[1])
-              val <- as(val, "ShallowSimpleListAssays")[[1]]
-              if (withDimnames) {
-                dimnames(val) <- dimnames(x)
-              }
-            }
-            val
+            .sparseAssay.SSE.missing(x = x, withDimnames = withDimnames,
+                                 expand = expand)
           }
 )
 
 #' @rdname RangedSparseSummarizedExperiment
 #'
-#' @importClassesFrom GenomicRanges ShallowSimpleListAssays
-#' @importFrom methods as
-#' @importFrom S4Vectors SimpleList
-#' @importFrom stats setNames
+#' @importFrom methods setMethod
 #'
 #' @export
 setMethod("sparseAssay", c("RangedSparseSummarizedExperiment", "numeric"),
           function(x, i, ..., withDimnames = TRUE, expand = FALSE) {
-
-            tryCatch({
-              # Don't want to expand all the sparseAssays, just the one being
-              # extracted, so don't expand just yet.
-              val <- sparseAssays(x, ..., withDimnames = withDimnames,
-                                  expand = FALSE)[[i]]
-            }, error = function(err) {
-              stop("'sparseAssay(<", class(x), ">, i=\"numeric\", ...)' ",
-                   "invalid subscript 'i'\n", conditionMessage(err))
-            })
-
-            if (expand) {
-              val <- setNames(SparseAssays(SimpleList(val)),
-                              sparseAssayNames(x)[i])
-              # extract first element, not i-th element, because this only has
-              # length 1.
-              val <- as(val, "ShallowSimpleListAssays")[[1]]
-              if (withDimnames) {
-                dimnames(val) <- dimnames(x)
-              }
-            }
-            val
+            .sparseAssay.SSE.numeric(x, i, ..., withDimnames = withDimnames,
+                                 expand = expand)
           }
 )
 
 #' @rdname RangedSparseSummarizedExperiment
 #'
-#' @importClassesFrom GenomicRanges ShallowSimpleListAssays
-#' @importFrom methods as
-#' @importFrom S4Vectors SimpleList
-#' @importFrom stats setNames
+#' @importFrom methods setMethod
 #'
 #' @export
 setMethod("sparseAssay", c("RangedSparseSummarizedExperiment", "character"),
           function(x, i, ..., withDimnames = TRUE, expand = FALSE) {
-
-            msg <- paste0("'sparseAssay(<", class(x), ">, i=\"character\",",
-                          "...)' invalid subscript 'i'")
-            val <- tryCatch({
-              # Don't want to expand all the sparseAssays, just the one being
-              # extracted, so don't expand just yet.
-              sparseAssays(x, ..., withDimnames = withDimnames,
-                           expand = FALSE)[[i]]
-            }, error = function(err) {
-              stop(msg, "\n", conditionMessage(err))
-            })
-            if (is.null(val)) {
-              stop(msg, "\n'i' not in names(sparseAssays(<", class(x), ">))")
-            }
-
-            if (expand) {
-              val <- setNames(SparseAssays(SimpleList(val)),
-                              sparseAssayNames(x)[i])
-              # extract first element, not i-th element, because this only has
-              # length 1.
-              val <- as(val, "ShallowSimpleListAssays")[[1]]
-              if (withDimnames) {
-                dimnames(val) <- dimnames(x)
-              }
-            }
-            val
+            .sparseAssay.SSE.character(x, i, ..., withDimnames = withDimnames,
+                                   expand = expand)
           }
 )
 
-# TODO: setReplaceMethod("sparseAssay", "RangedSummarizedExperiment").
-# See assay<-,RangedSummarizedExperiment-method, which has multiple methods; do
+# TODO
+# See assay<-,SummarizedExperiment-method, which has multiple methods; do
 # I need something like this?
 # What are valid signatures for this method?
 # Can I call out to the `[[`,SparseAssays-method?
+#' @importFrom methods setReplaceMethod
+#'
+#' @export
+setReplaceMethod("sparseAssay", "RangedSparseSummarizedExperiment",
+                 function(x, ..., value) {
+                   stop("Not yet implemented")
+                   .sparseAssayReplace.SSE(x, ..., value)
+                 }
+)
+
 
 #' @rdname RangedSparseSummarizedExperiment
+#'
+#' @importFrom methods setMethod
 #'
 #' @export
 setMethod("sparseAssayNames", "RangedSparseSummarizedExperiment",
           function(x, ...) {
-            names(sparseAssays(x))
+            .sparseAssayNames.SSE(x)
           }
 )
 
 # TODO
 #' @rdname RangedSparseSummarizedExperiment
 #'
+#' @importFrom methods setReplaceMethod
+#'
 #' @export
 setReplaceMethod("sparseAssayNames", "RangedSparseSummarizedExperiment",
                  function(x, ..., value) {
                    stop("Not yet implemented")
+                   .sparseAssayNamesReplace.SSE(x)
                  }
 )
 
-# NOTE: The cannonical location for dim, dimnames [here 'dimnames' almost
-#       always means 'colnames' since it doesn't really make sense for a
-#       SparseAssays object to have rownames (unlike an Assays object)].
-#       dimnames should be checked for consistency (if non-null) and stripped
-#       from sparseAssays on construction, or added from assays if dimnames
-#       are NULL in <SparseSummarizedExperiment> but not sparseAssays.
-#       dimnames need to be added on to sparse assays when sparseAssays() or
-#       sparseAssay() are invoked.
+# NOTE: The cannonical location for dim, dimnames. dimnames should be checked
+#       for consistency (if non-null) and stripped from sparseAssays on
+#       construction, or added from assays if dimnames are NULL in
+#       <SparseSummarizedExperiment> but not sparseAssays. dimnames need to be
+#       added on to sparse assays when sparseAssays() or sparseAssay() are
+#       invoked.
 # NOTE: dimnames and dimnames<- methods are inherited from
 #       RangedSummarizedExperiment.
 
@@ -391,130 +319,28 @@ setReplaceMethod("sparseAssayNames", "RangedSparseSummarizedExperiment",
 ### Subsetting.
 ###
 
-# TODO: Why aren't I replacing the metadata slot (I don't think the [,SE-method
-#       does this either)
-# TODO: There are data.table-related warnings when length(i) == 1L; follow
-#       these up.
-
 #' @rdname RangedSparseSummarizedExperiment
-#'
-#' @importFrom methods callNextMethod
 #'
 #' @export
 setMethod("[", "RangedSparseSummarizedExperiment",
           function(x, i, j, ..., drop = TRUE) {
-
-            if (length(drop) != 1L || (!missing(drop) && drop)) {
-              warning("'drop' ignored '[,", class(x), ",ANY,ANY-method'")
-            }
-
-            # Nothing to do if both i and j are missing
-            if (missing(i) && missing(j)) {
-              return(x)
-            }
-
-            # Subset the sparseAssays slot
-            # NOTE: Don't use the sparseAssays() accessor since can modify
-            #       the returned object under its default settings (e.g.,
-            #       withDimnames = TRUE).
-            if (!missing(i) && !missing(j)) {
-              ans_sparseAssays <- x@sparseAssays[i, j, drop = FALSE]
-            } else if (!missing(i)) {
-              ans_sparseAssays <- x@sparseAssays[i, , drop = FALSE]
-            } else if (!missing(j)) {
-              ans_sparseAssays <- x@sparseAssays[, j, drop = FALSE]
-            }
-
-            # Subset the rest of the object via callNextMethod()
-            ans_rse <- callNextMethod()
-
-            # Replace slots
-            BiocGenerics:::replaceSlots(x, ...,
-                                        sparseAssays = ans_sparseAssays,
-                                        elementMetadata = ans_rse@elementMetadata,
-                                        rowRanges = ans_rse@rowRanges,
-                                        colData = ans_rse@colData,
-                                        assays = ans_rse@assays,
-                                        check = FALSE)
+            .subsetSingleBracket.SSE(x, i, j, ..., drop = drop)
           }
 )
 
 #' @rdname RangedSparseSummarizedExperiment
-#'
-#' @importClassesFrom SummarizedExperiment RangedSummarizedExperiment
-#' @importFrom methods as
 #'
 #' @export
 setReplaceMethod("[",
                  c("RangedSparseSummarizedExperiment", "ANY", "ANY",
                    "RangedSparseSummarizedExperiment"),
                  function(x, i, j, ..., value) {
-
-                   # Nothing to do if both i and j are missing
-                   if (missing(i) && missing(j)) {
-                     return(x)
-                   }
-
-                   # Replace the sparseAssays slot
-                   if (!missing(i) && !missing(j)) {
-                     # NOTE: The use of local() is copied from `[<-`,SE-method.
-                     ans_sparseAssays <- local({
-                       sa <- x@sparseAssays
-                       sa[i, j] <- value@sparseAssays
-                       sa
-                     })
-                   } else if (!missing(i)) {
-                     # NOTE: The use of local() is copied from `[<-`,SE-method.
-                     ans_sparseAssays <- local({
-                       sa <- x@sparseAssays
-                       sa[i, ] <- value@sparseAssays
-                       sa
-                     })
-                   } else if (!missing(j)) {
-                     # NOTE: The use of local() is copied from `[<-`,SE-method.
-                     ans_sparseAssays <- local({
-                       sa <- x@sparseAssays
-                       sa[, j] <- value@sparseAssays
-                       sa
-                     })
-                   }
-
-                   # Replace the rest of the object
-                   # TODO: callNextMethod() doesn't work; why?
-                   # ans_rse <- callNextMethod()
-
-                   if (!missing(i) && !missing(j)) {
-                     ans_rse <- as(x, "RangedSummarizedExperiment")
-                     ans_rse[i, j] <- as(value, "RangedSummarizedExperiment")
-                   } else if (!missing(i)) {
-                     ans_rse <- as(x, "RangedSummarizedExperiment")
-                     ans_rse[i, ] <- as(value, "RangedSummarizedExperiment")
-                   } else if (!missing(j)) {
-                     ans_rse <- as(x, "RangedSummarizedExperiment")
-                     ans_rse[, j] <- as(value, "RangedSummarizedExperiment")
-                   }
-
-                   # Replace slots
-                   val <- BiocGenerics:::replaceSlots(x, ...,
-                                                      sparseAssays = ans_sparseAssays,
-                                                      elementMetadata = ans_rse@elementMetadata,
-                                                      rowRanges = ans_rse@rowRanges,
-                                                      colData = ans_rse@colData,
-                                                      assays = ans_rse@assays,
-                                                      metadata = ans_rse@metadata,
-                                                      check = FALSE)
-                   msg <- .valid.RangedSparseSummarizedExperiment.sparseAssays_dim(val)
-
-                   if (!is.null(msg)) {
-                     msg
-                   }
-                   val
+                   .replaceSingleBracket.SSE(x, i, j, ..., value = value)
                  }
 )
 
 # NOTE: extractROWS() and replaceROWS() methods inherited from
 #       SummarizedExperiment0 objects.
-
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Quick colData access.
@@ -527,223 +353,53 @@ setReplaceMethod("[",
 ### Display.
 ###
 
-# NOTE: Based on show,SummarizedExperiment0-method
 #' @rdname RangedSparseSummarizedExperiment
-#'
-#' @importFrom methods is
-#' @importMethodsFrom S4Vectors mcols metadata
-#' @importMethodsFrom SummarizedExperiment assayNames assays colData
 #'
 #' @export
 setMethod("show", "RangedSparseSummarizedExperiment",
           function(object) {
-            selectSome <- S4Vectors:::selectSome
-            scat <- function(fmt, vals = character(), exdent = 2, ...) {
-              vals <- ifelse(nzchar(vals), vals, "''")
-              lbls <- paste(S4Vectors:::selectSome(vals), collapse = " ")
-              txt <- sprintf(fmt, length(vals), lbls)
-              cat(strwrap(txt, exdent = exdent, ...), sep = "\n")
-            }
-
-            cat("class:", class(object), "\n")
-            cat("dim:", dim(object), "\n")
-
-            # metadata()
-            expt <- names(metadata(object))
-            if (is.null(expt)) {
-              expt <- character(length(metadata(object)))
-            }
-            scat("metadata(%d): %s\n", expt)
-
-            # sparseAssays()
-            nms <- sparseAssayNames(object)
-            if (is.null(nms)) {
-              nms <- character(length(sparseAssays(object,
-                                                   withDimnames = FALSE)))
-            }
-            scat("sparseAssays(%d): %s\n", nms)
-
-            # assays()
-            nms <- assayNames(object)
-            if (is.null(nms)) {
-              nms <- character(length(assays(object, withDimnames = FALSE)))
-            }
-            scat("assays(%d): %s\n", nms)
-
-            # rownames()
-            dimnames <- dimnames(object)
-            dlen <- sapply(dimnames, length)
-            if (dlen[[1]]) {
-              scat("rownames(%d): %s\n", dimnames[[1]])
-            } else {
-              scat("rownames: NULL\n")
-            }
-
-            # mcols()
-            mcolnames <- names(mcols(object))
-            fmt <- "metadata column names(%d): %s\n"
-            if (is(object, "RangedSummarizedExperiment")) {
-              fmt <- paste("rowRanges", fmt)
-            }
-            scat(fmt, mcolnames)
-
-            # colnames()
-            if (dlen[[2]]) {
-              scat("colnames(%d): %s\n", dimnames[[2]])
-            } else {
-              cat("colnames: NULL\n")
-            }
-
-            # colData()
-            scat("colData names(%d): %s\n", names(colData(object)))
+            .show.SSE(object)
           }
 )
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### Combine.
+### Combine
 ###
 
-# NOTE: Appropriate for objects with different ranges and same samples.
+# NOTE: Appropriate for objects with distinct ranges and identical samples.
 #' @rdname RangedSparseSummarizedExperiment
+#'
+#' @importFrom methods setMethod
 #'
 #' @export
 setMethod("rbind", "RangedSparseSummarizedExperiment",
           function(..., deparse.level = 1) {
             args <- unname(list(...))
-            .rbind.RangedSparseSummarizedExperiment(args)
+            .rbind.SSE(args)
           }
 )
 
-#' @importClassesFrom SummarizedExperiment RangedSummarizedExperiment
-.rbind.RangedSparseSummarizedExperiment <- function(args) {
-
-  # rbind sparseAssays slot
-  sparseAssays <- do.call(rbind, lapply(args, sparseAssays))
-
-  # rbind the rest of the object.
-  # NOTE: Can't use callNextMethod() because I'm using a local function
-  rse <- do.call(rbind, lapply(args, as, "RangedSummarizedExperiment"))
-
-  BiocGenerics:::replaceSlots(args[[1L]],
-                              sparseAssays = sparseAssays,
-                              elementMetadata = rse@elementMetadata,
-                              rowRanges = rse@rowRanges,
-                              colData = rse@colData,
-                              assays = rse@assays,
-                              metadata = rse@metadata,
-                              check = FALSE)
-}
-
-# NOTE: Appropriate for objects with same ranges and different samples.
+# NOTE: Appropriate for objects with identical ranges and distinct samples.
 #' @rdname RangedSparseSummarizedExperiment
 #'
-#' @importFrom methods as
+#' @importFrom methods setMethod
 #'
 #' @export
 setMethod("cbind", "RangedSparseSummarizedExperiment",
           function(..., deparse.level = 1) {
             args <- unname(list(...))
-            .cbind.RangedSparseSummarizedExperiment(args)
+            .cbind.SSE(args)
           }
 )
 
-#' @importClassesFrom SummarizedExperiment RangedSummarizedExperiment
-.cbind.RangedSparseSummarizedExperiment <- function(args) {
 
-  # cbind sparseAssays slot
-  # NOTE: cbind,sparseAssays-method isn't strictly a cbind (see
-  #       R/SparseAssays-class.R)
-  sparseAssays <- do.call(cbind, lapply(args, sparseAssays))
-
-  # cbind the rest of the object.
-  # NOTE: Can't use callNextMethod() because I'm using a local function
-  rse <- do.call(cbind, lapply(args, as, "RangedSummarizedExperiment"))
-
-  BiocGenerics:::replaceSlots(args[[1L]],
-                              sparseAssays = sparseAssays,
-                              elementMetadata = rse@elementMetadata,
-                              rowRanges = rse@rowRanges,
-                              colData = rse@colData,
-                              assays = rse@assays,
-                              metadata = rse@metadata,
-                              check = FALSE)
-}
-
-# TODO: There's quite a bit of room for optimising this, e.g., there's a lot of
-#       coercion and validity checking that likely adds a fair bit of overhead.
 #' @rdname RangedSparseSummarizedExperiment
-#'
-#' @importClassesFrom SummarizedExperiment RangedSummarizedExperiment
-#'                                         SummarizedExperiment0
-#' @importMethodsFrom IRanges findOverlaps
-#' @importFrom methods as is
-#' @importMethodsFrom S4Vectors endoapply subjectHits
-#' @importMethodsFrom SummarizedExperiment rowRanges
 #'
 #' @export
 setMethod("combine",
           c("RangedSparseSummarizedExperiment", "RangedSparseSummarizedExperiment"),
           function(x, y, ...) {
-
-            if (any(dim(y) == 0L)) {
-              return(x)
-            } else if (any(dim(x) == 0L)) {
-              return(y)
-            }
-
-            # Update the part of the object that are derived from
-            # SummarizedExperiment0/RangedSummarizedExperiment.
-            if (is(x, "RangedSparseSummarizedExperiment")) {
-              rse <- combine(as(x, "RangedSummarizedExperiment"),
-                             as(y, "RangedSummarizedExperiment"))
-            } else {
-              se0 <- combine(as(x, "SummarizedExperiment0"),
-                             as(y, "SummarizedExperiment0"))
-            }
-
-            # Update the sparseAssays slot
-            x_ol <- findOverlaps(rowRanges(x), rowRanges(rse),
-                                 type = "equal", minoverlap = 0L)
-            y_ol <- findOverlaps(rowRanges(y), rowRanges(rse),
-                                 type = "equal", minoverlap = 0L)
-            x_sa <- sparseAssays(x, withDimnames = TRUE)
-            y_sa <- sparseAssays(y, withDimnames = TRUE)
-            # A kludge to update the "rownames" of the sparseAssays objects
-            # so that they are combined using the findOverlaps()-based
-            # rownames.
-            x_sa <- endoapply(x_sa, function(sparse_assay) {
-              endoapply(sparse_assay, function(sample) {
-                names(sample[["map"]]) <- subjectHits(x_ol)
-                sample
-              })
-            })
-            y_sa <- endoapply(y_sa, function(sparse_assay) {
-              endoapply(sparse_assay, function(sample) {
-                names(sample[["map"]]) <- subjectHits(y_ol)
-                sample
-              })
-            })
-            sparseAssays <- combine(x_sa, y_sa)
-
-            # Construct the combined SSE
-            if (is(x, "RangedSparseSummarizedExperiment")) {
-              BiocGenerics:::replaceSlots(x,
-                                          sparseAssays = sparseAssays,
-                                          rowRanges = rse@rowRanges,
-                                          colData = rse@colData,
-                                          assays = rse@assays,
-                                          NAMES = rse@NAMES,
-                                          elementMetadata = rse@elementMetadata,
-                                          metadata = rse@metadata)
-            } else {
-              BiocGenerics:::replaceSlots(x,
-                                          sparseAssays = sparseAssays,
-                                          colData = rse@colData,
-                                          assays = rse@assays,
-                                          NAMES = rse@NAMES,
-                                          elementMetadata = rse@elementMetadata,
-                                          metadata = rse@metadata)
-            }
+            .combine.SSE(x, y, ...)
           }
 )
 

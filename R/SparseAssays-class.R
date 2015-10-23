@@ -2,7 +2,6 @@
 ### SparseAssays objects
 ### -------------------------------------------------------------------------
 ###
-###
 ### The SparseAssays API consists of:
 ###   (a) The SparseAssays() constructor function.
 ###   (b) length, names, names<-, [[, [[<-, dim, [, [<-, rbind, cbind
