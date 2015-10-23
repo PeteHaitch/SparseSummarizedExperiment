@@ -80,7 +80,7 @@ value <- SparseAssays(sparse_assays =
                                                        data = matrix(11, ncol = 1)),
                                        s2 = SimpleList(map =
                                                          as.integer(c(NA, NA, NA, NA, NA)),
-                                                       data = matrix(, ncol = 1)))
+                                                       data = matrix(NA_real_, ncol = 1)))
 
                         )
 )

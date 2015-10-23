@@ -116,8 +116,25 @@ setClass("SparseAssays",
       return("All 'data' elements must be matrix objects.")
     }
 
-    # TODO: Check all data elements have integer or double storage.mode. See
-    # functions that call storage.mode for where this is implicitly assumed.
+    # Check all data elements have integer or double storage.mode. This
+    # could probably be relaxed but will require changes to functions that call
+    # storage.mode() for where it is implicitly assumed that the value is
+    # either 'integer' or 'double'.
+    storage_mode <- lapply(x, function(sparse_assay) {
+      lapply(sparse_assay, function(sample) {
+        storage.mode(sample[["data"]])
+      })
+    })
+    storage_mode <- unlist(storage_mode)
+    if (any(!storage_mode %in% c("integer", "double"))) {
+      return("All 'data' elements must have storage.mode 'integer' or 'double'")
+    }
+
+    # Check each sparse assay has the same number of samples
+    n_samples <- vapply(x, length, integer(1L))
+    if (any(n_samples != n_samples[1])) {
+      return("All sparse assays must have identical number of samples")
+    }
 
     # Check sample names are identical across sparse assays.
     sample_names <- lapply(x, function(sparse_assay) {
@@ -177,8 +194,6 @@ setClass("SparseAssays",
                     "element."))
     }
   }
-
-  # TODO: Check each sparse assay has the same number of samples
 
   NULL
 }
@@ -240,7 +255,7 @@ setValidity2("SparseAssays", .valid.SparseAssays)
 #'                                                        data = matrix(11, ncol = 1)),
 #'                                        s2 = SimpleList(map =
 #'                                                          as.integer(c(NA, NA, NA, NA, NA)),
-#'                                                        data = matrix(, ncol = 1)))
+#'                                                        data = matrix(NA_real_, ncol = 1)))
 #'
 #'                         )
 #' )
@@ -731,7 +746,7 @@ setMethod("cbind", "SparseAssays",
     # Update data element by dropping NA row
     data <- data[-NA_idx, , drop = FALSE]
     # Update map element to replace index by NA for NA rows
-    # TODO: Probably more efficient ways to do this
+    # TODO (longterm): Probably more efficient ways to do this
     map[map == NA_idx] <- NA
     map[!is.na(map) & map > NA_idx] <- map[!is.na(map) & map > NA_idx] - 1L
   }
