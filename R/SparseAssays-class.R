@@ -936,22 +936,6 @@ setAs("SparseAssays", "ShallowSimpleListAssays",
       }
 )
 
-# TODO: Move to utils.R or similar
-.rowHash <- function(m) {
-  # NOTE: This code uses the parts of the digest::digest() function that are
-  # necessary for my needs. This approach is approximately 4-times faster than
-  # using apply(X = m, MARGIN = 1L, digest).
-  # TODO: Check how to properly call a NativeSymbolInfo from another package.
-  # See http://r-pkgs.had.co.nz/src.html#clang. Perhaps the definition of
-  # digest should be done via .onLoad()
-  digest <- getNativeSymbolInfo(name = "digest", PACKAGE = "digest")
-  apply(X = m, MARGIN = 1L, FUN = function(object) {
-    object <- serialize(object, connection = NULL, ascii = FALSE)
-
-    .Call(digest, object, 1L, -1L, 14L, 0L, 0L)
-  })
-}
-
 # Convert a matrix, data.frame, or data.table into a 'map' and 'data'
 # elements. Basically, convert 'x' to a data.table object, use all columns as
 # the keys, identify the unique rows of the data.table and map each row of
@@ -1017,50 +1001,6 @@ setAs("SparseAssays", "ShallowSimpleListAssays",
 # R CMD check caused by the .sparsify() function.
 #' @importFrom utils globalVariables
 globalVariables(c(".myI", ".myMap"))
-
-# Convert a matrix into 'map' and 'data' elements.
-# Basically hash each row of the matrix, check for duplicates amongst the
-# hashes, and, if there are any, find the matches using the hashes.
-# NOTE: The following should be TRUE:
-# identical(.expand.SparseAssays.sample(.sparsify(m)), m)
-# WARNING: This is **much** slower than .sparsify(), especially as nrow(m)
-#          grows. It will ultimately be removed from the package.
-# NOTE: Don't actually know whether using the `::` operator is any faster
-#       in this function.
-#' @importFrom methods as
-#' @importFrom S4Vectors SimpleList
-.sparsify_old <- function(m, data_class = class(m)) {
-
-  if (!is.matrix(m) && !is.data.frame(m)) {
-    stop("'m' must be a matrix or data.frame.")
-  }
-
-  if (data_class != "matrix" && data_class != "data.frame") {
-    stop("'data_class' must be 'matrix' or 'data.frame'")
-  }
-
-  hash <- .rowHash(m)
-
-  if (base::anyDuplicated.default(hash)) {
-    # map <- selfmatch(hash)
-    map <- match(hash, unique(hash))
-    data <- m[!base::duplicated(hash), , drop = FALSE]
-    # Remove row.names (for when m is a data.frame)
-    row.names(data) <- NULL
-    if (!identical(class(data), data_class)) {
-      if (data_class == "data.frame") {
-        # NOTE: as(data, "data.frame") doesn't work
-        data <- as.data.frame.matrix(data)
-      } else {
-      data <- as(data, data_class)
-      }
-    }
-  } else {
-    map <- seq_len(nrow(m))
-    data <- m
-  }
-  SimpleList(map = map, data = data)
-}
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Miscellaneous NOTEs
