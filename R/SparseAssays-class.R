@@ -222,7 +222,6 @@ setValidity2("SparseAssays", .valid.SparseAssays)
 #'                      )
 #' )
 #'
-#'
 #' value <- SparseAssays(sparse_assays =
 #'                         SimpleList(a1 =
 #'                                      SimpleList(
@@ -980,21 +979,30 @@ setAs("SparseAssays", "ShallowSimpleListAssays",
 
   data_class <- match.arg(data_class)
 
-  # Add an index for the original row number
-  if (any(c(".myI", ".myMap")  %in% colnames(x))) {
-    stop("'x' must not have a column named '.myI' or '.myMap'")
+  # NOTE: Will get errors if data have zero rows.
+  if (nrow(x)) {
+
+    # Add an index for the original row number
+    if (any(c(".myI", ".myMap")  %in% colnames(x))) {
+      stop("'x' must not have a column named '.myI' or '.myMap'")
+    }
+    x[, .myI := .I]
+
+    # Set the key (kind of like hashing the rows of the data.table since we use
+    # all columns)
+    my_key <- grep(".myI", colnames(x), value = TRUE, invert = TRUE)
+    setkeyv(x, cols = my_key)
+
+    # Create the map and data
+    x[, .myMap := .GRP, by = key(x)]
+    map <- setkey(x[, list(.myI, .myMap)], .myI)[, .myMap]
+    data <- unique(x)[, c(".myI", ".myMap") := NULL]
+  } else {
+    data <- x
+    map <- integer(0)
   }
-  x[, .myI := .I]
 
-  # Set the key (kind of like hashing the rows of the data.table since we use
-  # all columns)
-  my_key <- grep(".myI", colnames(x), value = TRUE, invert = TRUE)
-  setkeyv(x, cols = my_key)
 
-  # Create the map and data
-  x[, .myMap := .GRP, by = key(x)]
-  map <- setkey(x[, list(.myI, .myMap)], .myI)[, .myMap]
-  data <- unique(x)[, c(".myI", ".myMap") := NULL]
   if (identical(data_class, "matrix")) {
     data <- unname(as.matrix(data))
   } else if (identical(data_class, "data.frame")) {

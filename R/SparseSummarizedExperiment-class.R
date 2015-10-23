@@ -16,7 +16,7 @@
 #'
 #' @rdname SparseSummarizedExperiment
 #'
-#' @include SparseAssays-class.R
+#' @include SparseAssays-class.R SSE-helpers.R
 #'
 #' @importClassesFrom SummarizedExperiment SummarizedExperiment0
 #' @importFrom methods setClass
@@ -63,22 +63,17 @@ setValidity2("SparseSummarizedExperiment",
 #'
 #' @export
 setMethod("sparseAssays", "SparseSummarizedExperiment",
-          function(x, ..., withDimnames = TRUE, expand = FALSE) {
-            .sparseAssays.SSE(x, ..., withDimnames = withDimnames, expand = expand)
-          }
+          .sparseAssays.SSE
 )
 
-# TODO
 #' @rdname SparseSummarizedExperiment
 #'
 #' @importFrom methods setReplaceMethod
 #'
 #' @export
-setReplaceMethod("sparseAssays", "SparseSummarizedExperiment",
-                 function(x, ..., value) {
-                   stop("Not yet implemented")
-                   .sparseAssaysReplace.SSE(x, ..., value)
-                 }
+setReplaceMethod("sparseAssays",
+                 c("SparseSummarizedExperiment", "SparseAssays"),
+                 .sparseAssaysReplace.SSE
 )
 
 ## convenience for common use case
@@ -89,10 +84,7 @@ setReplaceMethod("sparseAssays", "SparseSummarizedExperiment",
 #'
 #' @export
 setMethod("sparseAssay", c("SparseSummarizedExperiment", "missing"),
-          function(x, i, ..., withDimnames = TRUE, expand = FALSE) {
-            .sparseAssay.SSE.missing(x = x, withDimnames = withDimnames,
-                                 expand = expand)
-          }
+          .sparseAssay.SSE.missing
 )
 
 #' @rdname SparseSummarizedExperiment
@@ -101,10 +93,7 @@ setMethod("sparseAssay", c("SparseSummarizedExperiment", "missing"),
 #'
 #' @export
 setMethod("sparseAssay", c("SparseSummarizedExperiment", "numeric"),
-          function(x, i, ..., withDimnames = TRUE, expand = FALSE) {
-            .sparseAssay.SSE.numeric(x, i, ..., withDimnames = withDimnames,
-                                 expand = expand)
-          }
+          .sparseAssay.SSE.numeric
 )
 
 #' @rdname SparseSummarizedExperiment
@@ -113,25 +102,37 @@ setMethod("sparseAssay", c("SparseSummarizedExperiment", "numeric"),
 #'
 #' @export
 setMethod("sparseAssay", c("SparseSummarizedExperiment", "character"),
-          function(x, i, ..., withDimnames = TRUE, expand = FALSE) {
-            .sparseAssay.SSE.character(x, i, ..., withDimnames = withDimnames,
-                                   expand = expand)
-          }
+          .sparseAssay.SSE.character
 )
 
-# TODO
-# See assay<-,SummarizedExperiment-method, which has multiple methods; do
-# I need something like this?
-# What are valid signatures for this method?
-# Can I call out to the `[[`,SparseAssays-method?
+#' @rdname SparseSummarizedExperiment
+#'
 #' @importFrom methods setReplaceMethod
 #'
 #' @export
-setReplaceMethod("sparseAssay", "SparseSummarizedExperiment",
-                 function(x, ..., value) {
-                   stop("Not yet implemented")
-                   .sparseAssayReplace.SSE(x, ..., value)
-                 }
+setReplaceMethod("sparseAssay",
+                 c("SparseSummarizedExperiment", "missing", "SimpleList"),
+                 .sparseAssayReplace.SSE.missing
+)
+
+#' @rdname SparseSummarizedExperiment
+#'
+#' @importFrom methods setReplaceMethod
+#'
+#' @export
+setReplaceMethod("sparseAssay",
+                 c("SparseSummarizedExperiment", "numeric", "SimpleList"),
+                 .sparseAssayReplace.SSE.numeric
+)
+
+#' @rdname SparseSummarizedExperiment
+#'
+#' @importFrom methods setReplaceMethod
+#'
+#' @export
+setReplaceMethod("sparseAssay",
+                 c("SparseSummarizedExperiment", "character", "SimpleList"),
+                 .sparseAssayReplace.SSE.character
 )
 
 #' @rdname SparseSummarizedExperiment
@@ -140,22 +141,17 @@ setReplaceMethod("sparseAssay", "SparseSummarizedExperiment",
 #'
 #' @export
 setMethod("sparseAssayNames", "SparseSummarizedExperiment",
-          function(x, ...) {
-            .sparseAssayNames.SSE(x)
-          }
+          .sparseAssayNames.SSE
 )
 
-# TODO
 #' @rdname SparseSummarizedExperiment
 #'
 #' @importFrom methods setReplaceMethod
 #'
 #' @export
-setReplaceMethod("sparseAssayNames", "SparseSummarizedExperiment",
-                 function(x, ..., value) {
-                   stop("Not yet implemented")
-                   .sparseAssayNamesReplace.SSE(x)
-                 }
+setReplaceMethod("sparseAssayNames",
+                 c("SparseSummarizedExperiment", "character"),
+                 .sparseAssayNamesReplace.SSE
 )
 
 # NOTE: The cannonical location for dim, dimnames. dimnames should be checked
@@ -175,9 +171,7 @@ setReplaceMethod("sparseAssayNames", "SparseSummarizedExperiment",
 #'
 #' @export
 setMethod("[", "SparseSummarizedExperiment",
-          function(x, i, j, ..., drop = TRUE) {
-            .subsetSingleBracket.SSE(x, i, j, ..., drop = drop)
-          }
+          .subsetSingleBracket.SSE
 )
 
 #' @rdname SparseSummarizedExperiment
@@ -208,9 +202,7 @@ setReplaceMethod("[",
 #'
 #' @export
 setMethod("show", "SparseSummarizedExperiment",
-          function(object) {
-            .show.SSE(object)
-          }
+          .show.SSE
 )
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -248,7 +240,5 @@ setMethod("cbind", "SparseSummarizedExperiment",
 #' @export
 setMethod("combine",
           c("SparseSummarizedExperiment", "SparseSummarizedExperiment"),
-          function(x, y, ...) {
-            .combine.SSE(x, y, ...)
-          }
+          .combine.SSE
 )

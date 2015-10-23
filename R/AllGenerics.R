@@ -33,15 +33,14 @@ setGeneric("sparseAssays<-", function(x, ..., withDimnames = TRUE, value) {
 #' @importFrom methods setGeneric
 #'
 #' @export
-setGeneric("sparseAssay", function(x, i, ..., withDimnames = TRUE,
-                                   expand = FALSE) {
+setGeneric("sparseAssay", function(x, i, ..., expand = FALSE) {
   standardGeneric("sparseAssay")
 })
 
 #' @importFrom methods setGeneric
 #'
 #' @export
-setGeneric("sparseAssay<-", function(x, i, ..., withDimnames = TRUE, value) {
+setGeneric("sparseAssay<-", function(x, i, ..., value) {
   standardGeneric("sparseAssay<-")
 })
 

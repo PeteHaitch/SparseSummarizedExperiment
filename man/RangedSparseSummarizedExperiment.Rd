@@ -14,10 +14,12 @@
 \alias{sparseAssay,RangedSparseSummarizedExperiment,character-method}
 \alias{sparseAssay,RangedSparseSummarizedExperiment,missing-method}
 \alias{sparseAssay,RangedSparseSummarizedExperiment,numeric-method}
+\alias{sparseAssay<-,RangedSparseSummarizedExperiment,character,SimpleList-method}
+\alias{sparseAssay<-,RangedSparseSummarizedExperiment,missing,SimpleList-method}
+\alias{sparseAssay<-,RangedSparseSummarizedExperiment,numeric,SimpleList-method}
 \alias{sparseAssayNames,RangedSparseSummarizedExperiment-method}
-\alias{sparseAssayNames<-,RangedSparseSummarizedExperiment-method}
 \alias{sparseAssays,RangedSparseSummarizedExperiment-method}
-\alias{sparseAssays<-,RangedSparseSummarizedExperiment-method}
+\alias{sparseAssays<-,RangedSparseSummarizedExperiment,SparseAssays-method}
 \title{RangedSparseSummarizedExperiment objects}
 \usage{
 \S4method{SparseSummarizedExperiment}{SparseAssays}(sparseAssays,
@@ -29,10 +31,10 @@
 \S4method{sparseAssays}{RangedSparseSummarizedExperiment}(x, ...,
   withDimnames = TRUE, expand = FALSE)
 
-\S4method{sparseAssays}{RangedSparseSummarizedExperiment}(x, ...,
+\S4method{sparseAssays}{RangedSparseSummarizedExperiment,SparseAssays}(x, ...,
   withDimnames = TRUE) <- value
 
-\S4method{sparseAssay}{RangedSparseSummarizedExperiment,missing}(x, i, ...,
+\S4method{sparseAssay}{RangedSparseSummarizedExperiment,missing}(x, ...,
   withDimnames = TRUE, expand = FALSE)
 
 \S4method{sparseAssay}{RangedSparseSummarizedExperiment,numeric}(x, i, ...,
@@ -41,9 +43,17 @@
 \S4method{sparseAssay}{RangedSparseSummarizedExperiment,character}(x, i, ...,
   withDimnames = TRUE, expand = FALSE)
 
-\S4method{sparseAssayNames}{RangedSparseSummarizedExperiment}(x, ...)
+\S4method{sparseAssay}{RangedSparseSummarizedExperiment,missing,SimpleList}(x,
+  i, ...) <- value
 
-\S4method{sparseAssayNames}{RangedSparseSummarizedExperiment}(x, ...) <- value
+\S4method{sparseAssay}{RangedSparseSummarizedExperiment,numeric,SimpleList}(x,
+  i, ...) <- value
+
+
+  \S4method{sparseAssay}{RangedSparseSummarizedExperiment,character,SimpleList}(x,
+  i, ...) <- value
+
+\S4method{sparseAssayNames}{RangedSparseSummarizedExperiment}(x, ...)
 
 \S4method{[}{RangedSparseSummarizedExperiment,ANY}(x, i, j, ..., drop = TRUE)
 

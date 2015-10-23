@@ -94,10 +94,33 @@
   val
 }
 
-
 #' @keywords internal
-.sparseAssaysReplace.SSE <- function(x, ..., value) {
-  stop("Not yet implemented")
+.sparseAssaysReplace.SSE <- function(x, ..., withDimnames = TRUE, value) {
+
+  # NOTE: withDimnames arg allows
+  # names(sparseAssays(se, withDimnames = FALSE)) <- value
+
+  ok <- vapply(value, function(sa, x_dimnames) {
+    # TODO: Replace with dimnames() when there is a
+    # dimnames,SparseAssay[[1]]-method (i.e., one that acts on an element
+    # of a SparseAssays object).
+    sa_dimnames <- list(names(sa[[1]][["map"]]),
+                        names(sa))
+    (is.null(sa_dimnames[[1L]]) ||
+      identical(sa_dimnames[[1L]], x_dimnames[[1L]]) &&
+      (is.null(sa_dimnames[[2L]]) ||
+         identical(sa_dimnames[[2L]], x_dimnames[[2L]])))
+  }, logical(1L), x_dimnames = dimnames(x))
+
+  if (!all(ok)) {
+    stop("current and replacement 'dimnames' differ")
+  }
+  # NOTE: .SummarizedExperiment.assays.replace uses check = FALSE due to
+  #       some unusual behaviour by packages that depend on the
+  #       SummarizedExperiment package.
+  x <- BiocGenerics:::replaceSlots(x, sparseAssays = value, check = TRUE)
+
+  x
 }
 
 ## convenience for common use case
@@ -190,32 +213,47 @@
   val
 }
 
-# TODO
 #' @keywords internal
-.sparseAssayReplace.SSE <- function(x, ..., value) {
-  stop("Not yet implemented")
+.sparseAssayReplace.SSE.missing <- function(x, i, ..., value) {
+
+  if (length(sparseAssays(x, withDimnames = FALSE)) == 0L) {
+    stop("'sparseAssay(<", class(x), ">) <- value' ", "length(sparseAssays(<",
+         class(x), ">)) is 0")
+  }
+  sparseAssays(x)[[1]] <- value
+  x
 }
 
 #' @keywords internal
-.sparseAssayNames.SSE <- function(x) {
-  names(sparseAssays(x))
+.sparseAssayReplace.SSE.numeric <- function(x, i, ..., value) {
+
+  sparseAssays(x, ...)[[i]] <- value
+  x
 }
 
-# TODO
 #' @keywords internal
-.sparseAssayNamesReplace.SSE <- function(x) {
-  stop("Not yet implemented")
+.sparseAssayReplace.SSE.character <- function(x, i, ..., value) {
+
+  sparseAssays(x, ...)[[i]] <- value
+  x
+}
+
+#' @keywords internal
+.sparseAssayNames.SSE <- function(x, ...) {
+  names(sparseAssays(x, withDimnames = FALSE))
+}
+
+#' @keywords internal
+.sparseAssayNamesReplace.SSE <- function(x, ..., value) {
+  names(sparseAssays(x, withDimnames = FALSE)) <- value
+  x
 }
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Subsetting.
 ###
 
-# TODO: Why aren't I replacing the metadata slot (I don't think the [,SE-method
-#       does this either)
-# TODO: There are data.table-related warnings when length(i) == 1L; follow
-#       these up.
-#' @importFrom methods callNextMethod is setMethod
+#' @importFrom methods is setMethod
 #' @keywords internal
 .subsetSingleBracket.SSE <- function(x, i, j, ..., drop = TRUE) {
 
@@ -240,10 +278,26 @@
     ans_sparseAssays <- x@sparseAssays[, j, drop = FALSE]
   }
 
-  # Subset the rest of the object via callNextMethod()
-  ans_se <- callNextMethod()
+  # NOTE: Can't use callNextMethod() because I'm using a .local function and
+  #       not directly inside a method definition.
+  if (is(x, "RangedSparseSummarizedExperiment")) {
+    as_class <- "RangedSummarizedExperiment"
+  } else {
+    as_class <- "SummarizedExperiment0"
+  }
+  # NOTE: drop is ignored by both `[`,SummarizedExperiment0,ANY,ANY-method,
+  #       so no need to pass it down.
+  if (!missing(i) && missing(j)) {
+    ans_se <- as(x, as_class)[i, j]
+  } else if (!missing(i)) {
+    ans_se <- as(x, as_class)[i, ]
+  } else if (!missing(j)) {
+    ans_se <- as(x, as_class)[, j]
+  }
 
   # Replace slots
+  # NOTE: No need to replace the metadata slot since it isn't subset by
+  #       "[".
   if (is(x, "RangedSparseSummarizedExperiment")) {
     BiocGenerics:::replaceSlots(x, ...,
                                 sparseAssays = ans_sparseAssays,
@@ -299,8 +353,8 @@
   }
 
   # Replace the rest of the object
-  # TODO: callNextMethod() doesn't work; why?
-  # ans_se <- callNextMethod()
+  # NOTE: Can't use callNextMethod() because I'm using a .local function and
+  #       not directly inside a method definition.
   if (is(x, "RangedSparseSummarizedExperiment")) {
     as_class <- "RangedSummarizedExperiment"
   } else {
@@ -572,3 +626,11 @@
                                 metadata = se@metadata)
   }
 }
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Miscellaneous NOTEs
+###
+
+# TODO: The `assay<-()` replacement methods for SummarizedExperiment0 don't
+#       set withDimnames = FALSE when checking length of assays, which
+#       likely slows things down somewhat since it incurs a copy.

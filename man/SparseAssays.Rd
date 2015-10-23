@@ -62,7 +62,6 @@ sa <- SparseAssays(sparse_assays =
                      )
 )
 
-
 value <- SparseAssays(sparse_assays =
                         SimpleList(a1 =
                                      SimpleList(

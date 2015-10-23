@@ -210,22 +210,17 @@ setMethod("SparseSummarizedExperiment", "missing",
 #'
 #' @export
 setMethod("sparseAssays", "RangedSparseSummarizedExperiment",
-          function(x, ..., withDimnames = TRUE, expand = FALSE) {
-            .sparseAssays.SSE(x, ..., withDimnames = withDimnames, expand = expand)
-          }
+            .sparseAssays.SSE
 )
 
-# TODO
 #' @rdname RangedSparseSummarizedExperiment
 #'
 #' @importFrom methods setReplaceMethod
 #'
 #' @export
-setReplaceMethod("sparseAssays", "RangedSparseSummarizedExperiment",
-                 function(x, ..., value) {
-                   stop("Not yet implemented")
-                   .sparseAssaysReplace.SSE(x, ..., value)
-                 }
+setReplaceMethod("sparseAssays",
+                 c("RangedSparseSummarizedExperiment", "SparseAssays"),
+                 .sparseAssaysReplace.SSE
 )
 
 ## convenience for common use case
@@ -236,10 +231,7 @@ setReplaceMethod("sparseAssays", "RangedSparseSummarizedExperiment",
 #'
 #' @export
 setMethod("sparseAssay", c("RangedSparseSummarizedExperiment", "missing"),
-          function(x, i, ..., withDimnames = TRUE, expand = FALSE) {
-            .sparseAssay.SSE.missing(x = x, withDimnames = withDimnames,
-                                 expand = expand)
-          }
+          .sparseAssay.SSE.missing
 )
 
 #' @rdname RangedSparseSummarizedExperiment
@@ -248,10 +240,7 @@ setMethod("sparseAssay", c("RangedSparseSummarizedExperiment", "missing"),
 #'
 #' @export
 setMethod("sparseAssay", c("RangedSparseSummarizedExperiment", "numeric"),
-          function(x, i, ..., withDimnames = TRUE, expand = FALSE) {
-            .sparseAssay.SSE.numeric(x, i, ..., withDimnames = withDimnames,
-                                 expand = expand)
-          }
+          .sparseAssay.SSE.numeric
 )
 
 #' @rdname RangedSparseSummarizedExperiment
@@ -260,27 +249,38 @@ setMethod("sparseAssay", c("RangedSparseSummarizedExperiment", "numeric"),
 #'
 #' @export
 setMethod("sparseAssay", c("RangedSparseSummarizedExperiment", "character"),
-          function(x, i, ..., withDimnames = TRUE, expand = FALSE) {
-            .sparseAssay.SSE.character(x, i, ..., withDimnames = withDimnames,
-                                   expand = expand)
-          }
+          .sparseAssay.SSE.character
 )
 
-# TODO
-# See assay<-,SummarizedExperiment-method, which has multiple methods; do
-# I need something like this?
-# What are valid signatures for this method?
-# Can I call out to the `[[`,SparseAssays-method?
+#' @rdname RangedSparseSummarizedExperiment
+#'
 #' @importFrom methods setReplaceMethod
 #'
 #' @export
-setReplaceMethod("sparseAssay", "RangedSparseSummarizedExperiment",
-                 function(x, ..., value) {
-                   stop("Not yet implemented")
-                   .sparseAssayReplace.SSE(x, ..., value)
-                 }
+setReplaceMethod("sparseAssay",
+                 c("RangedSparseSummarizedExperiment", "missing", "SimpleList"),
+                 .sparseAssayReplace.SSE.missing
 )
 
+#' @rdname RangedSparseSummarizedExperiment
+#'
+#' @importFrom methods setReplaceMethod
+#'
+#' @export
+setReplaceMethod("sparseAssay",
+                 c("RangedSparseSummarizedExperiment", "numeric", "SimpleList"),
+                 .sparseAssayReplace.SSE.numeric
+)
+
+#' @rdname RangedSparseSummarizedExperiment
+#'
+#' @importFrom methods setReplaceMethod
+#'
+#' @export
+setReplaceMethod("sparseAssay",
+                 c("RangedSparseSummarizedExperiment", "character", "SimpleList"),
+                 .sparseAssayReplace.SSE.character
+)
 
 #' @rdname RangedSparseSummarizedExperiment
 #'
@@ -288,22 +288,17 @@ setReplaceMethod("sparseAssay", "RangedSparseSummarizedExperiment",
 #'
 #' @export
 setMethod("sparseAssayNames", "RangedSparseSummarizedExperiment",
-          function(x, ...) {
-            .sparseAssayNames.SSE(x)
-          }
+          .sparseAssayNames.SSE
 )
 
-# TODO
-#' @rdname RangedSparseSummarizedExperiment
+#' @rdname SparseSummarizedExperiment
 #'
 #' @importFrom methods setReplaceMethod
 #'
 #' @export
-setReplaceMethod("sparseAssayNames", "RangedSparseSummarizedExperiment",
-                 function(x, ..., value) {
-                   stop("Not yet implemented")
-                   .sparseAssayNamesReplace.SSE(x)
-                 }
+setReplaceMethod("sparseAssayNames",
+                 c("RangedSparseSummarizedExperiment", "character"),
+                 .sparseAssayNamesReplace.SSE
 )
 
 # NOTE: The cannonical location for dim, dimnames. dimnames should be checked
@@ -323,9 +318,7 @@ setReplaceMethod("sparseAssayNames", "RangedSparseSummarizedExperiment",
 #'
 #' @export
 setMethod("[", "RangedSparseSummarizedExperiment",
-          function(x, i, j, ..., drop = TRUE) {
-            .subsetSingleBracket.SSE(x, i, j, ..., drop = drop)
-          }
+          .subsetSingleBracket.SSE
 )
 
 #' @rdname RangedSparseSummarizedExperiment
@@ -334,9 +327,7 @@ setMethod("[", "RangedSparseSummarizedExperiment",
 setReplaceMethod("[",
                  c("RangedSparseSummarizedExperiment", "ANY", "ANY",
                    "RangedSparseSummarizedExperiment"),
-                 function(x, i, j, ..., value) {
-                   .replaceSingleBracket.SSE(x, i, j, ..., value = value)
-                 }
+                 .replaceSingleBracket.SSE
 )
 
 # NOTE: extractROWS() and replaceROWS() methods inherited from
@@ -357,9 +348,7 @@ setReplaceMethod("[",
 #'
 #' @export
 setMethod("show", "RangedSparseSummarizedExperiment",
-          function(object) {
-            .show.SSE(object)
-          }
+          .show.SSE
 )
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -398,13 +387,12 @@ setMethod("cbind", "RangedSparseSummarizedExperiment",
 #' @export
 setMethod("combine",
           c("RangedSparseSummarizedExperiment", "RangedSparseSummarizedExperiment"),
-          function(x, y, ...) {
-            .combine.SSE(x, y, ...)
-          }
+          .combine.SSE
 )
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Miscellaneous NOTEs
+###
 
 # NOTE: granges,RangedSummarizedExperiment doesn't honour its contract to
 #       return a GRanges object, e.g., the rowRanges slot could be a
