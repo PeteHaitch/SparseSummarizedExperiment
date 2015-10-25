@@ -5,8 +5,10 @@
 \alias{SparseSummarizedExperiment-class}
 \alias{[,SparseSummarizedExperiment,ANY-method}
 \alias{[<-,SparseSummarizedExperiment,ANY,ANY,SparseSummarizedExperiment-method}
+\alias{as}
 \alias{cbind,SparseSummarizedExperiment-method}
 \alias{combine,SparseSummarizedExperiment,SparseSummarizedExperiment-method}
+\alias{makeSEFromSSE}
 \alias{rbind,SparseSummarizedExperiment-method}
 \alias{show,SparseSummarizedExperiment-method}
 \alias{sparseAssay,SparseSummarizedExperiment,character-method}
@@ -24,6 +26,8 @@
 \usage{
 \S4method{sparseAssayNames}{RangedSparseSummarizedExperiment,character}(x, ...)
   <- value
+
+makeSEFromSSE(SSE, ...)
 
 \S4method{sparseAssays}{SparseSummarizedExperiment}(x, ...,
   withDimnames = TRUE, expand = FALSE)
@@ -70,5 +74,7 @@
 }
 \description{
 SparseSummarizedExperiment objects
+
+as
 }
 

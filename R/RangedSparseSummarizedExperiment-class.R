@@ -61,10 +61,6 @@ get_rownames_from_sparse_assays <- function(sparse_assays) {
   names(sparse_assays[[1L]][[1L]][["map"]])
 }
 
-# TODO: Think about meaningful ways in which a RangedSparseSummarizedExperiment
-# might be constructed. Note how SummarizedExperiment has several different
-# constructors - a low-level function matched with several higher-level methods.
-
 #' @rdname RangedSparseSummarizedExperiment
 #'
 #' @examples
@@ -188,17 +184,37 @@ setMethod("SparseSummarizedExperiment", "missing",
           }
 )
 
-# TODO: SparseSummarizedExperiment,SimpleList-method and/or
-#       SparseSummarizedExperiment,list-method? i.e. first try to coerce
-#       SimpleList/list to a SparseAssays object and then call
-#       SparseSummarizedExperiment,SparseAssays-method. When would this be
-#       useful?
-
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Coercion
 ###
 
-# TODO: RangedSparseSummarizedExperiment -> RangedSummarizedExperiment
+# NOTE: See R/SparseSummarizedExperiment.R for definition and rational behind
+#       makeSEFromSSE() and why there is no as() method.
+# setAs("RangedSparseSummarizedExperiment", "RangedSummarizedExperiment",
+#       .SSE.to.SE(from)
+# )
+
+#' as
+#'
+#' @name as
+#'
+#' @rdname RangedSparseSummarizedExperiment
+#'
+#' @importClassesFrom S4Vectors SimpleList
+#' @importFrom IRanges PartitioningByEnd
+#' @importFrom methods as setAs
+#' @importFrom methods setAs
+#'
+#' @export
+setAs("RangedSparseSummarizedExperiment", "SparseSummarizedExperiment",
+      function(from) {
+
+        new("SparseSummarizedExperiment",
+            sparseAssays = from@sparseAssays,
+            as(rsse, "SummarizedExperiment0")
+        )
+      }
+)
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Getters and setters

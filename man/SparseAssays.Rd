@@ -37,6 +37,8 @@ SparseAssays(sparse_assays = SimpleList())
 SparseAssays objects
 
 SparseAssays
+
+as
 }
 \examples{
 sa <- SparseAssays(sparse_assays =

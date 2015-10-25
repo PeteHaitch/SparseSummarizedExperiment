@@ -7,6 +7,7 @@
 \alias{SparseSummarizedExperiment,missing-method}
 \alias{[,RangedSparseSummarizedExperiment,ANY-method}
 \alias{[<-,RangedSparseSummarizedExperiment,ANY,ANY,RangedSparseSummarizedExperiment-method}
+\alias{as}
 \alias{cbind,RangedSparseSummarizedExperiment-method}
 \alias{combine,RangedSparseSummarizedExperiment,RangedSparseSummarizedExperiment-method}
 \alias{rbind,RangedSparseSummarizedExperiment-method}
@@ -73,6 +74,8 @@
 }
 \description{
 RangedSparseSummarizedExperiment objects
+
+as
 }
 \examples{
 sa <- SparseAssays(sparse_assays =

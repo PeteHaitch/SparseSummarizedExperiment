@@ -50,8 +50,47 @@ setValidity2("SparseSummarizedExperiment",
 ### Coercion
 ###
 
-# TODO: SparseSummarizedExperiment -> SummarizedExperiment0
-# TODO: SparseSummarizedExperiment -> RangedSparseSummarizedExperiment
+# NOTE: Don't define this as an explicit as() method because it will break the
+#       implicit coercion of SSE to SE;  this implicit/inherited coercoin drops
+#       the sparseAssays slot whereas makeSEFromSSE() preserves it by expanding
+#       the sparse assays and adding them to the assays slot. The
+#       implicit/inherited coercion of SSE to SE is currently relied upon by
+#       several functions in this package (most non-user facing).
+#' @rdname SparseSummarizedExperiment
+#'
+#' @export
+# setAs("SparseSummarizedExperiment", "SummarizedExperiment0",
+#       .SSE.to.SE(from)
+# )
+makeSEFromSSE <- function(SSE, ...) {
+  .SSE.to.SE(SSE)
+}
+
+#' as
+#'
+#' @name as
+#'
+#' @rdname SparseSummarizedExperiment
+#'
+#' @importClassesFrom S4Vectors SimpleList
+#' @importFrom IRanges PartitioningByEnd
+#' @importFrom methods as setAs
+#' @importFrom methods setAs
+#'
+#' @export
+setAs("SparseSummarizedExperiment", "RangedSparseSummarizedExperiment",
+      function(from) {
+
+        partitioning <- PartitioningByEnd(integer(length(from)), names = names(from))
+        rowRanges <- relist(GRanges(), partitioning)
+        SparseSummarizedExperiment(sparseAssays = from@sparseAssays,
+                                   rowRanges = rowRanges,
+                                   colData = from@colData,
+                                   assays = as(from@assays, "SimpleList",
+                                               strict = FALSE),
+                                   metadata = from@metadata)
+      }
+)
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Getters and setters

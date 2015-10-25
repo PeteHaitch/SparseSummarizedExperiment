@@ -938,9 +938,11 @@ setMethod("combine", c("SparseAssays", "SparseAssays"),
   }
 }
 
-#' @rdname SparseAssays
+#' as
 #'
 #' @name as
+#'
+#' @rdname SparseAssays
 #'
 #' @importFrom methods setAs
 #'

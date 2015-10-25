@@ -30,6 +30,7 @@ setMethod("combine", c("GRanges", "GRanges"),
 )
 
 # NOTE: Errors if any of the GRangesList objects have NULL names().
+# TODO: How to handle unnamed GRangesList objects?
 #' @rdname GenomicRanges-pkg
 #'
 #' @importFrom methods setMethod

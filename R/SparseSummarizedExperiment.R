@@ -14,9 +14,6 @@
 #'
 NULL
 
-# TODO: What's the correct way to import the C-routines from digest (if digest
-#       is still required)?
-
 ### NOTE: The SparseSummarizedExperiment class and associated methods
 ###       are inspired by the of the SummarizedExperiment0 class and
 ###       associated methods in the SummarizedExperiment package. There is also

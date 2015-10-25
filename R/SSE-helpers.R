@@ -61,6 +61,28 @@
 }
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Coercion
+###
+
+#' @keywords internal
+#'
+#' @importClassesFrom GenomicRanges ShallowSimpleListAssays
+#' @importFrom methods as is
+.SSE.to.SE <- function(from) {
+
+  extra_assays <- as(sparseAssays(from), "ShallowSimpleListAssays")
+  assays <- Assays(c(assays(from),
+                     as(extra_assays, "SimpleList", strict = FALSE)))
+  if (is(from, "RangedSparseSummarizedExperiment")) {
+    from <- as(from, "RangedSummarizedExperiment")
+  } else {
+    from <- as(from, "SummarizedExperiment0")
+  }
+  BiocGenerics:::replaceSlots(from,
+                              assays = assays)
+}
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Getters and setters
 ###
 
