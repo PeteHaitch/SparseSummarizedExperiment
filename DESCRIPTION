@@ -1,12 +1,12 @@
 Package: SparseSummarizedExperiment
 Title: SparseSummarizedExperiment Container
-Version: 0.0.0.9006
+Version: 0.0.0.9007
 Authors@R: c(person("Peter", "Hickey", role = c("aut", "cre"),
     email = "peter.hickey@gmail.com"))
 Description: An experimental implementation of a container modeled on the
     SummarizedExperiment class for storing sparse genomic data.
 Depends:
-    R (>= 3.2.1),
+    R (>= 3.3.0),
     GenomicRanges (>= 1.23.1),
     S4Vectors (>= 0.9.5),
     SummarizedExperiment (>= 1.1.0)
