@@ -260,7 +260,7 @@ setValidity2("SparseAssays", .valid.SparseAssays)
 #'                         )
 #' )
 #'
-#' @importFrom methods validObject
+#' @importFrom methods new validObject
 #'
 #' @export
 SparseAssays <- function(sparse_assays = SimpleList()) {

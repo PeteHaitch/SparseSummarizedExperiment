@@ -96,7 +96,7 @@ get_rownames_from_sparse_assays <- function(sparse_assays) {
 #' @importClassesFrom SummarizedExperiment SummarizedExperiment0
 #'                                         RangedSummarizedExperiment
 #' @importFrom GenomicRanges GRangesList
-#' @importFrom methods setMethod
+#' @importFrom methods new setMethod
 #' @importFrom S4Vectors DataFrame SimpleList
 #' @importFrom SummarizedExperiment SummarizedExperiment
 #' @importMethodsFrom S4Vectors endoapply
