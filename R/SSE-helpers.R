@@ -93,7 +93,7 @@
   val <- x@sparseAssays
 
   if (expand) {
-    val <- SimpleList(.expand(val))
+    val <- SimpleList(densify(val))
     if (withDimnames) {
       val <- endoapply(val, function(e) {
         names(e) <- colnames(x)

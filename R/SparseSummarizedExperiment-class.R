@@ -12,12 +12,7 @@
 ### SparseSummarizedExperiment class
 ###
 
-#' SparseSummarizedExperiment objects
-#'
-#' @rdname SparseSummarizedExperiment
-#'
-#' @include SparseAssays-class.R SSE-helpers.R
-#'
+#' @include SimpleListSparseAssays-class.R SSE-helpers.R
 #' @importClassesFrom SummarizedExperiment SummarizedExperiment0
 #' @importFrom methods setClass
 #'
@@ -37,8 +32,7 @@ setClass("SparseSummarizedExperiment",
 ###
 
 #' @importFrom S4Vectors setValidity2
-setValidity2("SparseSummarizedExperiment",
-             .valid.SSE)
+setValidity2("SparseSummarizedExperiment", .valid.SSE)
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Constructor
@@ -56,8 +50,6 @@ setValidity2("SparseSummarizedExperiment",
 #       the sparse assays and adding them to the assays slot. The
 #       implicit/inherited coercion of SSE to SE is currently relied upon by
 #       several functions in this package (most non-user facing).
-#' @rdname SparseSummarizedExperiment
-#'
 #' @export
 # setAs("SparseSummarizedExperiment", "SummarizedExperiment0",
 #       .SSE.to.SE(from)
@@ -66,22 +58,19 @@ makeSEFromSSE <- function(SSE, ...) {
   .SSE.to.SE(SSE)
 }
 
-#' as
-#'
-#' @name as
-#'
-#' @rdname SparseSummarizedExperiment
-#'
 #' @importClassesFrom S4Vectors SimpleList
 #' @importFrom IRanges PartitioningByEnd
+#' @importFrom GenomicRanges GRanges
 #' @importFrom methods as setAs
 #' @importFrom methods setAs
+#'
 #'
 #' @export
 setAs("SparseSummarizedExperiment", "RangedSparseSummarizedExperiment",
       function(from) {
 
-        partitioning <- PartitioningByEnd(integer(length(from)), names = names(from))
+        partitioning <- PartitioningByEnd(integer(length(from)),
+                                          names = names(from))
         rowRanges <- relist(GRanges(), partitioning)
         SparseSummarizedExperiment(sparseAssays = from@sparseAssays,
                                    rowRanges = rowRanges,
@@ -96,8 +85,6 @@ setAs("SparseSummarizedExperiment", "RangedSparseSummarizedExperiment",
 ### Getters and setters
 ###
 
-#' @rdname SparseSummarizedExperiment
-#'
 #' @importFrom methods setMethod
 #'
 #' @export
@@ -105,8 +92,6 @@ setMethod("sparseAssays", "SparseSummarizedExperiment",
           .sparseAssays.SSE
 )
 
-#' @rdname SparseSummarizedExperiment
-#'
 #' @importFrom methods setReplaceMethod
 #'
 #' @export
@@ -117,8 +102,6 @@ setReplaceMethod("sparseAssays",
 
 ## convenience for common use case
 
-#' @rdname SparseSummarizedExperiment
-#'
 #' @importFrom methods setMethod
 #'
 #' @export
@@ -126,8 +109,6 @@ setMethod("sparseAssay", c("SparseSummarizedExperiment", "missing"),
           .sparseAssay.SSE.missing
 )
 
-#' @rdname SparseSummarizedExperiment
-#'
 #' @importFrom methods setMethod
 #'
 #' @export
@@ -135,8 +116,6 @@ setMethod("sparseAssay", c("SparseSummarizedExperiment", "numeric"),
           .sparseAssay.SSE.numeric
 )
 
-#' @rdname SparseSummarizedExperiment
-#'
 #' @importFrom methods setMethod
 #'
 #' @export
@@ -144,8 +123,6 @@ setMethod("sparseAssay", c("SparseSummarizedExperiment", "character"),
           .sparseAssay.SSE.character
 )
 
-#' @rdname SparseSummarizedExperiment
-#'
 #' @importFrom methods setReplaceMethod
 #'
 #' @export
@@ -154,8 +131,6 @@ setReplaceMethod("sparseAssay",
                  .sparseAssayReplace.SSE.missing
 )
 
-#' @rdname SparseSummarizedExperiment
-#'
 #' @importFrom methods setReplaceMethod
 #'
 #' @export
@@ -164,8 +139,6 @@ setReplaceMethod("sparseAssay",
                  .sparseAssayReplace.SSE.numeric
 )
 
-#' @rdname SparseSummarizedExperiment
-#'
 #' @importFrom methods setReplaceMethod
 #'
 #' @export
@@ -174,8 +147,6 @@ setReplaceMethod("sparseAssay",
                  .sparseAssayReplace.SSE.character
 )
 
-#' @rdname SparseSummarizedExperiment
-#'
 #' @importFrom methods setMethod
 #'
 #' @export
@@ -183,8 +154,6 @@ setMethod("sparseAssayNames", "SparseSummarizedExperiment",
           .sparseAssayNames.SSE
 )
 
-#' @rdname SparseSummarizedExperiment
-#'
 #' @importFrom methods setReplaceMethod
 #'
 #' @export
@@ -206,15 +175,11 @@ setReplaceMethod("sparseAssayNames",
 ### Subsetting.
 ###
 
-#' @rdname SparseSummarizedExperiment
-#'
 #' @export
 setMethod("[", "SparseSummarizedExperiment",
           .subsetSingleBracket.SSE
 )
 
-#' @rdname SparseSummarizedExperiment
-#'
 #' @export
 setReplaceMethod("[",
                  c("SparseSummarizedExperiment", "ANY", "ANY",
@@ -237,8 +202,6 @@ setReplaceMethod("[",
 ### Display.
 ###
 
-#' @rdname SparseSummarizedExperiment
-#'
 #' @export
 setMethod("show", "SparseSummarizedExperiment",
           .show.SSE
@@ -249,8 +212,6 @@ setMethod("show", "SparseSummarizedExperiment",
 ###
 
 # NOTE: Appropriate for objects with distinct features and identical samples.
-#' @rdname SparseSummarizedExperiment
-#'
 #' @importFrom methods setMethod
 #'
 #' @export
@@ -262,8 +223,6 @@ setMethod("rbind", "SparseSummarizedExperiment",
 )
 
 # NOTE: Appropriate for objects with identical features and distinct samples.
-#' @rdname SparseSummarizedExperiment
-#'
 #' @importFrom methods setMethod
 #'
 #' @export
@@ -274,8 +233,6 @@ setMethod("cbind", "SparseSummarizedExperiment",
           }
 )
 
-#' @rdname SparseSummarizedExperiment
-#'
 #' @export
 setMethod("combine",
           c("SparseSummarizedExperiment", "SparseSummarizedExperiment"),

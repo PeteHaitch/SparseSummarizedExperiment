@@ -31,10 +31,6 @@
 #       SummarizedExperiment0 or RangedSummarizedExperiment objects.
 # TODO: Avoid unnecessary (and possibly costly) object validation where
 #       possible to safely do so.
-#' Code for SummarizedExperiment package
-#'
-#' @rdname SummarizedExperiment-pkg
-#'
 #' @importFrom methods is setMethod
 #' @importFrom S4Vectors DataFrame
 #' @importFrom SummarizedExperiment Assays

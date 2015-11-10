@@ -9,10 +9,6 @@
 ### S4Vectors package. Therefore, the functionality in this file probably
 ### belongs in the S4Vectors package.
 
-#' Code for S4Vectors package
-#'
-#' @rdname S4Vectors-pkg
-#'
 #' @importFrom methods as setMethod
 #'
 #' @export
@@ -34,10 +30,6 @@ setMethod("combine", c("DataFrame", "DataFrame"),
           }
 )
 
-# TODO: How should elements unique to x or y be handled? Currently this will
-#       return an error if x and y have different elements.
-#' @rdname S4Vectors-pkg
-#'
 #' @importFrom methods setMethod
 #' @importMethodsFrom S4Vectors mendoapply
 #'

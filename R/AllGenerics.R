@@ -1,4 +1,27 @@
 ### -------------------------------------------------------------------------
+### densify
+###
+
+#' @include SparseSummarizedExperiment.R S4Vectors-pkg.R GenomicRanges-pkg.R
+#' SummarizedExperiment-pkg.R
+#'
+#' @importFrom methods setGeneric
+#'
+#' @export
+setGeneric("densify", function(x, ...) standardGeneric("densify"),
+           signature = "x")
+
+### -------------------------------------------------------------------------
+### sparsify
+###
+
+#' @importFrom methods setGeneric
+#'
+#' @export
+setGeneric("sparsify", function(x, ...) standardGeneric("sparsify"),
+           signature = "x")
+
+### -------------------------------------------------------------------------
 ### sparseAssays
 ###
 

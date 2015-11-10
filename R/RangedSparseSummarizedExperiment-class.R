@@ -12,11 +12,7 @@
 ### RangedSparseSummarizedExperiment class
 ###
 
-#' RangedSparseSummarizedExperiment objects
-#'
-#' @rdname RangedSparseSummarizedExperiment
-#'
-#' @include SparseAssays-class.R
+#' @include SparseSummarizedExperiment-class.R
 #'
 #' @importClassesFrom SummarizedExperiment RangedSummarizedExperiment
 #' @importFrom methods setClass
@@ -45,7 +41,7 @@ setClass("RangedSparseSummarizedExperiment",
     .valid.SSE.sparseAssays_dim(x))
 }
 
-#' @include SparseSummarizedExperiment-class.R
+# #' @include SparseSummarizedExperiment-class.R
 #' @importFrom S4Vectors setValidity2
 setValidity2("RangedSparseSummarizedExperiment",
              .valid.RangedSparseSummarizedExperiment)
@@ -61,38 +57,6 @@ get_rownames_from_sparse_assays <- function(sparse_assays) {
   names(sparse_assays[[1L]][[1L]][["map"]])
 }
 
-#' @rdname RangedSparseSummarizedExperiment
-#'
-#' @examples
-#' sa <- SparseAssays(sparse_assays =
-#'                      SimpleList(a1 =
-#'                                   SimpleList(
-#'                                     s1 = SimpleList(map =
-#'                                                       as.integer(c(NA, 1, NA, NA, 2, NA, 3, NA, 4, 5)),
-#'                                                     data =
-#'                                                       matrix(1:10, ncol = 2)),
-#'                                     s2 = SimpleList(map =
-#'                                                       as.integer(c(NA, NA, 1, 2, NA, NA, 3, 4, NA, NA)),
-#'                                                     data =
-#'                                                       matrix(8:1, ncol = 2))),
-#'                                 a2 =
-#'                                   SimpleList(
-#'                                     s1 = SimpleList(map =
-#'                                                       as.integer(c(NA, 1, NA, 2, 2, NA, 1, NA, NA, 1)),
-#'                                                     data = matrix(1:2, ncol = 1)),
-#'                                     s2 = SimpleList(map =
-#'                                                       as.integer(c(1, 1, 1, 2, NA, NA, NA, NA, NA, NA)),
-#'                                                     data = matrix(4:3, ncol = 1)))
-#'
-#'                      )
-#' )
-#' sse <- SparseSummarizedExperiment(sparseAssays = sa)
-#' rr <- GRanges('chr1', IRanges(1:10, 2:11))
-#' rsse <- SparseSummarizedExperiment(sparseAssays = sa,
-#'                                    rowRanges = rr)
-#' x <- rsse
-#' y <- new("RangedSparseSummarizedExperiment")
-#'
 #' @importClassesFrom SummarizedExperiment SummarizedExperiment0
 #'                                         RangedSummarizedExperiment
 #' @importFrom GenomicRanges GRangesList
@@ -173,8 +137,6 @@ setMethod("SparseSummarizedExperiment", "SparseAssays",
           }
 )
 
-#' @rdname RangedSparseSummarizedExperiment
-#'
 #' @importFrom methods setMethod
 #'
 #' @export
@@ -194,12 +156,6 @@ setMethod("SparseSummarizedExperiment", "missing",
 #       .SSE.to.SE(from)
 # )
 
-#' as
-#'
-#' @name as
-#'
-#' @rdname RangedSparseSummarizedExperiment
-#'
 #' @importClassesFrom S4Vectors SimpleList
 #' @importFrom IRanges PartitioningByEnd
 #' @importFrom methods as setAs
@@ -211,7 +167,7 @@ setAs("RangedSparseSummarizedExperiment", "SparseSummarizedExperiment",
 
         new("SparseSummarizedExperiment",
             sparseAssays = from@sparseAssays,
-            as(rsse, "SummarizedExperiment0")
+            as(from, "SummarizedExperiment0")
         )
       }
 )
@@ -220,8 +176,6 @@ setAs("RangedSparseSummarizedExperiment", "SparseSummarizedExperiment",
 ### Getters and setters
 ###
 
-#' @rdname RangedSparseSummarizedExperiment
-#'
 #' @importFrom methods setMethod
 #'
 #' @export
@@ -229,8 +183,6 @@ setMethod("sparseAssays", "RangedSparseSummarizedExperiment",
             .sparseAssays.SSE
 )
 
-#' @rdname RangedSparseSummarizedExperiment
-#'
 #' @importFrom methods setReplaceMethod
 #'
 #' @export
@@ -241,8 +193,6 @@ setReplaceMethod("sparseAssays",
 
 ## convenience for common use case
 
-#' @rdname RangedSparseSummarizedExperiment
-#'
 #' @importFrom methods setMethod
 #'
 #' @export
@@ -250,8 +200,6 @@ setMethod("sparseAssay", c("RangedSparseSummarizedExperiment", "missing"),
           .sparseAssay.SSE.missing
 )
 
-#' @rdname RangedSparseSummarizedExperiment
-#'
 #' @importFrom methods setMethod
 #'
 #' @export
@@ -259,8 +207,6 @@ setMethod("sparseAssay", c("RangedSparseSummarizedExperiment", "numeric"),
           .sparseAssay.SSE.numeric
 )
 
-#' @rdname RangedSparseSummarizedExperiment
-#'
 #' @importFrom methods setMethod
 #'
 #' @export
@@ -268,8 +214,6 @@ setMethod("sparseAssay", c("RangedSparseSummarizedExperiment", "character"),
           .sparseAssay.SSE.character
 )
 
-#' @rdname RangedSparseSummarizedExperiment
-#'
 #' @importFrom methods setReplaceMethod
 #'
 #' @export
@@ -278,8 +222,6 @@ setReplaceMethod("sparseAssay",
                  .sparseAssayReplace.SSE.missing
 )
 
-#' @rdname RangedSparseSummarizedExperiment
-#'
 #' @importFrom methods setReplaceMethod
 #'
 #' @export
@@ -288,8 +230,6 @@ setReplaceMethod("sparseAssay",
                  .sparseAssayReplace.SSE.numeric
 )
 
-#' @rdname RangedSparseSummarizedExperiment
-#'
 #' @importFrom methods setReplaceMethod
 #'
 #' @export
@@ -298,8 +238,6 @@ setReplaceMethod("sparseAssay",
                  .sparseAssayReplace.SSE.character
 )
 
-#' @rdname RangedSparseSummarizedExperiment
-#'
 #' @importFrom methods setMethod
 #'
 #' @export
@@ -307,8 +245,6 @@ setMethod("sparseAssayNames", "RangedSparseSummarizedExperiment",
           .sparseAssayNames.SSE
 )
 
-#' @rdname SparseSummarizedExperiment
-#'
 #' @importFrom methods setReplaceMethod
 #'
 #' @export
@@ -330,14 +266,14 @@ setReplaceMethod("sparseAssayNames",
 ### Subsetting.
 ###
 
-#' @rdname RangedSparseSummarizedExperiment
+#' @importFrom methods setMethod
 #'
 #' @export
 setMethod("[", "RangedSparseSummarizedExperiment",
           .subsetSingleBracket.SSE
 )
 
-#' @rdname RangedSparseSummarizedExperiment
+#' @importFrom methods setReplaceMethod
 #'
 #' @export
 setReplaceMethod("[",
@@ -354,13 +290,13 @@ setReplaceMethod("[",
 ###
 
 # NOTE: There methods are inherited from SummarizedExperiment0 objects.
-
+# TODO: Ensure the corresponding generics are imported by the NAMESPACE
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Display.
 ###
 
-#' @rdname RangedSparseSummarizedExperiment
+#' @importFrom methods setMethod
 #'
 #' @export
 setMethod("show", "RangedSparseSummarizedExperiment",
@@ -372,8 +308,6 @@ setMethod("show", "RangedSparseSummarizedExperiment",
 ###
 
 # NOTE: Appropriate for objects with distinct ranges and identical samples.
-#' @rdname RangedSparseSummarizedExperiment
-#'
 #' @importFrom methods setMethod
 #'
 #' @export
@@ -385,8 +319,6 @@ setMethod("rbind", "RangedSparseSummarizedExperiment",
 )
 
 # NOTE: Appropriate for objects with identical ranges and distinct samples.
-#' @rdname RangedSparseSummarizedExperiment
-#'
 #' @importFrom methods setMethod
 #'
 #' @export
@@ -398,7 +330,7 @@ setMethod("cbind", "RangedSparseSummarizedExperiment",
 )
 
 
-#' @rdname RangedSparseSummarizedExperiment
+#' @importFrom methods setMethod
 #'
 #' @export
 setMethod("combine",
