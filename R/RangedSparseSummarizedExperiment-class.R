@@ -1,3 +1,7 @@
+# UP TO HERE: Try to simplify the SSE class hierarchy by having
+#             RangedSparseSummarizedExperiment contain both
+#             SparseSummarizedExperiment and RangedSummarizedExperiment.
+
 ### =========================================================================
 ### RangedSparseSummarizedExperiment objects
 ### -------------------------------------------------------------------------

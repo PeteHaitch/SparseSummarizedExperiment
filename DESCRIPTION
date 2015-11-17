@@ -1,6 +1,6 @@
 Package: SparseSummarizedExperiment
 Title: SparseSummarizedExperiment Container
-Version: 0.0.0.9009
+Version: 0.0.0.9010
 Authors@R: c(person("Peter", "Hickey", role = c("aut", "cre"),
     email = "peter.hickey@gmail.com"))
 Description: An experimental implementation of a container modeled on the
@@ -14,7 +14,8 @@ Imports:
     methods,
     BiocGenerics (>= 0.17.1),
     data.table (>= 1.9.6),
-    IRanges (>= 2.5.4)
+    IRanges (>= 2.5.4),
+    GenomeInfoDb (>= 1.7.3)
 License: MIT + file LICENSE
 LazyData: true
 Collate:
@@ -28,4 +29,5 @@ Collate:
     'SparseSummarizedExperiment-class.R'
     'RangedSparseSummarizedExperiment-class.R'
     'SummarizedExperiment-pkg.R'
-RoxygenNote: 5.0.0
+    'sparsify.R'
+RoxygenNote: 5.0.1

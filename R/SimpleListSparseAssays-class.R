@@ -1,41 +1,9 @@
 ### =========================================================================
 ### SparseAssays objects
 ### -------------------------------------------------------------------------
-###
-### The SparseAssays class has a nested-list structure. This hierarchy is
-### illustrated below for an example with two sparse assays and three samples.
-###
-### SimpleListSparseAssays
-### ├── "sparse_assay_1"
-### │   ├── "sample_1"
-###     │   ├── key_1_1
-###     │   ├── value_1_1
-### │   ├── "sample_2"
-###     │   ├── key_1_2
-###     │   ├── value_1_2
-### │   ├── "sample3"
-###     │   ├── key_1_3
-###     │   ├── value_1_3
-### ├── "sparse_assay_2"
-### │   ├── "sample_1"
-###     │   ├── key_2_1
-###     │   ├── value_2_1
-### │   ├── "sample_2"
-###     │   ├── key_2_2
-###     │   ├── value_2_2
-### │   ├── "sample_3"
-###     │   ├── key_2_3
-###     │   ├── value_2_3
-###
-### Each key is an integer vector and all key_*_* elements must have identical
-### length.
-### Each value element is a matrix object (an assay with a 1-dimensional
-### measurement is stored as a 1-column matrix). Each value_*_* element may
-### have a different number of rows but the maximum number of rows must be less
-### than or equal to the length of the key_*_* elements. A row of the value_*_*
-### element may be pointed to multiple times by the key_*_* element within the
-### same sample and asssay.
-###
+
+#' @include SparseAssays-class.R
+NULL
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### SparseAssays class
@@ -43,7 +11,134 @@
 
 # NOTE: Lossless back and forth coercion from/to SimpleList are automatically
 #       taken care of by automatic methods defined by the methods package.
-#' @include SparseAssays-class.R
+#' SimpleListSparseAssays objects
+#'
+#' @description A concrete subclass of the \link{SparseAssays} virtual class.
+#'
+#' @details The SimpleListSparseAssays class has a nested-list structure. This
+#' hierarchy is illustrated below for an example with two sparse assays and
+#' three samples:
+#' \preformatted{
+#' SimpleListSparseAssays
+#' |-- sparse_assay_1
+#' |   |-- sample_1
+#' |   |   |-- key
+#' |   |   |-- value
+#' |   |-- sample_2
+#' |   |   |-- key
+#' |   |   |-- value
+#' |   |-- sample3
+#' |   |   |-- key
+#' |   |   |-- value
+#' |-- sparse_assay_2
+#' |   |-- sample_1
+#' |   |   |-- key
+#' |   |   |-- value
+#' |   |-- sample_2
+#' |   |   |-- key
+#' |   |   |-- value
+#' |   |-- sample_3
+#' |   |   |-- key
+#' |   |   |-- value
+#' }
+#'
+#' Each "key" is an integer vector and all key elements must have identical
+#' length. Each "value" element is a matrix object (an assay with a
+#' 1-dimensional measurement is stored as a 1-column matrix). Each value
+#' element may have a different number of rows but the maximum number of rows
+#' must be less than or equal to the length of the key elements. A row of the
+#' value element may be pointed to multiple times by the key element within
+#' the same sample and asssay.
+#'
+#' @section Dimensions:
+#' The dimensions of a SimpleListSparseAssays object are defined by nrow =
+#' length of key, and ncol = number of samples.
+#'
+#' @section Subsetting:
+#' Subsetting with \code{[} uses \code{i} to subset \emph{rows} in each
+#' sparse assay and \code{j} to subset samples in each sparse assay. Use
+#' \code{[[} to select the \code{i}-th sparse assay.
+#'
+#' @section Combining:
+#' SimpleListSparseAssays objects can be combined in three different ways.
+#' \enumerate{
+#'  \item \code{rbind} Suitable for when each object has the same samples.
+#'  \item \code{cbind} Suitable for when each object has unique samples.
+#'  \item \code{combine} Suitable in either case, \strong{however}, requires
+#'  that \code{dimnames} are set on each object and that all objects have an
+#'  identical number of sparse assays with identical names.
+#' }
+#'
+#' @section Densifying and coercion:
+#' SimpleListSparseAssays objects can densified using the
+#' \code{\link{densify}} method. It is generally advisable to only
+#' densify a single sample and an sparse assay at a time; see
+#' \code{\link{densify}} for details.
+#'
+#' SimpleListSparseAssays objects can also coerced
+#' into a
+#' \link[SummarizedExperiment]{ShallowSimpleListAssays} object (from the
+#' \pkg{SummarizedExperiment} package); this will also densify the object.
+#' This can be done using \code{as(x, "ShallowSimpleListAssays")}, where
+#' \code{x} is a SimpleListSparseAssays object. \emph{WARNING}: The resulting
+#' \link[SummarizedExperiment]{ShallowSimpleListAssays} object will typically
+#' require much more memory than the equivalent SimpleListSparseAssays object.
+#'
+#' @author Peter Hickey, \url{peter.hickey@gmail.com}
+#'
+#' @seealso
+#' \itemize{
+#'  \item \link{SparseAssays} objects for additional methods.
+#' }
+#'
+#' @aliases SimpleListSparseAssays
+#'
+#' @examples
+#' # TODO: Get old examples from docs
+#' ## ---------------------------------------------------------------------
+#' ## DIRECT MANIPULATION OF SparseAssays OBJECTS
+#' ## ---------------------------------------------------------------------
+#' sl1 <- SimpleList(
+#'   s1 = SimpleList(key = as.integer(c(NA, 1, NA, NA, 2, NA, 3, NA, 4, 5)),
+#'                   value = matrix(1:10, ncol = 2)),
+#'   s2 = SimpleList(key = as.integer(c(NA, NA, 1, 2, NA, NA, 3, 4, NA, NA)),
+#'                   value = matrix(8:1, ncol = 2)))
+#'
+#' sl2 <- SimpleList(
+#'   s1 = SimpleList(key = as.integer(c(NA, 1, NA, 2, 2, NA, 1, NA, NA, 1)),
+#'                   value = matrix(1:2, ncol = 1)),
+#'   s2 = SimpleList(key = as.integer(c(1, 1, 1, 2, NA, NA, NA, NA, NA, NA)),
+#'                   value = matrix(4:3, ncol = 1)))
+#' sa <- SparseAssays(SimpleList(sl1, sl2))
+#' sa
+#'
+#' as(sa, "SimpleList")
+#'
+#' length(sa)
+#' sa[[2]]
+#' dim(sa)
+#'
+#' sa2 <- sa[-4, 2]
+#' sa2
+#' length(sa2)
+#' sa2[[2]]
+#' dim(sa2)
+#'
+#' names(sa)
+#' names(sa) <- c("sa1", "sa2")
+#' names(sa)
+#' sa[["sa2"]]
+#'
+#' rbind(sa, sa)
+#' \dontrun{
+#'   # ERROR: cbind-ing requires unique sample names
+#'   cbind(sa, sa)
+#' }
+#' \dontrun{
+#'   # ERROR: missing dimnames (which can't because there is no
+#'   #        dimnames,SparseAssays-method.
+#'   combine(sa[1:7, 1], sa[3:10, 2])
+#' }
 #'
 #' @importFrom methods setClass
 #'
@@ -196,7 +291,10 @@ setValidity2("SimpleListSparseAssays", .valid.SimpleListSparseAssays)
 
 ### dim
 
-# NOTE: dim is defined by nrow = length of key, and ncol = number of samples
+#' @param x A SimpleListSparseAssays object.
+#'
+#' @rdname SimpleListSparseAssays-class
+#'
 #' @importFrom methods setMethod
 #'
 #' @export
@@ -232,7 +330,7 @@ setMethod("dim", "SimpleListSparseAssays",
         # Extract using mapped i
         data <- sample[["value"]][ii, , drop = FALSE]
         # Sparsify the data
-        sparsified <- .sparsify(data)
+        sparsified <- sparsify(data, "SimpleList")
         # Update the key
         # Should have length(key) == length(i)
         if (!is.null(attr(ii, "na.action"))) {
@@ -259,7 +357,7 @@ setMethod("dim", "SimpleListSparseAssays",
         # Extract using mapped i
         data <- sample[["value"]][ii, , drop = FALSE]
         # Sparsify the data
-        sparsified <- .sparsify(data)
+        sparsified <- sparsify(data, "SimpleList")
         # Update the key
         # Should have length(key) == length(i)
         if (!is.null(attr(ii, "na.action"))) {
@@ -282,6 +380,13 @@ setMethod("dim", "SimpleListSparseAssays",
   endoapply(x, fun)
 }
 
+#' @inheritParams dim,SimpleListSparseAssays-method
+#' @param i,j Numeric or character vectors indicating which \emph{rows} of the
+#'        sparse assays (\code{i}) and samples (\code{j}) to select.
+#' @param drop Not used by \code{[,SimpleListSparseAssays,ANY-method}.
+#'
+#' @rdname SimpleListSparseAssays-class
+#'
 #' @importFrom methods setMethod
 #'
 #' @export
@@ -313,7 +418,10 @@ setMethod("[", "SimpleListSparseAssays",
 # individual elements may not be identical.
 #
 # IDEA (when missing(i)):
-# (1) Simply replace the j-th sample(s) (key, value)-pair by that given in value.
+# (1) Simply replace the j-th sample(s) (key, value)-pair by that given in
+#     value.
+# TODO: Should really inherit params from [,SparseAssays,ANY-method, but I
+#       can't get this to work.
 #' @importFrom methods validObject
 #' @importFrom S4Vectors SimpleList
 #' @importFrom stats na.omit
@@ -340,7 +448,8 @@ setMethod("[", "SimpleListSparseAssays",
         key <- sample[["key"]]
         key[i] <- vsm_updated
         # (3) and (4)
-        sparsified <- .sparsify(tmp_value[na.omit(unique(key)), , drop = FALSE])
+        sparsified <- sparsify(tmp_value[na.omit(unique(key)), , drop = FALSE],
+                                "SimpleList")
         # (5)
         new_lvls <- sparsified[["key"]]
         old_lvls <- na.omit(unique(key))
@@ -365,7 +474,8 @@ setMethod("[", "SimpleListSparseAssays",
         key <- sample[["key"]]
         key[i] <- vsm_updated
         # (3) and (4)
-        sparsified <- .sparsify(tmp_value[na.omit(unique(key)), , drop = FALSE])
+        sparsified <- sparsify(tmp_value[na.omit(unique(key)), , drop = FALSE],
+                               "SimpleList")
         # (5)
         new_lvls <- sparsified[["key"]]
         old_lvls <- na.omit(unique(key))
@@ -405,6 +515,12 @@ setMethod("[", "SimpleListSparseAssays",
   val
 }
 
+#' @inheritParams dim,SimpleListSparseAssays-method
+#' @param value An object of a class specified in the S4 method signature or as
+#'        outlined in \sQuote{Details}.
+#'
+#' @rdname SimpleListSparseAssays-class
+#'
 #' @importFrom methods setReplaceMethod
 #'
 #' @export
@@ -540,6 +656,14 @@ setReplaceMethod("[", "SimpleListSparseAssays",
 # rbind,ANY-method, which fails because a SimpleListSparseAssays object cannot
 # be coerced to a vector (and even if it could, the resulting operation
 # probably wouldn't make sense).
+#' @param ... For \code{cbind()}, \code{rbind()}, and \code{combine()} one or
+#'        more SimpleListSparseAssay objects. Otherwise, additional arguments,
+#'        for use in specific methods.
+#' @param deparse.level See \code{?base::\link[base]{cbind}} for a description
+#'        of this argument.
+#'
+#' @rdname SimpleListSparseAssays-class
+#'
 #' @importFrom methods setMethod
 #'
 #' @export
@@ -554,6 +678,9 @@ setMethod("rbind", "SimpleListSparseAssays",
 # (and doesn't make much sense for SimpleListSparseAssays objects).
 # WARNING: Not really a cbind. It adds new elements to the 'sparse_assay'-level
 #          SimpleList.
+#' @inheritParams rbind,SimpleListSparseAssays-method
+#'
+#' @rdname SimpleListSparseAssays-class
 #' @importFrom methods setMethod
 #'
 #' @export
@@ -585,7 +712,7 @@ setMethod("cbind", "SimpleListSparseAssays",
     storage.mode(ye) <- storage.mode(xe)
   }
 
-  sparsified <- .sparsify(combine(xe, ye))
+  sparsified <- sparsify(combine(xe, ye), "SimpleList")
 
   key <- sparsified[["key"]]
   value <- sparsified[["value"]]
@@ -609,6 +736,11 @@ setMethod("cbind", "SimpleListSparseAssays",
 #       second level (corresponding to different samples).
 # NOTE: Requires that both x and y have the identical number of sparse assays
 #       with identical names.
+#' @inheritParams dim
+#' @param y A SimpleListSparseAssays object.
+#'
+#' @rdname SimpleListSparseAssays-class
+#'
 #' @importFrom methods setMethod
 #' @importFrom S4Vectors SimpleList
 #' @importMethodsFrom S4Vectors endoapply mendoapply
@@ -696,18 +828,20 @@ setMethod("combine", c("SimpleListSparseAssays", "SimpleListSparseAssays"),
 
 # NOTE: Useful if wanting to densify/expand one sample's worth of data at a
 #       time.
-# TODO: Might be useful to export so that developers' can make use of it. If
-#       exported, then need to come up with a better name.
 .densify.SimpleListSparseAssays.sample <- function(sample) {
   sample[["value"]][sample[["key"]], , drop = FALSE]
 }
 
-# NOTE: Not a method for the time being; also cannot be called expand() because
-# of IRanges::expand().
+#' @param x A SimpleListSparseAssays or SimpleList object.
+#'
 #' @importClassesFrom GenomicRanges ShallowSimpleListAssays
 #' @importFrom SummarizedExperiment Assays
 .densify.SimpleListSparseAssays <- function(x, ShallowSimpleListAssays = FALSE) {
 
+  if (is(x, "SimpleListSparseAssays")) {
+    # TODO: I should be passing strict = FALSE but this doesn't work
+    x <- as(x, "SimpleList")
+  }
 
   if (ShallowSimpleListAssays) {
     l <- lapply(x, function(sparse_assay) {
@@ -751,8 +885,168 @@ setMethod("combine", c("SimpleListSparseAssays", "SimpleListSparseAssays"),
 #' @importFrom methods setMethod
 #'
 #' @export
-setMethod("densify", "SimpleListSparseAssays",
-          .densify.SimpleListSparseAssays)
+setMethod("densify", c("SimpleListSparseAssays", "numeric", "missing"),
+          function(x, i, j, ...) {
+
+            tryCatch({
+              # TODO: I should be passing strict = FALSE but this doesn't work
+              sparse_assays <- as(x, "SimpleList")[i]
+            }, error = function(err) {
+              stop("'densify(<", class(x), ">, i=\"numeric\", j=\"missing\",  ",
+                   "...)' invalid subscript 'i'\n", conditionMessage(err))
+            })
+            .densify.SimpleListSparseAssays(sparse_assays)
+          }
+)
+
+#' @importFrom methods setMethod
+#'
+#' @export
+setMethod("densify", c("SimpleListSparseAssays", "character", "missing"),
+          function(x, i, j, ...) {
+
+            msg <- paste0("'densify(<", class(x), ">, i=\"character\", ",
+                          "j=\"missing\", ...)' invalid subscript 'i'")
+            tryCatch({
+              sparse_assays <- as(x, "SimpleList")[i]
+            }, error = function(err) {
+              stop(msg, "\n", conditionMessage(err))
+            })
+
+            .densify.SimpleListSparseAssays(sparse_assays)
+          }
+)
+
+#' @importFrom methods setMethod
+#'
+#' @export
+setMethod("densify", c("SimpleListSparseAssays", "missing", "numeric"),
+          function(x, i, j, ...) {
+
+            tryCatch({
+              sparse_assays <- x[, j]
+            }, error = function(err) {
+              stop("'densify(<", class(x), ">, i=\"missing\", j=\"numeric\",  ",
+                   "...)' invalid subscript 'j'\n", conditionMessage(err))
+            })
+            .densify.SimpleListSparseAssays(sparse_assays)
+          }
+)
+
+#' @importFrom methods setMethod
+#'
+#' @export
+setMethod("densify", c("SimpleListSparseAssays", "missing", "character"),
+          function(x, i, j, ...) {
+
+            msg <- paste0("'densify(<", class(x), ">, i=\"missing\", ",
+                          "j=\"character\", ...)' invalid subscript 'j'")
+            tryCatch({
+              sparse_assays <- x[, j]
+            }, error = function(err) {
+              stop(msg, "\n", conditionMessage(err))
+            })
+
+            .densify.SimpleListSparseAssays(sparse_assays)
+          }
+)
+
+#' @importFrom methods setMethod
+#'
+#' @export
+setMethod("densify", c("SimpleListSparseAssays", "numeric", "numeric"),
+          function(x, i, j, ...) {
+
+            tryCatch({
+              x <- x[, j]
+            }, error = function(err) {
+              stop("'densify(<", class(x), ">, i=\"numeric\", j=\"numeric\",  ",
+                   "...)' invalid subscript 'j'\n", conditionMessage(err))
+            })
+            tryCatch({
+              # TODO: I should be passing strict = FALSE but this doesn't work
+              sparse_assays <- as(x, "SimpleList")[i]
+            }, error = function(err) {
+              stop("'densify(<", class(x), ">, i=\"numeric\", j=\"numeric\",  ",
+                   "...)' invalid subscript 'i'\n",
+                   conditionMessage(err))
+            })
+            .densify.SimpleListSparseAssays(sparse_assays)
+          }
+)
+
+#' @importFrom methods setMethod
+#'
+#' @export
+setMethod("densify", c("SimpleListSparseAssays", "numeric", "character"),
+          function(x, i, j, ...) {
+
+            msg <- paste0("'densify(<", class(x), ">, i=\"numeric\", ",
+                          "j=\"character\", ...)' invalid subscript 'j'")
+            tryCatch({
+              x <- x[, j]
+            }, error = function(err) {
+              stop(msg, "\n", conditionMessage(err))
+            })
+            tryCatch({
+              # TODO: I should be passing strict = FALSE but this doesn't work
+              sparse_assays <- as(x, "SimpleList")[i]
+            }, error = function(err) {
+              stop("'densify(<", class(x), ">, i=\"numeric\", ",
+                   "j=\"character\", ...)' invalid subscript 'i'\n",
+                   conditionMessage(err))
+            })
+            .densify.SimpleListSparseAssays(sparse_assays)
+          }
+)
+
+#' @importFrom methods setMethod
+#'
+#' @export
+setMethod("densify", c("SimpleListSparseAssays", "character", "numeric"),
+          function(x, i, j, ...) {
+
+            tryCatch({
+              x <- x[, j]
+            }, error = function(err) {
+              stop("'densify(<", class(x), ">, i=\"character\", ",
+                   "j=\"numeric\", ...)' invalid subscript 'j'\n",
+                   conditionMessage(err))
+            })
+            msg <- paste0("'densify(<", class(x), ">, i=\"character\", ",
+                          "j=\"numeric\", ...)' invalid subscript 'i'")
+            tryCatch({
+              sparse_assays <- as(x, "SimpleList")[i]
+            }, error = function(err) {
+              stop(msg, "\n", conditionMessage(err))
+            })
+            .densify.SimpleListSparseAssays(sparse_assays)
+          }
+)
+
+#' @importFrom methods setMethod
+#'
+#' @export
+setMethod("densify", c("SimpleListSparseAssays", "character", "character"),
+          function(x, i, j, ...) {
+
+            msg <- paste0("'densify(<", class(x), ">, i=\"character\", ",
+                          "j=\"character\", ...)' invalid subscript 'j'")
+            tryCatch({
+              x <- x[, j]
+            }, error = function(err) {
+              stop(msg, "\n", conditionMessage(err))
+            })
+            msg <- paste0("'densify(<", class(x), ">, i=\"character\", ",
+                          "j=\"character\", ...)' invalid subscript 'i'")
+            tryCatch({
+              sparse_assays <- as(x, "SimpleList")[i]
+            }, error = function(err) {
+              stop(msg, "\n", conditionMessage(err))
+            })
+            .densify.SimpleListSparseAssays(sparse_assays)
+          }
+)
 
 #' @importFrom methods setAs
 #'
@@ -761,101 +1055,6 @@ setAs("SimpleListSparseAssays", "ShallowSimpleListAssays",
       function(from) {
         .densify.SimpleListSparseAssays(from, ShallowSimpleListAssays = TRUE)
       }
-)
-
-# Convert a matrix, data.frame, or data.table into a 'key' and 'value'
-# elements. Basically, convert 'x' to a data.table object, use all columns as
-# the keys, identify the unique rows of the data.table and map each row of
-# 'x' to these unique rows.
-#
-# WARNING: The relative row-order of 'x' is not preserved in the returned 'data'.
-#          However, the following should be TRUE when 'x' is
-#          matrix:
-#          identical(.densify.SimpleListSparseAssays.sample(sparsify(x)), x)
-# NOTE: Returned object is stripped of dimnames
-#' @importFrom data.table := .GRP .I as.data.table key setDT setkey setkeyv
-#' @importFrom S4Vectors SimpleList
-#'
-.sparsify <- function(x, data_class = c("matrix", "data.frame", "data.table")) {
-
-  # Convert input to data.table
-  if (is(x, "data.frame")) {
-    # Modifiy by reference
-    setDT(x)
-  } else if (is(x, "matrix")) {
-    x <- as.data.table(x, keep.rownames = FALSE)
-  } else if (is(x, "data.table")) {
-    # Nothing to do
-  } else {
-    stop("'x' must be a 'matrix', 'data.frame', or 'data.table' object")
-  }
-
-  data_class <- match.arg(data_class)
-
-  # NOTE: Will get errors if data have zero rows.
-  if (nrow(x)) {
-
-    # Add an index for the original row number
-    if (any(c(".myI", ".myKey")  %in% colnames(x))) {
-      stop("'x' must not have a column named '.myI' or '.myKey'")
-    }
-    x[, .myI := .I]
-
-    # Set the map (kind of like hashing the rows of the data.table since we use
-    # all columns)
-    my_key <- grep(".myI", colnames(x), value = TRUE, invert = TRUE)
-    setkeyv(x, cols = my_key)
-
-    # Create the map and data
-    x[, .myKey := .GRP, by = key(x)]
-    key <- setkey(x[, list(.myI, .myKey)], .myI)[, .myKey]
-    value <- unique(x)[, c(".myI", ".myKey") := NULL]
-  } else {
-    value <- x
-    key <- integer(0)
-  }
-
-
-  if (identical(data_class, "matrix")) {
-    value <- unname(as.matrix(value))
-  } else if (identical(data_class, "data.frame")) {
-    value <- unname(as.data.frame(value))
-  }
-
-  # Return the result
-  SimpleList(key = key,
-             value = value)
-}
-# To avoid WARNINGs about "Undefined global functions or variables" in
-# R CMD check caused by the .sparsify() function.
-#' @importFrom utils globalVariables
-globalVariables(c(".myI", ".myKey"))
-
-#' @importFrom methods setMethod
-#'
-#' @export
-setMethod("sparsify", "matrix",
-          function(x, data_class = "matrix") {
-            .sparsify(x = x, data_class = data_class)
-          }
-)
-
-#' @importFrom methods setMethod
-#'
-#' @export
-setMethod("sparsify", "data.frame",
-          function(x, data_class = "data.frame") {
-            .sparsify(x = x, data_class = data_class)
-          }
-)
-
-#' @importFrom methods setMethod
-#'
-#' @export
-setMethod("sparsify", "data.table",
-          function(x, data_class = "data.table") {
-            .sparsify(x = x, data_class = data_class)
-          }
 )
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
