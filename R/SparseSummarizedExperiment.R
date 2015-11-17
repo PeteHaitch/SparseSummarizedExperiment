@@ -30,10 +30,15 @@ NULL
 ###       class to extend the SummarizedExperiment0 class. This hierarchy is
 ###       illustrated below:
 ###
+###       The class hierarchy is as follows:
 ###       SummarizedExperiment0
 ###       ├── RangedSummarizedExperiment
 ###       │   ├── RangedSparseSummarizedExperiment
 ###       ├── SparseSummarizedExperiment
+###       │   ├── RangedSparseSummarizedExperiment
+###       i.e. RangedSparseSummarizedExperiment is a subclass of both
+###       SparseSummarizedExperiment and RangedSummarizedExperiment, although
+###       SparseSummarizedExperiment has precedence.
 ###
 ###       The main benefit of this hierarchy is that all rowRanges-based
 ###       methods automatically work via inheritance for the
