@@ -8,17 +8,17 @@
 \S4method{combine}{GRangesList,GRangesList}(x, y, ...)
 }
 \arguments{
-\item{x}{A \link[GenomcRanges]{GRangesList} object.}
+\item{x}{A \link[GenomicRanges]{GRangesList} object.}
 
-\item{y}{A \link[GenomcRanges]{GRangesList} object.}
+\item{y}{A \link[GenomicRanges]{GRangesList} object.}
 
-\item{...}{One or more \link[GenomcRanges]{GRangesList} objects.}
+\item{...}{One or more \link[GenomicRanges]{GRangesList} objects.}
 }
 \value{
-A \link[GenomcRanges]{GRanges} object.
+A \link[GenomicRanges]{GRanges} object.
 }
 \description{
-Combine multiple \link[GenomcRanges]{GRangesList} objects using a union
+Combine multiple \link[GenomicRanges]{GRangesList} objects using a union
 strategy.
 }
 \details{

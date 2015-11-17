@@ -11,7 +11,7 @@
 
 #' Combining GRanges objects
 #'
-#' Combine multiple \link[GenomcRanges]{GRanges} objects using a union strategy.
+#' Combine multiple \link[GenomicRanges]{GRanges} objects using a union strategy.
 #'
 #' @details Unlike other \code{combine} methods (e.g.,
 #' \code{\link[BiocGenerics]{combine,matrix,matrix-method}}), this does not
@@ -19,11 +19,11 @@
 #' \code{...}. In fact, the \code{names} are ignored entirely and the method
 #' effectively calls \code{unique(c(x, y, ...))}.
 #'
-#' @param x A \link[GenomcRanges]{GRanges} object.
-#' @param y A \link[GenomcRanges]{GRanges} object.
-#' @param ... One or more \link[GenomcRanges]{GRanges} objects.
+#' @param x A \link[GenomicRanges]{GRanges} object.
+#' @param y A \link[GenomicRanges]{GRanges} object.
+#' @param ... One or more \link[GenomicRanges]{GRanges} objects.
 #'
-#' @return A \link[GenomcRanges]{GRanges} object.
+#' @return A \link[GenomicRanges]{GRanges} object.
 #'
 #' @author Peter Hickey, \url{peter.hickey@gmail.com}
 #'
@@ -56,17 +56,17 @@ setMethod("combine", c("GRanges", "GRanges"),
 # TODO: How to handle unnamed GRangesList objects?
 #' Combining GRangesList objects
 #'
-#' Combine multiple \link[GenomcRanges]{GRangesList} objects using a union
+#' Combine multiple \link[GenomicRanges]{GRangesList} objects using a union
 #' strategy.
 #'
 #' @details Objects are combined based on the \code{names} of \code{x},
 #' \code{y}, and \code{...}.
 #'
-#' @param x A \link[GenomcRanges]{GRangesList} object.
-#' @param y A \link[GenomcRanges]{GRangesList} object.
-#' @param ... One or more \link[GenomcRanges]{GRangesList} objects.
+#' @param x A \link[GenomicRanges]{GRangesList} object.
+#' @param y A \link[GenomicRanges]{GRangesList} object.
+#' @param ... One or more \link[GenomicRanges]{GRangesList} objects.
 #'
-#' @return A \link[GenomcRanges]{GRanges} object.
+#' @return A \link[GenomicRanges]{GRanges} object.
 #'
 #' @author Peter Hickey, \url{peter.hickey@gmail.com}
 #'
