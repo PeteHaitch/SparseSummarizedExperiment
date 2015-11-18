@@ -38,6 +38,6 @@ combine(x, y)
 
 }
 \author{
-Peter Hickey, \url{peter.hickey@gmail.com}
+Peter Hickey, \email{peter.hickey@gmail.com}
 }
 

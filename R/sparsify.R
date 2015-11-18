@@ -38,12 +38,12 @@ NULL
     }
     x[, .myI := .I]
 
-    # Set the map (kind of like hashing the rows of the data.table since we use
+    # Set the key (kind of like hashing the rows of the data.table since we use
     # all columns)
     my_key <- grep(".myI", colnames(x), value = TRUE, invert = TRUE)
     setkeyv(x, cols = my_key)
 
-    # Create the map and data
+    # Create the key and value
     x[, .myKey := .GRP, by = key(x)]
     key <- setkey(x[, list(.myI, .myKey)], .myI)[, .myKey]
     value <- unique(x)[, c(".myI", ".myKey") := NULL]

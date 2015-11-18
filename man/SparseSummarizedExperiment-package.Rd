@@ -2,13 +2,18 @@
 % Please edit documentation in R/SparseSummarizedExperiment.R
 \docType{package}
 \name{SparseSummarizedExperiment-package}
+\alias{SparseSummarizedExperiment}
 \alias{SparseSummarizedExperiment-package}
-\title{An experimental implementation of a container modeled on the
-SummarizedExperiment class for storing sparse genomic data.}
+\title{SparseSummarizedExperiment Container}
 \description{
-\pkg{SparseSummarizedExperiment} defines general purpose containers for
+An experimental implementation of a container modeled on the
+SummarizedExperiment class for storing sparse genomic data.
+SparseSummarizedExperiment defines general purpose containers for
 storing sparse genomic data. It aims to provide functionality for sparse
 genomic data analogous to that available in the SummarizedExperiment
 Bioconductor package.
+}
+\author{
+Peter Hickey, \email{peter.hickey@gmail.com}
 }
 

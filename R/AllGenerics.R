@@ -27,7 +27,7 @@
 #'         each containing a \code{matrix} of the densified data for that
 #'         sample in that sparse assay.
 #'
-#' @author Peter Hickey, \url{peter.hickey@gmail.com}
+#' @author Peter Hickey, \email{peter.hickey@@gmail.com}
 #'
 #' @seealso
 #' \itemize{
@@ -43,8 +43,11 @@
 #' @importFrom methods setGeneric
 #'
 #' @export
-setGeneric("densify", function(x, i, j, ...) standardGeneric("densify"),
-           signature = c("x", "i", "j"))
+setGeneric("densify",
+           function(x, i, j, ...)
+             standardGeneric("densify"),
+           signature = c("x", "i", "j")
+)
 
 ### -------------------------------------------------------------------------
 ### sparsify
@@ -74,7 +77,7 @@ setGeneric("densify", function(x, i, j, ...) standardGeneric("densify"),
 #' \link[S4Vectors]{SimpleList} object with an \code{integer} \code{key}
 #' element and a \code{matrix} \code{value} element.
 #'
-#' @author Peter Hickey, \url{peter.hickey@gmail.com}
+#' @author Peter Hickey, \email{peter.hickey@@gmail.com}
 #'
 #' @seealso
 #' \itemize{
@@ -87,14 +90,17 @@ setGeneric("densify", function(x, i, j, ...) standardGeneric("densify"),
 #' @importFrom methods setGeneric
 #'
 #' @export
-setGeneric("sparsify", function(x, return_class, ...) {
-  standardGeneric("sparsify")
-  }, signature = c("x", "return_class"))
+setGeneric("sparsify",
+           function(x, return_class, ...)
+             standardGeneric("sparsify"),
+           signature = c("x", "return_class")
+)
 
 ### -------------------------------------------------------------------------
 ### sparseAssays
 ###
 
+# TODO: Document in SparseSummarizedExperiment-class
 # NOTE: Following assays(), sparseAssays() will not strip the dimnames if
 #       withDimnames = FALSE but will simply fail to add them.
 # NOTE: The expand = TRUE argument returns a SimpleList, not a SparseAssays
@@ -109,53 +115,62 @@ setGeneric("sparsify", function(x, return_class, ...) {
 #'
 #' @export
 setGeneric("sparseAssays",
-           function(x, ..., withDimnames = TRUE, expand = FALSE) {
-             standardGeneric("sparseAssays")
-           }, signature = "x")
+           function(x, densify = FALSE, ..., withDimnames = TRUE)
+             standardGeneric("sparseAssays"),
+           signature = "x")
 
+# TODO: Document in SparseSummarizedExperiment-class
 #' @importFrom methods setGeneric
 #'
 #' @export
 setGeneric("sparseAssays<-",
-           function(x, ..., withDimnames = TRUE, value) {
-             standardGeneric("sparseAssays<-")
-           }, signature = c("x", "value"))
+           function(x, ..., withDimnames = TRUE, value)
+             standardGeneric("sparseAssays<-"),
+           signature = c("x", "value"))
 
 ### -------------------------------------------------------------------------
 ### sparseAssay
 ###
 
+# TODO: Document in SparseSummarizedExperiment-class
 #' @importFrom methods setGeneric
 #'
 #' @export
-setGeneric("sparseAssay", function(x, i, ..., expand = FALSE) {
-  standardGeneric("sparseAssay")
-})
+setGeneric("sparseAssay",
+           function(x, i, ..., densify = FALSE)
+             standardGeneric("sparseAssay")
+)
 
+# TODO: Document in SparseSummarizedExperiment-class
 #' @importFrom methods setGeneric
 #'
 #' @export
-setGeneric("sparseAssay<-", function(x, i, ..., value) {
-  standardGeneric("sparseAssay<-")
-})
+setGeneric("sparseAssay<-",
+           function(x, i, ..., value)
+             standardGeneric("sparseAssay<-")
+)
 
 ### -------------------------------------------------------------------------
 ### sparseAssayNames
 ###
 
+# TODO: Document in SparseSummarizedExperiment-class
 #' @importFrom methods setGeneric
 #'
 #' @export
-setGeneric("sparseAssayNames", function(x, ...) {
-  standardGeneric("sparseAssayNames")
-})
+setGeneric("sparseAssayNames",
+           function(x, ...)
+             standardGeneric("sparseAssayNames")
+)
 
+# TODO: Document in SparseSummarizedExperiment-class
 #' @importFrom methods setGeneric
 #'
 #' @export
-setGeneric("sparseAssayNames<-", function(x, ..., value) {
-  standardGeneric("sparseAssayNames<-")
-})
+setGeneric("sparseAssayNames<-",
+           function(x, ..., value)
+             standardGeneric("sparseAssayNames<-")
+)
 
 ### -------------------------------------------------------------------------
 ### SparseSummarizedExperiment
@@ -165,6 +180,6 @@ setGeneric("sparseAssayNames<-", function(x, ..., value) {
 #'
 #' @export
 setGeneric("SparseSummarizedExperiment",
-           function(sparseAssays, ...) {
+           function(sparseAssays, ...)
              standardGeneric("SparseSummarizedExperiment")
-})
+)

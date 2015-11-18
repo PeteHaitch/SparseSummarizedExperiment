@@ -39,7 +39,7 @@ A generic function to densify (expand) the elements of a SparseAssays object.
 
 }
 \author{
-Peter Hickey, \url{peter.hickey@gmail.com}
+Peter Hickey, \email{peter.hickey@gmail.com}
 }
 \seealso{
 \itemize{

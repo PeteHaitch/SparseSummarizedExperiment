@@ -122,7 +122,7 @@ be removed) and/or lots of NAs per-sample.
 
 }
 \author{
-Peter Hickey, \url{peter.hickey@gmail.com}
+Peter Hickey, \email{peter.hickey@gmail.com}
 }
 \seealso{
 \itemize{

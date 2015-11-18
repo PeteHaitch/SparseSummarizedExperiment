@@ -5,6 +5,10 @@ Authors@R: c(person("Peter", "Hickey", role = c("aut", "cre"),
     email = "peter.hickey@gmail.com"))
 Description: An experimental implementation of a container modeled on the
     SummarizedExperiment class for storing sparse genomic data.
+    SparseSummarizedExperiment defines general purpose containers for
+    storing sparse genomic data. It aims to provide functionality for sparse
+    genomic data analogous to that available in the SummarizedExperiment
+    Bioconductor package.
 Depends:
     R (>= 3.3.0),
     GenomicRanges (>= 1.23.3),
@@ -23,7 +27,6 @@ Collate:
     'S4Vectors-pkg.R'
     'SparseSummarizedExperiment.R'
     'AllGenerics.R'
-    'SSE-helpers.R'
     'SparseAssays-class.R'
     'SimpleListSparseAssays-class.R'
     'SparseSummarizedExperiment-class.R'

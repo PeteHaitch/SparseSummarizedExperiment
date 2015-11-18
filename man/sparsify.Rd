@@ -39,7 +39,7 @@ is generally not compatible with the signature of a
 
 }
 \author{
-Peter Hickey, \url{peter.hickey@gmail.com}
+Peter Hickey, \email{peter.hickey@gmail.com}
 }
 \seealso{
 \itemize{

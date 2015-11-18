@@ -84,7 +84,7 @@ NULL
 #' \link[SummarizedExperiment]{ShallowSimpleListAssays} object will typically
 #' require much more memory than the equivalent SimpleListSparseAssays object.
 #'
-#' @author Peter Hickey, \url{peter.hickey@gmail.com}
+#' @author Peter Hickey, \email{peter.hickey@@gmail.com}
 #'
 #' @seealso
 #' \itemize{
@@ -308,6 +308,19 @@ setMethod("dim", "SimpleListSparseAssays",
             }
           }
 )
+
+### dimnames
+
+.dimnames.SimpleListSparseAssays <- function(x) {
+
+  # NOTE: Uses rownames from first sparse assay-sample with no check
+  #       that these are the same across other sparse assay-sample
+  #       combinations
+  # NOTE: Uses colnames from first sparse assay with no check that
+  #       these are the same across other sparse assays
+  list(names(x[[1L]][[1L]][["key"]]),
+       names(x[[1L]]))
+}
 
 ### [
 
@@ -755,10 +768,6 @@ setMethod("combine", c("SimpleListSparseAssays", "SimpleListSparseAssays"),
               return(y)
             }
 
-            if (is.null(dimnames(x)) || is.null(dimnames(y))) {
-              stop("'x' and 'y' must have non-NULL dimnames")
-            }
-
             mendoapply(function(x_sa, y_sa) {
 
               if (is.null(names(x_sa)) || is.null(names(y_sa))) {
@@ -835,7 +844,6 @@ setMethod("combine", c("SimpleListSparseAssays", "SimpleListSparseAssays"),
 #' @param x A SimpleListSparseAssays or SimpleList object.
 #'
 #' @importClassesFrom GenomicRanges ShallowSimpleListAssays
-#' @importFrom SummarizedExperiment Assays
 .densify.SimpleListSparseAssays <- function(x, ShallowSimpleListAssays = FALSE) {
 
   if (is(x, "SimpleListSparseAssays")) {
@@ -876,9 +884,10 @@ setMethod("combine", c("SimpleListSparseAssays", "SimpleListSparseAssays"),
     return(Assays(l))
 
   } else {
-    lapply(x, function(sparse_assay) {
+    l <- lapply(x, function(sparse_assay) {
       lapply(sparse_assay, .densify.SimpleListSparseAssays.sample)
     })
+    SimpleList(l)
   }
 }
 

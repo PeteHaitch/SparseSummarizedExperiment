@@ -27,7 +27,6 @@
 #'
 #' @aliases RangedSparseSummarizedExperiment
 #'
-#' @importClassesFrom SummarizedExperiment RangedSummarizedExperiment
 #' @importFrom methods setClass
 #'
 #' @export
@@ -60,12 +59,9 @@ get_rownames_from_sparse_assays <- function(sparse_assays) {
 #'
 #' @rdname RangedSparseSummarizedExperiment-class
 #'
-#' @importClassesFrom SummarizedExperiment SummarizedExperiment0
-#'                                         RangedSummarizedExperiment
 #' @importFrom GenomicRanges GRangesList
 #' @importFrom methods new setMethod
 #' @importFrom S4Vectors DataFrame SimpleList
-#' @importFrom SummarizedExperiment SummarizedExperiment
 #' @importMethodsFrom S4Vectors endoapply
 #'
 #' @export
@@ -116,6 +112,8 @@ setMethod("SparseSummarizedExperiment", "SparseAssays",
               }
             }
 
+            # TODO: strip dimnames from sparseAssays **except colnames of value**
+
             if (missing(rowRanges)) {
               # Need to update elementMetadata slot to have the valid dimensions
               se@elementMetadata <- DataFrame()
@@ -150,6 +148,9 @@ setMethod("SparseSummarizedExperiment", "missing",
             SparseSummarizedExperiment(SparseAssays(), ...)
           }
 )
+
+# TODO: Add SparseSummarizedExperiment,SimpleList-method and
+#       SparseSummarizedExperiment,list-method.
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Miscellaneous NOTEs

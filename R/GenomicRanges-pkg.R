@@ -25,7 +25,7 @@
 #'
 #' @return A \link[GenomicRanges]{GRanges} object.
 #'
-#' @author Peter Hickey, \url{peter.hickey@gmail.com}
+#' @author Peter Hickey, \email{peter.hickey@@gmail.com}
 #'
 #' @examples
 #' x <- GRanges(seqnames = c("chr1", "chr2"),
@@ -68,7 +68,7 @@ setMethod("combine", c("GRanges", "GRanges"),
 #'
 #' @return A \link[GenomicRanges]{GRanges} object.
 #'
-#' @author Peter Hickey, \url{peter.hickey@gmail.com}
+#' @author Peter Hickey, \email{peter.hickey@@gmail.com}
 #'
 #' @examples
 #' x <- GRangesList(

@@ -173,7 +173,7 @@ rbind(sa, sa)
 
 }
 \author{
-Peter Hickey, \url{peter.hickey@gmail.com}
+Peter Hickey, \email{peter.hickey@gmail.com}
 }
 \seealso{
 \itemize{
