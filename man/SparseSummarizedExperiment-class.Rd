@@ -2,22 +2,32 @@
 % Please edit documentation in R/SparseSummarizedExperiment-class.R
 \docType{class}
 \name{SparseSummarizedExperiment-class}
-\alias{SparseSummarizedExperiment}
 \alias{SparseSummarizedExperiment-class}
 \alias{[,SparseSummarizedExperiment}
-\alias{[,SparseSummarizedExperiment,ANY}
-\alias{[<-,SparseSummarizedExperiment,ANY,ANY,SparseSummarizedExperiment}
+\alias{[,SparseSummarizedExperiment,ANY-method}
+\alias{[<-,SparseSummarizedExperiment,ANY,ANY,SparseSummarizedExperiment-method}
 \alias{cbind,SparseSummarizedExperiment-method}
 \alias{combine,SparseSummarizedExperiment,SparseSummarizedExperiment-method}
 \alias{makeSEFromSSE}
 \alias{rbind,SparseSummarizedExperiment-method}
 \alias{show,SparseSummarizedExperiment-method}
 \alias{sparseAssay}
+\alias{sparseAssay,SparseSummarizedExperiment,character-method}
+\alias{sparseAssay,SparseSummarizedExperiment,missing-method}
+\alias{sparseAssay,SparseSummarizedExperiment,numeric-method}
 \alias{sparseAssay<-}
+\alias{sparseAssay<-,SparseSummarizedExperiment,character,SimpleList-method}
+\alias{sparseAssay<-,SparseSummarizedExperiment,missing,SimpleList-method}
+\alias{sparseAssay<-,SparseSummarizedExperiment,numeric,SimpleList-method}
 \alias{sparseAssayNames}
+\alias{sparseAssayNames,SparseSummarizedExperiment-method}
 \alias{sparseAssayNames<-}
+\alias{sparseAssayNames<-,SparseSummarizedExperiment,character-method}
 \alias{sparseAssays}
+\alias{sparseAssays,SparseSummarizedExperiment-method}
 \alias{sparseAssays<-}
+\alias{sparseAssays<-,SparseSummarizedExperiment,SimpleList-method}
+\alias{sparseAssays<-,SparseSummarizedExperiment,SparseAssays-method}
 \title{SparseSummarizedExperiment objects}
 \usage{
 ## Constructor
@@ -28,15 +38,13 @@
 
 sparseAssayNames(x, ...)
 sparseAssayNames(x, ...) <- value
-sparseAssays(x, densify = FALSE, ..., withDimnames = TRUE)
+sparseAssays(x, ..., withDimnames = TRUE)
 sparseAssays(x, ..., withDimnames = TRUE) <- value
-sparseAssay(x, i, ..., densify = FALSE)
+sparseAssay(x, i, ...)
 sparseAssay(x, i, ...) <- value
 
 ## Subsetting
 
-## S4 method for signature 'SparseSummarizedExperiment'
-x[i, j, ..., drop = TRUE]
 ## S4 replacement method for signature
 ## 'SparseSummarizedExperiment,ANY,ANY,SparseSummarizedExperiment'
 x[i, j] <- value
@@ -67,14 +75,15 @@ makeSEFromSSE(x)
 
        For other accessors, ignored.}
 
-\item{i, j}{For \code{sparseAssay}, \code{sparseAssays<-}, \code{i} is a
-       numeric or character scalar; see \sQuote{Details} for additional
+\item{i, j}{For \code{sparseAssay}, \code{sparseAssay<-}, \code{i} is a
+       numeric or character scalar; see \sQuote{Accessors} for additional
        constraints.
 
        For \code{[,SparseSummarizedExperiment},
        \code{[,SparseSummarizedExperiment<-}, \code{i}, \code{j} are
-       subscripts that can act to subset the rows and columns of \code{x},
-       that is the sparse assay elements of \code{sparseAssays}.
+       subscripts that can act to subset the rows (features) and columns
+       (samples) of \code{x}, that is the sparse assay elements of
+       \code{sparseAssays} and the \code{matrix} elements of \code{assays}.
 
        For \code{[[,SparseSummarizedExperiment},
        \code{[[,SparseSummarizedExperiment<-}, \code{i}, is a scalar index
@@ -92,17 +101,6 @@ efficient that \code{names(sparseAssays(x)) <- ...}); it does not
 influence actual assignment of dimnames to sparse assays.
 \strong{NOTE}: For this particular example, it is simpler and just as
 efficient to use \code{sparseAssayNames(x) <- ...}.}
-
-\item{densify}{A \code{logical(1)}, indicating whether sparse assays should
-be \emph{densified}. It is generally advisable to work with
-the sparse representation of the data wherever possible, but there
-are times when the \emph{densified} version of the sparse data are
-required.This can be achieved using the \code{densify = TRUE}
-argument in \code{sparseAssays()} and \code{sparseAssay()}. Note,
-however, that it is generally unadvisable to simultaneously densify
-all sparse assays and samples; see \code{\link{densify}}.}
-
-\item{drop}{A \code{logical(1)}, ignored by these methods}
 
 \item{value}{An object of a class specified in the S4 method signature or as
 outlined in \sQuote{Details}.}
@@ -165,22 +163,27 @@ is a SparseSummarizedExperiment objects, the following accessors are
 applicable.
 
 \describe{
- \item{\code{sparseAssays(x, densify = FALSE, ..., withDimnames = TRUE)},
-   \code{sparseAssays(x, ..., withDimnames = TRUE) <- value}:}{Get or set
-   the sparse assays. \code{value} is a \link{SparseAssays} with the same
-   dimensions as \code{x} or a \link{SimpleList} object (which will be
-   coerced to a \code{SparseAssays} object and must then have the same
-   dimensions as \code{x}). See \code{?\link{sparseAssays}} and
-   \code{?\link{sparseAssays<-}} for further details.}
+# TODO: Check equivalence claim
+ \item{\code{sparseAssays(x)}, \code{sparseAssays(x) <- value}:}{Get or set
+   the sparse assays. Unlike \code{\link[SummarizedExperiment]{assays}(x)},
+   \code{sparseAssays(x)} does not coerce the returned object to a
+   \link[S4Vectors]{SimpleList} object but preserves it as the concrete
+   \link{SparseAssays} subclass. \code{value} is a \link{SparseAssays}
+   object with the same dimensions as \code{x} or a \link{SimpleList} object
+   (which will be coerced to a \code{SparseAssays} object and must then have
+   the same dimensions as \code{x}).}
 
- \item{\code{sparseAssay(x, i)}, \code{sparseAssay(x, i) <- value}:}{A
-   convenient alternative (to \code{sparseAssays(x)[[i]]},
-   \code{sparseAssays(x)[[i]] <- value}) to get or set the \code{i}th
-   (default first) sparse assay element. \code{value} must be a
-   \link{SparseAssays} object of the same dimension as \code{x}, and with
-   dimension names \code{NULL} or consistent with those of \code{x}. See
-   \code{?\link{sparseAssay}} and \code{?\link{sparseAssay<-}} for further
-   details.}
+# TODO: Check equivalence claim
+# TODO: Could/should I allow value to be a SimpleList
+ \item{\code{sparseAssay(x, i)}, \code{sparseAssay(x, i) <- value}:}{Get or
+   set the \code{i}th (default first) sparse assay elements. Unlike
+   \code{\link[SummarizedExperiment]{assay}(x, i)},
+   \code{sparseAssay(x, i)} allows vector \code{i} and preserves the
+   returned object as the concrete  \link{SparseAssays} subclass.
+   \code{value} must be a \link{SparseAssays} object (with the same concrete
+   subclass) of the same dimension as \code{x}, and with dimension names
+   \code{NULL} or consistent with those of \code{x} and \code{length} equal
+   to \code{length(i)}.}
 
  \item{\code{sparseAssayNames(x)}, \code{sparseAssayNames(x) <- value}:}{Get
    or set the names of \code{sparseAssays()} elements.}
@@ -271,7 +274,9 @@ the existing SparseSummarizedExperiment class without modification. See
 \link{SparseAssays} for more information.
 
 The current \code{sparseAssays} slot is implemented as a
-\link{SimpleListSparseAssays} object. It is generally advisable to work with
+\link{SimpleListSparseAssays} object.
+
+It is generally advisable to work with
 the sparse representation of the data wherever possible, but there are
 times when the \emph{densified} version of the sparse data are required.
 This can be achieved using the \code{densify = TRUE} argument in
@@ -292,7 +297,7 @@ sl2 <- SimpleList(
   s2 = SimpleList(key = as.integer(c(1, 1, 1, 2, NA, NA, NA, NA, NA, NA)),
                   value = matrix(4:3, ncol = 1)))
 # TODO: Need to require(?) that sparse assays are named
-sa <- SparseAssays(SimpleList("a1" = sl1, "a2" = sl2))
+sa <- SparseAssays(SimpleList("sa1" = sl1, "sa2" = sl2))
 
 colData <- DataFrame(Genotype = c("WT", "KO"),
                      row.names = c("s1", "s2"))
@@ -301,12 +306,16 @@ sse <- SparseSummarizedExperiment(sparseAssays = sa,
 sse
 dim(sse)
 dimnames(sse)
+sparseAssay(sse)
+# densify the first sparse assay.
 # In general its a bad idea to use densify = TRUE, but these data are small
 # enough not to worry.
-sparseAssay(sse, densify = TRUE)
+densify(sparseAssay(sse), 1, 1:2)[[1]]
 # TODO: Implement saapply
 # sparseAssays(sse) <- saapply(sparseAssays(sse), function(x) x^2)
-sparseAssay(sse, densify = TRUE)
+sparseAssay(sse)
+# densify the first sparse assay
+densify(sparseAssay(sse), 1, 1:2)[[1]]
 
 sse[, sse$Genotype == "WT"]
 

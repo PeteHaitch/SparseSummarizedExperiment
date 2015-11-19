@@ -92,6 +92,7 @@ NULL
 #' }
 #'
 #' @aliases SimpleListSparseAssays
+#'          [,SimpleListSparseAssays,ANY-method
 #'
 #' @examples
 #' # TODO: Get old examples from docs
@@ -846,6 +847,8 @@ setMethod("combine", c("SimpleListSparseAssays", "SimpleListSparseAssays"),
 #' @importClassesFrom GenomicRanges ShallowSimpleListAssays
 .densify.SimpleListSparseAssays <- function(x, ShallowSimpleListAssays = FALSE) {
 
+  nr <- nrow(x)
+  nc <- ncol(x)
   if (is(x, "SimpleListSparseAssays")) {
     # TODO: I should be passing strict = FALSE but this doesn't work
     x <- as(x, "SimpleList")
@@ -861,15 +864,11 @@ setMethod("combine", c("SimpleListSparseAssays", "SimpleListSparseAssays"),
       data_storage_mode <- unlist(data_storage_mode)
       if (all(data_storage_mode == "integer")) {
         val <- array(NA_integer_,
-                     dim = c(nrow(x),
-                             ncol(x),
-                             ncol(sparse_assay[[1L]][["value"]])),
+                     dim = c(nr, nc, ncol(sparse_assay[[1L]][["value"]])),
                      dimnames = list(NULL, names(sparse_assay), NULL))
       } else {
         val <- array(NA_real_,
-                     dim = c(nrow(x),
-                             ncol(x),
-                             ncol(sparse_assay[[1L]][["value"]])),
+                     dim = c(nr, nc, ncol(sparse_assay[[1L]][["value"]])),
                      dimnames = list(NULL, names(sparse_assay), NULL))
       }
 

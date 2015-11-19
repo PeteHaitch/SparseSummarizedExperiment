@@ -2,6 +2,9 @@
 % Please edit documentation in R/AllGenerics.R
 \name{sparsify}
 \alias{sparsify}
+\alias{sparsify,data.frame,character-method}
+\alias{sparsify,data.table,character-method}
+\alias{sparsify,matrix,character-method}
 \title{Sparsify a matrix-like object.}
 \usage{
 sparsify(x, return_class, ...)

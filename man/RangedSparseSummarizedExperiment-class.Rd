@@ -4,10 +4,15 @@
 \name{RangedSparseSummarizedExperiment-class}
 \alias{RangedSparseSummarizedExperiment}
 \alias{RangedSparseSummarizedExperiment-class}
+\alias{SparseSummarizedExperiment}
 \alias{SparseSummarizedExperiment,SparseAssays-method}
 \alias{SparseSummarizedExperiment,missing-method}
 \title{RangedSparseSummarizedExperiment objects}
 \usage{
+## Constructor
+
+SparseSummarizedExperiment(sparseAssays, ...)
+
 \S4method{SparseSummarizedExperiment}{SparseAssays}(sparseAssays,
   assays = SimpleList(), rowRanges = GRangesList(), colData = DataFrame(),
   metadata = list())
@@ -15,9 +20,7 @@
 \S4method{SparseSummarizedExperiment}{missing}(sparseAssays, ...)
 }
 \arguments{
-\item{sparseAssays}{A \link{SparseAssays} object. All dimension names (if
-present) must be consistent across elements and with the row names of
-\code{rowRanges} and \code{colData}.}
+\item{sparseAssays}{A \link{SparseAssays} object.}
 
 \item{assays}{A \code{list} or \code{SimpleList} of matrix elements,
     or a \code{matrix}. All elements of the list must have the same
@@ -48,6 +51,165 @@ present) must be consistent across elements and with the row names of
   }
 }
 \description{
-RangedSparseSummarizedExperiment objects
+The RangedSparseSummarizedExperiment class extends the
+\link[SummarizedExperiment]{RangedSummarizedExperiment} class by adding the
+\code{sparseAssays} slot, which contains a \link{SparseAssays} object.
+
+RangedSummarizedSparseExperiment is a subclass of both
+\link{SparseSummarizedExperiment} and
+\link[SummarizedExperiment]{RangedSummarizedExperiment}, with the former
+having precedence. As such, all the methods documented in
+\code{?}\link{SparseSummarizedExperiment} and
+\code{?}\link[SummarizedExperiment]{RangedSummarizedExperiment} also work on
+a RangedSparseSummarizedExperiment object. See
+\link{SparseSummarizedExperiment} for details.
+}
+\details{
+See \link{SparseAssays} and
+\link[SummarizedExperiment]{RangedSummarizedExperiment}.
+}
+\section{Constructor}{
+
+RangedSparseSummarizedExperiment instances are constructed using the
+\code{SparseSummarizedExperiment} function with arguments outlined above.
+}
+
+\section{Accessors}{
+ See \link{SparseAssays} and
+\link[SummarizedExperiment]{RangedSummarizedExperiment}.
+}
+
+\section{GRanges compatibility (rowRanges access)}{
+
+See \link[SummarizedExperiment]{RangedSummarizedExperiment}.
+}
+
+\section{Subsetting}{
+
+See \link[SummarizedExperiment]{RangedSummarizedExperiment}.
+}
+
+\section{Extension}{
+
+RangedSparseSummarizedExperiment is implemented as an S4 class, and can be
+extended in the usual way, using
+\code{contains = "RangedSparseSummarizedExperiment"} in the new class
+definition.
+}
+\examples{
+sl1 <- SimpleList(
+s1 = SimpleList(key = as.integer(c(NA, 1, NA, NA, 2, NA, 3, NA, 4, 5)),
+                value = matrix(1:10, ncol = 2)),
+s2 = SimpleList(key = as.integer(c(NA, NA, 1, 2, NA, NA, 3, 4, NA, NA)),
+                value = matrix(8:1, ncol = 2)))
+
+sl2 <- SimpleList(
+  s1 = SimpleList(key = as.integer(c(NA, 1, NA, 2, 2, NA, 1, NA, NA, 1)),
+                  value = matrix(1:2, ncol = 1)),
+  s2 = SimpleList(key = as.integer(c(1, 1, 1, 2, NA, NA, NA, NA, NA, NA)),
+                  value = matrix(4:3, ncol = 1)))
+# TODO: Need to require(?) that sparse assays are named
+sa <- SparseAssays(SimpleList("sa1" = sl1, "sa2" = sl2))
+colData <- DataFrame(Genotype = c("WT", "KO"),
+                     row.names = c("s1", "s2"))
+sse <- SparseSummarizedExperiment(sparseAssays = sa,
+                                  colData = colData)
+rowRanges <- GRanges(rep(c("chr1", "chr2"), c(3, 7)),
+                     IRanges(c(1, 5, 11, 15, 21, 100, 200, 300, 5000, 5010),
+                             width = 50),
+                     strand = rep(c("+", "-"), times = 5),
+                     feature_id = paste0("f", 1:10))
+rsse <- SparseSummarizedExperiment(sparseAssays = sa,
+                                   rowRanges = rowRanges,
+                                   colData = colData)
+rsse
+dim(rsse)
+dimnames(rsse)
+sparseAssayNames(rsse)
+sparseAssay(rsse)
+# densify the first sparse assay.
+# In general its a bad idea to use densify = TRUE, but these data are small
+# enough not to worry.
+densify(sparseAssay(rsse), 1, 1:2)[[1]]
+# TODO: Implement saapply
+#sparseAssays(rsse) <- saapply(assays(rse), asinh)
+sparseAssay(rsse)
+# densify the first sparse assay
+densify(sparseAssay(rsse), 1, 1:2)[[1]]
+
+rowRanges(rsse)
+mcols(rsse)  # same as mcols(rowRanges(rsse))
+
+rsse[, rsse$Genotype == "WT"]
+
+## cbind() combines objects with the same features of interest
+## but different samples:
+rsse1 <- rsse
+rsse2 <- rsse1[, 1]
+colnames(rsse2) <- "s3"
+cmb1 <- cbind(rsse1, rsse2)
+dim(cmb1)
+dimnames(cmb1)
+
+## rbind() combines objects with the same samples but different
+## features of interest:
+rsse1 <- rsse
+rsse2 <- rsse1[1:5, ]
+rownames(rsse2) <- letters[1:nrow(rsse2)]
+cmb2 <- rbind(rsse1, rsse2)
+dim(cmb2)
+dimnames(cmb2)
+
+## combine() combines objects with potentially different genomic ranges of
+## interest and different samples, by finding matching genomic ranges:
+rsse1 <- rsse[1:5, ]
+names(rsse1) <- letters[1:5]
+rsse2 <- rsse[3:8, 2]
+names(rsse2) <- letters[3:8]
+cmb3 <- combine(rsse1, rsse2)
+dim(cmb3)
+dimnames(cmb3)
+
+## Coercion to/from SparseSummarizedExperiment:
+sse <- as(rsse, "SparseSummarizedExperiment")
+sse
+
+as(sse, "RangedSparseSummarizedExperiment")
+## Coercion to/from RangedSummarizedExperiment
+## Using as() drops the sparseAssays slot
+rse <- as(rsse, "RangedSummarizedExperiment")
+as(rse, "RangedSparseSummarizedExperiment")
+## But using makeSEFromSSE() preserves the sparseAssays slot by densifying and
+## storing it in the assays slot.
+rse2 <- makeSEFromSSE(rsse)
+assays(rse2)
+## However, converting back does not re-sparsify the sparse assays
+rsse2 <- as(rse2, "RangedSparseSummarizedExperiment")
+sparseAssays(rsse2)
+
+## Setting rowRanges on a SparseSummarizedExperiment object turns it into a
+## RangedSparseSummarizedExperiment object:
+sse2 <- sse
+rowRanges(sse) <- rowRanges
+sse  # RangedSparseSummarizedExperiment
+
+## Sanity checks:
+stopifnot(identical(assays(sse), assays(rsse)))
+stopifnot(identical(dim(sse), dim(rsse)))
+stopifnot(identical(dimnames(sse), dimnames(rsse)))
+stopifnot(identical(mcols(sse), mcols(rsse)))
+stopifnot(identical(colData(sse), colData(rsse)))
+
+}
+\author{
+Peter Hickey, \email{peter.hickey@gmail.com}
+}
+\seealso{
+\itemize{
+ \item \link{SparseSummarizedExperiment} objects.
+ \item \link[SummarizedExperiment]{SummarizedExperiment0} objects in the
+   \pkg{SummarizedExperiment} package.
+ \item \link{SparseAssays} and \link{SimpleListSparseAssays} objects.
+}
 }
 

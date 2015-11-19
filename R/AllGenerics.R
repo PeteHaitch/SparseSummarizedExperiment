@@ -16,7 +16,7 @@
 #' @details \strong{WARNING}: Since it is generally undesirable to
 #'          simultaneously densify all sparse assays and samples, you must
 #'          specify at least one of \code{i} and \code{j}. If you \emph{really}
-#'          wish to simultaneously densify all sparse assays and samples then
+#'          wish to simultaneously densify all sparse assays and samples, then
 #'          use \code{densify(x, seq_len(length(x)), seq_len(ncol(x)))}. If
 #'          \code{i} (resp. \code{j}) is missing then effectively
 #'          \code{i = seq_len(length(x))} (resp. \code{j = seq_len(ncol(x))}).
@@ -33,6 +33,15 @@
 #' \itemize{
 #'  \item \link{SimpleListSparseAssays} for examples.
 #' }
+#'
+#' @aliases densify,SimpleListSparseAssays,character,character-method
+#'          densify,SimpleListSparseAssays,character,missing-method
+#'          densify,SimpleListSparseAssays,character,numeric-method
+#'          densify,SimpleListSparseAssays,missing,character-method
+#'          densify,SimpleListSparseAssays,missing,numeric-method
+#'          densify,SimpleListSparseAssays,numeric,character-method
+#'          densify,SimpleListSparseAssays,numeric,missing-method
+#'          densify,SimpleListSparseAssays,numeric,numeric-method
 #'
 #' @examples
 #' # See ?SimpleListSparseAssays
@@ -84,6 +93,10 @@ setGeneric("densify",
 #'  \item \link{SimpleListSparseAssays}
 #' }
 #'
+#' @aliases sparsify,data.frame,character-method
+#'          sparsify,data.table,character-method
+#'          sparsify,matrix,character-method
+#'
 #' @examples
 #' # See ?SimpleListSparseAssays
 #'
@@ -99,62 +112,61 @@ setGeneric("sparsify",
 ### -------------------------------------------------------------------------
 ### sparseAssays
 ###
+### NOTE: Documented in R/SparseSummarizedExperiment-class.R
 
-# TODO: Document in SparseSummarizedExperiment-class
 # NOTE: Following assays(), sparseAssays() will not strip the dimnames if
 #       withDimnames = FALSE but will simply fail to add them.
-# NOTE: The expand = TRUE argument returns a SimpleList, not a SparseAssays
-#       object.
 # NOTE: If the user wants sparseAssays as a ShallowSimpleListAssays object then
 #       they should run as(sparseAssays(x), "ShallowSimpleListAssays"). The
 #       returned object will not have rownames regardless of the value of
-#       withDimnames. Note also that expand must be FALSE; the coercion to a
-#       ShallowSimpleListAssays object automatically expands the
-#       sparseAssays.
+#       withDimnames.
 #' @importFrom methods setGeneric
 #'
 #' @export
 setGeneric("sparseAssays",
-           function(x, densify = FALSE, ..., withDimnames = TRUE)
+           function(x, ..., withDimnames = TRUE)
              standardGeneric("sparseAssays"),
-           signature = "x")
+           signature = "x"
+)
 
-# TODO: Document in SparseSummarizedExperiment-class
 #' @importFrom methods setGeneric
 #'
 #' @export
 setGeneric("sparseAssays<-",
            function(x, ..., withDimnames = TRUE, value)
              standardGeneric("sparseAssays<-"),
-           signature = c("x", "value"))
+           signature = c("x", "value")
+)
 
 ### -------------------------------------------------------------------------
 ### sparseAssay
 ###
+### NOTE: Documented in R/SparseSummarizedExperiment-class.R
 
-# TODO: Document in SparseSummarizedExperiment-class
 #' @importFrom methods setGeneric
 #'
 #' @export
 setGeneric("sparseAssay",
-           function(x, i, ..., densify = FALSE)
-             standardGeneric("sparseAssay")
+           function(x, i, ...)
+             standardGeneric("sparseAssay"),
+           signature = c("x", "i")
 )
 
-# TODO: Document in SparseSummarizedExperiment-class
 #' @importFrom methods setGeneric
 #'
 #' @export
 setGeneric("sparseAssay<-",
            function(x, i, ..., value)
-             standardGeneric("sparseAssay<-")
+             standardGeneric("sparseAssay<-"),
+           signature = c("x", "i", "value")
+
 )
 
 ### -------------------------------------------------------------------------
 ### sparseAssayNames
 ###
+### NOTE: Documented in R/SparseSummarizedExperiment-class.R
 
-# TODO: Document in SparseSummarizedExperiment-class
 #' @importFrom methods setGeneric
 #'
 #' @export
@@ -163,7 +175,6 @@ setGeneric("sparseAssayNames",
              standardGeneric("sparseAssayNames")
 )
 
-# TODO: Document in SparseSummarizedExperiment-class
 #' @importFrom methods setGeneric
 #'
 #' @export
@@ -175,6 +186,7 @@ setGeneric("sparseAssayNames<-",
 ### -------------------------------------------------------------------------
 ### SparseSummarizedExperiment
 ###
+### NOTE: Documented in R/SparseSummarizedExperiment-class.R
 
 #' @importFrom methods setGeneric
 #'

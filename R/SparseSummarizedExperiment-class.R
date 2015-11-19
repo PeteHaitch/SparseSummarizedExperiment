@@ -1,7 +1,3 @@
-# UP TO HERE: Manually write Usage and Argument sections of
-#       SparseSummarizedExperiment to make it cleaner and more like that of
-#       SummarizedExperiment0.
-
 ### =========================================================================
 ### SparseSummarizedExperiment objects
 ### -------------------------------------------------------------------------
@@ -39,15 +35,13 @@ NULL
 #'
 #' sparseAssayNames(x, ...)
 #' sparseAssayNames(x, ...) <- value
-#' sparseAssays(x, densify = FALSE, ..., withDimnames = TRUE)
+#' sparseAssays(x, ..., withDimnames = TRUE)
 #' sparseAssays(x, ..., withDimnames = TRUE) <- value
-#' sparseAssay(x, i, ..., densify = FALSE)
+#' sparseAssay(x, i, ...)
 #' sparseAssay(x, i, ...) <- value
 #'
 #' ## Subsetting
 #'
-#' ## S4 method for signature 'SparseSummarizedExperiment'
-#' x[i, j, ..., drop = TRUE]
 #' ## S4 replacement method for signature
 #' ## 'SparseSummarizedExperiment,ANY,ANY,SparseSummarizedExperiment'
 #' x[i, j] <- value
@@ -75,14 +69,15 @@ NULL
 #'        contains SparseSummarizedExperiment objects to be combined.
 #'
 #'        For other accessors, ignored.
-#' @param i,j For \code{sparseAssay}, \code{sparseAssays<-}, \code{i} is a
-#'        numeric or character scalar; see \sQuote{Details} for additional
+#' @param i,j For \code{sparseAssay}, \code{sparseAssay<-}, \code{i} is a
+#'        numeric or character scalar; see \sQuote{Accessors} for additional
 #'        constraints.
 #'
 #'        For \code{[,SparseSummarizedExperiment},
 #'        \code{[,SparseSummarizedExperiment<-}, \code{i}, \code{j} are
-#'        subscripts that can act to subset the rows and columns of \code{x},
-#'        that is the sparse assay elements of \code{sparseAssays}.
+#'        subscripts that can act to subset the rows (features) and columns
+#'        (samples) of \code{x}, that is the sparse assay elements of
+#'        \code{sparseAssays} and the \code{matrix} elements of \code{assays}.
 #'
 #'        For \code{[[,SparseSummarizedExperiment},
 #'        \code{[[,SparseSummarizedExperiment<-}, \code{i}, is a scalar index
@@ -99,15 +94,6 @@ NULL
 #'        influence actual assignment of dimnames to sparse assays.
 #'        \strong{NOTE}: For this particular example, it is simpler and just as
 #'        efficient to use \code{sparseAssayNames(x) <- ...}.
-#' @param densify A \code{logical(1)}, indicating whether sparse assays should
-#'        be \emph{densified}. It is generally advisable to work with
-#'        the sparse representation of the data wherever possible, but there
-#'        are times when the \emph{densified} version of the sparse data are
-#'        required.This can be achieved using the \code{densify = TRUE}
-#'        argument in \code{sparseAssays()} and \code{sparseAssay()}. Note,
-#'        however, that it is generally unadvisable to simultaneously densify
-#'        all sparse assays and samples; see \code{\link{densify}}.
-#' @param drop A \code{logical(1)}, ignored by these methods
 #' @param value An object of a class specified in the S4 method signature or as
 #'        outlined in \sQuote{Details}.
 #'
@@ -129,7 +115,6 @@ NULL
 #' storing these data in the \code{assays} slot, as would be done in a
 #' \link[SummarizedExperiment]{SummarizedExperiment0} object.
 #'
-#  TODO: Revisit this paragraph once sparseAssays() is updated. See ?SummarizedExperiment0
 #' The \emph{sparse data} are accessed by using the \code{sparseAssays}
 #' funcion, described below. This returns a \link{SimpleList} object.
 #'
@@ -151,24 +136,27 @@ NULL
 #' applicable.
 #'
 #' \describe{
-#   # TODO: Update docs following changes to sparseAssays(), e.g., densify
-#'  \item{\code{sparseAssays(x, densify = FALSE, ..., withDimnames = TRUE)},
-#'    \code{sparseAssays(x, ..., withDimnames = TRUE) <- value}:}{Get or set
-#'    the sparse assays. \code{value} is a \link{SparseAssays} with the same
-#'    dimensions as \code{x} or a \link{SimpleList} object (which will be
-#'    coerced to a \code{SparseAssays} object and must then have the same
-#'    dimensions as \code{x}). See \code{?\link{sparseAssays}} and
-#'    \code{?\link{sparseAssays<-}} for further details.}
+#' # TODO: Check equivalence claim
+#'  \item{\code{sparseAssays(x)}, \code{sparseAssays(x) <- value}:}{Get or set
+#'    the sparse assays. Unlike \code{\link[SummarizedExperiment]{assays}(x)},
+#'    \code{sparseAssays(x)} does not coerce the returned object to a
+#'    \link[S4Vectors]{SimpleList} object but preserves it as the concrete
+#'    \link{SparseAssays} subclass. \code{value} is a \link{SparseAssays}
+#'    object with the same dimensions as \code{x} or a \link{SimpleList} object
+#'    (which will be coerced to a \code{SparseAssays} object and must then have
+#'    the same dimensions as \code{x}).}
 #'
-#   # TODO: Update docs following changes to sparseAssay(), e.g., densify
-#'  \item{\code{sparseAssay(x, i)}, \code{sparseAssay(x, i) <- value}:}{A
-#'    convenient alternative (to \code{sparseAssays(x)[[i]]},
-#'    \code{sparseAssays(x)[[i]] <- value}) to get or set the \code{i}th
-#'    (default first) sparse assay element. \code{value} must be a
-#'    \link{SparseAssays} object of the same dimension as \code{x}, and with
-#'    dimension names \code{NULL} or consistent with those of \code{x}. See
-#'    \code{?\link{sparseAssay}} and \code{?\link{sparseAssay<-}} for further
-#'    details.}
+#' # TODO: Check equivalence claim
+#' # TODO: Could/should I allow value to be a SimpleList
+#'  \item{\code{sparseAssay(x, i)}, \code{sparseAssay(x, i) <- value}:}{Get or
+#'    set the \code{i}th (default first) sparse assay elements. Unlike
+#'    \code{\link[SummarizedExperiment]{assay}(x, i)},
+#'    \code{sparseAssay(x, i)} allows vector \code{i} and preserves the
+#'    returned object as the concrete  \link{SparseAssays} subclass.
+#'    \code{value} must be a \link{SparseAssays} object (with the same concrete
+#'    subclass) of the same dimension as \code{x}, and with dimension names
+#'    \code{NULL} or consistent with those of \code{x} and \code{length} equal
+#'    to \code{length(i)}.}
 #'
 #'  \item{\code{sparseAssayNames(x)}, \code{sparseAssayNames(x) <- value}:}{Get
 #'    or set the names of \code{sparseAssays()} elements.}
@@ -255,7 +243,9 @@ NULL
 #  # TODO: Update docs following changes to sparseAssay(), e.g., densify, or
 #          addition of saapply().
 #' The current \code{sparseAssays} slot is implemented as a
-#' \link{SimpleListSparseAssays} object. It is generally advisable to work with
+#' \link{SimpleListSparseAssays} object.
+#'
+#' It is generally advisable to work with
 #' the sparse representation of the data wherever possible, but there are
 #' times when the \emph{densified} version of the sparse data are required.
 #' This can be achieved using the \code{densify = TRUE} argument in
@@ -273,17 +263,27 @@ NULL
 #'  \item \link{SparseAssays} and \link{SimpleListSparseAssays} objects.
 #' }
 #'
-#' @aliases SparseSummarizedExperiment
-#'          makeSEFromSSE
+#' @aliases makeSEFromSSE
 #'          sparseAssays
+#'          sparseAssays,SparseSummarizedExperiment-method
 #'          sparseAssays<-
+#'          sparseAssays<-,SparseSummarizedExperiment,SimpleList-method
+#'          sparseAssays<-,SparseSummarizedExperiment,SparseAssays-method
 #'          sparseAssay
+#'          sparseAssay,SparseSummarizedExperiment,character-method
+#'          sparseAssay,SparseSummarizedExperiment,missing-method
+#'          sparseAssay,SparseSummarizedExperiment,numeric-method
 #'          sparseAssay<-
+#'          sparseAssay<-,SparseSummarizedExperiment,character,SimpleList-method
+#'          sparseAssay<-,SparseSummarizedExperiment,missing,SimpleList-method
+#'          sparseAssay<-,SparseSummarizedExperiment,numeric,SimpleList-method
 #'          sparseAssayNames
+#'          sparseAssayNames,SparseSummarizedExperiment-method
 #'          sparseAssayNames<-
+#'          sparseAssayNames<-,SparseSummarizedExperiment,character-method
 #'          [,SparseSummarizedExperiment
-#'          [,SparseSummarizedExperiment,ANY
-#'          [<-,SparseSummarizedExperiment,ANY,ANY,SparseSummarizedExperiment
+#'          [,SparseSummarizedExperiment,ANY-method
+#'      [<-,SparseSummarizedExperiment,ANY,ANY,SparseSummarizedExperiment-method
 #'          show,SparseSummarizedExperiment-method
 #'          rbind,SparseSummarizedExperiment-method
 #'          cbind,SparseSummarizedExperiment-method
@@ -301,7 +301,7 @@ NULL
 #'   s2 = SimpleList(key = as.integer(c(1, 1, 1, 2, NA, NA, NA, NA, NA, NA)),
 #'                   value = matrix(4:3, ncol = 1)))
 #' # TODO: Need to require(?) that sparse assays are named
-#' sa <- SparseAssays(SimpleList("a1" = sl1, "a2" = sl2))
+#' sa <- SparseAssays(SimpleList("sa1" = sl1, "sa2" = sl2))
 #'
 #' colData <- DataFrame(Genotype = c("WT", "KO"),
 #'                      row.names = c("s1", "s2"))
@@ -310,12 +310,16 @@ NULL
 #' sse
 #' dim(sse)
 #' dimnames(sse)
+#' sparseAssay(sse)
+#' # densify the first sparse assay.
 #' # In general its a bad idea to use densify = TRUE, but these data are small
 #' # enough not to worry.
-#' sparseAssay(sse, densify = TRUE)
+#' densify(sparseAssay(sse), 1, 1:2)[[1]]
 #' # TODO: Implement saapply
 #' # sparseAssays(sse) <- saapply(sparseAssays(sse), function(x) x^2)
-#' sparseAssay(sse, densify = TRUE)
+#' sparseAssay(sse)
+#' # densify the first sparse assay
+#' densify(sparseAssay(sse), 1, 1:2)[[1]]
 #'
 #' sse[, sse$Genotype == "WT"]
 #'
@@ -462,11 +466,29 @@ makeSEFromSSE <- function(x) {
 #' @importFrom S4Vectors SimpleList
 #' @importMethodsFrom S4Vectors endoapply
 #' @keywords internal
-.sparseAssays.SSE <- function(x, densify = FALSE, ..., withDimnames = TRUE) {
-  val <- x@sparseAssays
+.sparseAssays.SSE <- function(x, ..., withDimnames = TRUE) {
+
+  # TODO: Why doesn't strict = FALSE work; why and is it necessary?
+  # val <- as(x@sparseAssays, "SimpleList", strict = TRUE)
+  sparse_assays <- x@sparseAssays
+  # if (!missing(j)) {
+  #   # NOTE: Need to convert character 'j' to numeric because converting the
+  #   #       sparseAssays slot to a SimpleList does not include the sample names.
+  #   if (is.character(j)) {
+  #     j <- match(j, colnames(x))
+  #     if (any(is.na(j))) {
+  #       stop("'sparseAssays(<", class(x), ">, j=\"character\", ...)' ",
+  #            "invalid subscript 'j'\n")
+  #     }
+  #   }
+  #   # TODO: This line (specifically, endoapply) seems to be broken; why?
+  #   val <- endoapply(val, "[", j)
+  # } else {
+  #   j <- seq_len(ncol(x))
+  # }
 
   if (withDimnames) {
-    val <- endoapply(val, function(sparse_assay) {
+    sparse_assays <- endoapply(sparse_assays, function(sparse_assay) {
       sparse_assay <- endoapply(sparse_assay, function(sample) {
         names(sample[["key"]]) <- names(x)
         sample
@@ -475,12 +497,8 @@ makeSEFromSSE <- function(x) {
       sparse_assay
     })
   }
-  if (densify) {
-    return(densify(val, seq_len(length(val)), seq_len(ncol(val))))
-  } else {
-    # TODO: Why doesn't strict = FALSE work and is it necessary?
-    as(val, "SimpleList", strict = TRUE)
-  }
+
+  sparse_assays
 }
 
 #' @importFrom methods setMethod
@@ -495,11 +513,6 @@ setMethod("sparseAssays", "SparseSummarizedExperiment",
 
   # NOTE: withDimnames arg allows
   # names(sparseAssays(se, withDimnames = FALSE)) <- value
-
-  if (!missing(densify)) {
-    warning(paste0("'densify' ignored by sparseAssays<-,", class(x), ",",
-                   class(value), "-method"))
-  }
 
   ok <- vapply(value, function(sa, x_dimnames) {
     # TODO: Replace with dimnames() when there is a
@@ -524,6 +537,8 @@ setMethod("sparseAssays", "SparseSummarizedExperiment",
   x
 }
 
+# TODO: Unsure whether this should be SparseAssays or SimpleListSparseAssays
+#       in signature.
 #' @importFrom methods setReplaceMethod
 #'
 #' @export
@@ -539,10 +554,10 @@ setReplaceMethod("sparseAssays",
                  c("SparseSummarizedExperiment", "SimpleList"),
                  function(x, ..., withDimnames, value) {
                    value <- SparseAssays(value)
-                 .sparseAssaysReplace.SSE(x,
-                                          ...,
-                                          withDimnames = withDimnames,
-                                          value = value)
+                   .sparseAssaysReplace.SSE(x,
+                                            ...,
+                                            withDimnames = withDimnames,
+                                            value = value)
                  }
 )
 
@@ -552,26 +567,34 @@ setReplaceMethod("sparseAssays",
 #' @importFrom methods as
 #' @importFrom stats setNames
 #' @keywords internal
-.sparseAssay.SSE.missing <- function(x, ..., withDimnames = TRUE,
-                                     densify = FALSE) {
+.sparseAssay.SSE.missing <- function(x, i, ...) {
+
   # Don't want to densify all the sparseAssays, just the one being
   # extracted, so don't densify just yet.
-  sparse_assays <- sparseAssays(x, ..., withDimnames = withDimnames,
-                                densify = FALSE)
+  # if (!missing(j)) {
+  #   sparse_assays <- sparseAssays(x, j, densify = FALSE, ...)
+  # } else {
+  sparse_assays <- sparseAssays(x, ...)
+  # }
   if (length(sparse_assays) == 0L)
     stop("'sparseAssay(<", class(x), ">, i=\"missing\", ...) ",
          "length(sparseAssays(<", class(x), ">)) is 0'")
-  val <- sparse_assays[[1]]
-
-  if (densify) {
-    val <- setNames(SparseAssays(SimpleList(val)),
-                    sparseAssayNames(x)[1])
-    val <- as(val, "ShallowSimpleListAssays")[[1]]
-    if (withDimnames) {
-      dimnames(val) <- dimnames(x)
-    }
-  }
-  val
+  # val <- sparse_assays[[1]]
+  #
+  # if (densify) {
+  #   val <- setNames(SparseAssays(SimpleList(val)),
+  #                   sparseAssayNames(x)[1])
+  #   # TODO: Why was this line ever there?
+  #   # val <- as(val, "ShallowSimpleListAssays")[[1]]
+  #   # if (!missing(withDimnames) && withDimnames) {
+  #   #   # TODO: Check withDimnames works
+  #   #   dimnames(val) <- dimnames(x)
+  #   # }
+  # }
+  #
+  # val
+  subclass <- class(x@sparseAssays)
+  as(as(sparse_assays, "SimpleList", strict = TRUE)[1L], subclass)
 }
 
 #' @importFrom methods setMethod
@@ -586,29 +609,35 @@ setMethod("sparseAssay", c("SparseSummarizedExperiment", "missing"),
 #' @importFrom S4Vectors SimpleList
 #' @importFrom stats setNames
 #' @keywords internal
-.sparseAssay.SSE.numeric <- function(x, i, ..., withDimnames = TRUE,
-                                     densify = FALSE) {
+.sparseAssay.SSE.numeric <- function(x, i, ...) {
   tryCatch({
     # Don't want to densify all the sparseAssays, just the one being
     # extracted, so don't densify just yet.
-    val <- sparseAssays(x, ..., withDimnames = withDimnames,
-                        densify = FALSE)[[i]]
+    # if (!missing(j)) {
+    #   val <- sparseAssays(x, j, densify = FALSE, ...)[[i]]
+    # } else {
+    # TODO: Why doesn't strict = FALSE work; why and is it necessary?
+    subclass <- class(x@sparseAssays)
+    as(as(sparseAssays(x, ...), "SimpleList", strict = TRUE)[i], subclass)
+    # }
   }, error = function(err) {
     stop("'sparseAssay(<", class(x), ">, i=\"numeric\", ...)' ",
          "invalid subscript 'i'\n", conditionMessage(err))
   })
 
-  if (densify) {
-    val <- setNames(SparseAssays(SimpleList(val)),
-                    sparseAssayNames(x)[i])
-    # extract first element, not i-th element, because this only has
-    # length 1.
-    val <- as(val, "ShallowSimpleListAssays")[[1]]
-    if (withDimnames) {
-      dimnames(val) <- dimnames(x)
-    }
-  }
-  val
+  # if (densify) {
+  #   val <- setNames(SparseAssays(SimpleList(val)),
+  #                   sparseAssayNames(x)[i])
+  #   # extract first element, not i-th element, because this only has
+  #   # length 1.
+  #   # TODO: Why was this line ever there?
+  #   # val <- as(val, "ShallowSimpleListAssays")[[1]]
+  #   if (withDimnames) {
+  #     # TODO: Check withDimnames works
+  #     dimnames(val) <- dimnames(x)
+  #   }
+  # }
+  # val
 }
 
 #' @importFrom methods setMethod
@@ -623,34 +652,42 @@ setMethod("sparseAssay", c("SparseSummarizedExperiment", "numeric"),
 #' @importFrom S4Vectors SimpleList
 #' @importFrom stats setNames
 #' @keywords internal
-.sparseAssay.SSE.character <- function(x, i, ..., withDimnames = TRUE,
-                                       densify = FALSE) {
+.sparseAssay.SSE.character <- function(x, i, ...) {
 
   msg <- paste0("'sparseAssay(<", class(x), ">, i=\"character\",",
                 "...)' invalid subscript 'i'")
   val <- tryCatch({
     # Don't want to densify all the sparseAssays, just the one being
     # extracted, so don't densify just yet.
-    sparseAssays(x, ..., withDimnames = withDimnames,
-                 densify = FALSE)[[i]]
+    # if (!missing(j)) {
+    #   val <- sparseAssays(x, j, densify = FALSE, ...)[[i]]
+    # } else {
+    #   val <- sparseAssays(x, densify = FALSE, ...)[[i]]
+    # }
+    subclass <- class(x@sparseAssays)
+    as(as(sparseAssays(x, ...), "SimpleList", strict = TRUE)[i], subclass)
   }, error = function(err) {
     stop(msg, "\n", conditionMessage(err))
   })
+  # TODO: Is this strictly necessary (and does it even get called)?
   if (is.null(val)) {
     stop(msg, "\n'i' not in names(sparseAssays(<", class(x), ">))")
   }
-
-  if (densify) {
-    val <- setNames(SparseAssays(SimpleList(val)),
-                    sparseAssayNames(x)[i])
-    # extract first element, not i-th element, because this only has
-    # length 1.
-    val <- as(val, "ShallowSimpleListAssays")[[1]]
-    if (withDimnames) {
-      dimnames(val) <- dimnames(x)
-    }
-  }
   val
+
+  # if (densify) {
+  #   val <- setNames(SparseAssays(SimpleList(val)),
+  #                   sparseAssayNames(x)[i])
+  #   # extract first element, not i-th element, because this only has
+  #   # length 1.
+  #   # TODO: Why was this line ever there?
+  #   # val <- as(val, "ShallowSimpleListAssays")[[1]]
+  #   if (withDimnames) {
+  #     # TODO: Check withDimnames works
+  #     dimnames(val) <- dimnames(x)
+  #   }
+  # }
+  # val
 }
 
 #' @importFrom methods setMethod

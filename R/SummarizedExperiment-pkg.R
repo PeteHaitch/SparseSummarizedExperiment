@@ -31,6 +31,49 @@
 #       SummarizedExperiment0 or RangedSummarizedExperiment objects.
 # TODO: Avoid unnecessary (and possibly costly) object validation where
 #       possible to safely do so.
+#' Combining SummarizedExperiment0/RangedSummarizedExperiment objects
+#'
+#' Combine multiple \link[SummarizedExperiment]{SummarizedExperiment0} or
+#' \link[SummarizedExperiment]{RangedSummarizedExperiment} objects using a
+#' union strategy.
+#'
+#' @details \link[SummarizedExperiment]{SummarizedExperiment0} objects are
+#' combined based on the \code{names} of \code{x}, \code{y}, and \code{...},
+#' while \link[SummarizedExperiment]{RangedSummarizedExperiment} are combined
+#' based on finding matching genomic ranges. \strong{WARNING}: Does not
+#' currently work if the \code{rowRanges} slot of \code{x}, \code{y}, or
+#' \code{...} is a \link[GenomicRanges]{GRangesList} objets.
+#'
+#'
+#' @param x A \link[S4Vectors]{DataFrame} object.
+#' @param y A \link[S4Vectors]{DataFrame} object.
+#' @param ... One or more \link[S4Vectors]{DataFrame} objects.
+#'
+#' @return A \link[S4Vectors]{DataFrame} object.
+#'
+#' @author Peter Hickey, \email{peter.hickey@@gmail.com}
+#'
+#' @examples
+#' nrows <- 200; ncols <- 6
+#' counts <- matrix(runif(nrows * ncols, 1, 1e4), nrows)
+#' colData <- DataFrame(Treatment=rep(c("ChIP", "Input"), 3),
+#'                      row.names=LETTERS[1:6])
+#' se0 <- SummarizedExperiment(assays=SimpleList(counts=counts),
+#'                             colData=colData)
+#' names(se0) <- paste0("f", 1:200)
+#' x <- se0[1:150, 1:4]
+#' y <- se0[30:170, 2:6]
+#' combine(x, y)
+#' rowRanges <- GRanges(rep(c("chr1", "chr2"), c(50, 150)),
+#'                      IRanges(floor(runif(200, 1e5, 1e6)), width=100),
+#'                      strand=sample(c("+", "-"), 200, TRUE),
+#'                      feature_id=sprintf("ID%03d", 1:200))
+#' rse <- unname(se0)
+#' rowRanges(rse) <- rowRanges
+#' x <- se0[1:150, 1:4]
+#' y <- se0[30:170, 2:6]
+#' combine(x, y)
+#'
 #' @importFrom methods is setMethod
 #' @importFrom S4Vectors DataFrame
 #' @importMethodsFrom IRanges findOverlaps

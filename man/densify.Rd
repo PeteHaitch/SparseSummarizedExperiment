@@ -2,6 +2,14 @@
 % Please edit documentation in R/AllGenerics.R
 \name{densify}
 \alias{densify}
+\alias{densify,SimpleListSparseAssays,character,character-method}
+\alias{densify,SimpleListSparseAssays,character,missing-method}
+\alias{densify,SimpleListSparseAssays,character,numeric-method}
+\alias{densify,SimpleListSparseAssays,missing,character-method}
+\alias{densify,SimpleListSparseAssays,missing,numeric-method}
+\alias{densify,SimpleListSparseAssays,numeric,character-method}
+\alias{densify,SimpleListSparseAssays,numeric,missing-method}
+\alias{densify,SimpleListSparseAssays,numeric,numeric-method}
 \title{Densify sparse assays.}
 \usage{
 densify(x, i, j, ...)
@@ -29,7 +37,7 @@ A generic function to densify (expand) the elements of a SparseAssays object.
 \strong{WARNING}: Since it is generally undesirable to
          simultaneously densify all sparse assays and samples, you must
          specify at least one of \code{i} and \code{j}. If you \emph{really}
-         wish to simultaneously densify all sparse assays and samples then
+         wish to simultaneously densify all sparse assays and samples, then
          use \code{densify(x, seq_len(length(x)), seq_len(ncol(x)))}. If
          \code{i} (resp. \code{j}) is missing then effectively
          \code{i = seq_len(length(x))} (resp. \code{j = seq_len(ncol(x))}).
