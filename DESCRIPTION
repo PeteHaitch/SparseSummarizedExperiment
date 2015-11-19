@@ -1,6 +1,6 @@
 Package: SparseSummarizedExperiment
 Title: SparseSummarizedExperiment Container
-Version: 0.0.0.9010
+Version: 0.0.0.9011
 Authors@R: c(person("Peter", "Hickey", role = c("aut", "cre"),
     email = "peter.hickey@gmail.com"))
 Description: An experimental implementation of a container modeled on the
@@ -32,5 +32,6 @@ Collate:
     'SparseSummarizedExperiment-class.R'
     'RangedSparseSummarizedExperiment-class.R'
     'SummarizedExperiment-pkg.R'
+    'saapply.R'
     'sparsify.R'
 RoxygenNote: 5.0.1

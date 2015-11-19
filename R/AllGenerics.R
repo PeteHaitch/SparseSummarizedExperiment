@@ -195,3 +195,22 @@ setGeneric("SparseSummarizedExperiment",
            function(sparseAssays, ...)
              standardGeneric("SparseSummarizedExperiment")
 )
+
+### -------------------------------------------------------------------------
+### saapply
+###
+
+# NOTE: Will need to keep API up-to-date with BiocParallel::bplapply
+#' @importFrom methods setGeneric
+#'
+#' @export
+# setGeneric("saapply",
+#            function(X, FUN, densify, ..., BPREDO = list(), BPPARAM = bpparam())
+#              standardGeneric("saapply"),
+#            signature = "X"
+# )
+setGeneric("saapply",
+           function(X, FUN, densify)
+             standardGeneric("saapply"),
+           signature = "X"
+)
