@@ -11,7 +11,8 @@
 
 #' Combining GRanges objects
 #'
-#' Combine multiple \link[GenomicRanges]{GRanges} objects using a union strategy.
+#' Combine multiple \link[GenomicRanges]{GRanges} objects using a union
+#' strategy.
 #'
 #' @details Unlike other \code{combine} methods (e.g.,
 #' \code{\link[BiocGenerics]{combine,matrix,matrix-method}}), this does not

@@ -18,7 +18,8 @@
 A \link[GenomicRanges]{GRanges} object.
 }
 \description{
-Combine multiple \link[GenomicRanges]{GRanges} objects using a union strategy.
+Combine multiple \link[GenomicRanges]{GRanges} objects using a union
+strategy.
 }
 \details{
 Unlike other \code{combine} methods (e.g.,

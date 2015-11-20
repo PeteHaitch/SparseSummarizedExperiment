@@ -1,54 +1,8 @@
 ### -------------------------------------------------------------------------
 ### densify
 ###
+### NOTE: Documented in R/SparseAssays-class.R
 
-# TODO: roxygen splits i,j by a newline in the .Rd file, which is ugly.
-#' Densify sparse assays.
-#'
-#' A generic function to densify (expand) the elements of a SparseAssays object.
-#'
-#' @param x A \link{SparseAssays} object.
-#' @param i,j Numeric or character vectors indicating which sparse assay
-#'        (\code{i}) and samples (\code{j}) to extract and densify. At least
-#'        one of \code{i} or \code{j} must be specified; see \sQuote{Details}.
-#' @param ... Additional arguments, for use in specific methods.
-#'
-#' @details \strong{WARNING}: Since it is generally undesirable to
-#'          simultaneously densify all sparse assays and samples, you must
-#'          specify at least one of \code{i} and \code{j}. If you \emph{really}
-#'          wish to simultaneously densify all sparse assays and samples, then
-#'          use \code{densify(x, seq_len(length(x)), seq_len(ncol(x)))}. If
-#'          \code{i} (resp. \code{j}) is missing then effectively
-#'          \code{i = seq_len(length(x))} (resp. \code{j = seq_len(ncol(x))}).
-#'
-#' @return A \code{\link[S4Vectors]{SimpleList}} of length =
-#'         \code{length(i)}, each containing a
-#'         \code{\link[S4Vectors]{SimpleList}} of length = \code{length{j}},
-#'         each containing a \code{matrix} of the densified data for that
-#'         sample in that sparse assay.
-#'
-#' @author Peter Hickey, \email{peter.hickey@@gmail.com}
-#'
-#' @seealso
-#' \itemize{
-#'  \item \link{SimpleListSparseAssays} for examples.
-#' }
-#'
-#' @aliases densify,SimpleListSparseAssays,character,character-method
-#'          densify,SimpleListSparseAssays,character,missing-method
-#'          densify,SimpleListSparseAssays,character,numeric-method
-#'          densify,SimpleListSparseAssays,missing,character-method
-#'          densify,SimpleListSparseAssays,missing,numeric-method
-#'          densify,SimpleListSparseAssays,numeric,character-method
-#'          densify,SimpleListSparseAssays,numeric,missing-method
-#'          densify,SimpleListSparseAssays,numeric,numeric-method
-#'
-#' @examples
-#' # See ?SimpleListSparseAssays
-#'
-#' @include SparseSummarizedExperiment.R S4Vectors-pkg.R GenomicRanges-pkg.R
-#' SummarizedExperiment-pkg.R
-#'
 #' @importFrom methods setGeneric
 #'
 #' @export
@@ -199,18 +153,15 @@ setGeneric("SparseSummarizedExperiment",
 ### -------------------------------------------------------------------------
 ### saapply
 ###
+### NOTE: Documented in R/SparseAsaays-class.R
 
-# NOTE: Will need to keep API up-to-date with BiocParallel::bplapply
+# TODO: Will need to keep API up-to-date with BiocParallel::bplapply
 #' @importFrom methods setGeneric
 #'
 #' @export
-# setGeneric("saapply",
-#            function(X, FUN, densify, ..., BPREDO = list(), BPPARAM = bpparam())
-#              standardGeneric("saapply"),
-#            signature = "X"
-# )
-setGeneric("saapply",
-           function(X, FUN, densify)
-             standardGeneric("saapply"),
+setGeneric("SAapply",
+           function(X, FUN, densify = TRUE, ..., BPREDO = list(),
+                    BPPARAM = bpparam())
+             standardGeneric("SAapply"),
            signature = "X"
 )

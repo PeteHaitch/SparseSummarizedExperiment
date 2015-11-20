@@ -42,24 +42,11 @@ NULL
 #'
 #' ## Subsetting
 #'
-#' ## S4 replacement method for signature
-#' ## 'SparseSummarizedExperiment,ANY,ANY,SparseSummarizedExperiment'
-#' x[i, j] <- value
+#' \S4method{[}{SparseSummarizedExperiment}(x, i, j, ...)
 #'
 #' ## Combining
 #'
-#' ## S4 method for signature 'SparseSummarizedExperiment'
-#' combine(x, y, ...)
-#'
-#' ## Coercion
-#'
-#' ## Drops the sparseAssays slot
-#' as(x, "SummarizedExperiment0")
-#' as(x, "RangedSummarizedExperiment")
-#'
-#' ## Retains the sparseAssays slot by coercing SparseAssays object to an
-#' ## Assays object and adding it to the assays slot
-#' makeSEFromSSE(x)
+#' \S4method{combine}{SparseSummarizedExperiment,SparseSummarizedExperiment}(x, y, ...)
 #'
 #' @param x,y A SparseSummarizedExperiment object.
 #' @param ... For \code{sparseAssay}, \code{...} may contain
@@ -205,7 +192,7 @@ NULL
 #' \code{sparseAssays} slot}. The second method uses an
 #' explicit coercion to coerce the \link{SparseAssays} object in
 #' \code{sparseAssays} slot into a \link{Assays} object and adds it to the
-#' \code{assays} slot of the resulting object, e.g., \code{makeSEFromSSE(x)}.
+#' \code{assays} slot of the resulting object, \code{makeSEFromSSE(x)}.
 #'
 #' @section Implementation and Extension:
 #' This section contains advanced material meant for package developers.
@@ -281,7 +268,7 @@ NULL
 #'          sparseAssayNames,SparseSummarizedExperiment-method
 #'          sparseAssayNames<-
 #'          sparseAssayNames<-,SparseSummarizedExperiment,character-method
-#'          [,SparseSummarizedExperiment
+#'          [,SparseSummarizedExperiment-method
 #'          [,SparseSummarizedExperiment,ANY-method
 #'      [<-,SparseSummarizedExperiment,ANY,ANY,SparseSummarizedExperiment-method
 #'          show,SparseSummarizedExperiment-method

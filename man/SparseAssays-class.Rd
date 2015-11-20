@@ -3,16 +3,31 @@
 \docType{class}
 \name{SparseAssays-class}
 \alias{NROW,SparseAssays-method}
+\alias{SAapply}
+\alias{SAapply,SimpleListSparseAssays-method}
 \alias{SparseAssays}
 \alias{SparseAssays-class}
 \alias{[[,SparseAssays,ANY,ANY-method}
 \alias{[[<-,SparseAssays,ANY,ANY-method}
+\alias{densify}
+\alias{densify,SimpleListSparseAssays,character,character-method}
+\alias{densify,SimpleListSparseAssays,character,missing-method}
+\alias{densify,SimpleListSparseAssays,character,numeric-method}
+\alias{densify,SimpleListSparseAssays,missing,character-method}
+\alias{densify,SimpleListSparseAssays,missing,numeric-method}
+\alias{densify,SimpleListSparseAssays,numeric,character-method}
+\alias{densify,SimpleListSparseAssays,numeric,missing-method}
+\alias{densify,SimpleListSparseAssays,numeric,numeric-method}
 \alias{length,SparseAssays-method}
 \alias{names,SparseAssays-method}
 \alias{names<-,SparseAssays-method}
 \title{SparseAssays objects}
 \usage{
+## Constructor
+
 SparseAssays(sparse_assays = SimpleList(), subclass)
+
+## Accessors
 
 \S4method{length}{SparseAssays}(x)
 
@@ -25,29 +40,50 @@ SparseAssays(sparse_assays = SimpleList(), subclass)
 \S4method{[[}{SparseAssays,ANY,ANY}(x, i, j, ...)
 
 \S4method{[[}{SparseAssays,ANY,ANY}(x, i, j, ...) <- value
+
+## Densify a SparseAssays object
+
+densify(x, i, j, ...)
+
+## Apply a function to a SparseAssays object
+
+SAapply(X, FUN, densify = TRUE, ..., BPREDO = list(), BPPARAM = bpparam())
 }
 \arguments{
-\item{sparse_assays}{A SimpleList or list of sparse assays.}
+\item{sparse_assays}{A SimpleList or list that can be used to construct a
+SparseAssays instance; see \sQuote{Examples}.}
 
 \item{subclass}{The concrete subclass to be instantiated. The default is
 \link{SimpleListSparseAssays}.}
 
 \item{x}{A SparseAssays object.}
 
+\item{i, j}{For \code{[[, [[<-}, \code{i} is a numeric or character vector of
+       length 1 indicating which sparse assay to select. \code{j} is not
+       used.
+
+       For \code{densify}, \code{i} and \code{j} are numeric or character
+       vectors indicating which sparse assays (\code{i}) and samples
+       (\code{j}) to extract and densify. At least one of \code{i} or
+       \code{j} must be provided; see \sQuote{Densify}.}
+
 \item{value}{An object of a class specified in the S4 method signature or as
 outlined in \sQuote{Details}.}
 
-\item{i}{Numeric or character vector of length 1 indicating which sparse
-assay to select.}
+\item{X}{A SparseAssays object.}
 
-\item{j}{Not used by \code{[[,SparseAssays,ANY,ANY-method} or
-\code{[[<-,SparseAssays,ANY,ANY-method}.}
+\item{FUN}{The function to be applied to each element of \code{X}: see
+\sQuote{Applying a function to a SparseAssays object (\code{SAapply})}. In
+the case of functions like \code{+}, \code{\%*\%}, the function name must be
+backquoted or quoted.}
 
-\item{...}{Additional arguments, for use in specific methods.}
-}
-\value{
-For \code{SparseAssays()}, an instance of a concrete SparseAssays
-subclass given by \code{subclass}.
+\item{densify}{A \code{logical(1)}, indicating whether the sparse data need
+to be densified prior to applying \code{FUN}.}
+
+\item{...}{Optional arguments to \code{FUN} or additional arguments, for use
+in specific methods.}
+
+\item{BPREDO, BPPARAM}{See \code{?\link[BiocParallel]{bplapply}}.}
 }
 \description{
 The SparseAssays virtual class and its methods provide a
@@ -75,10 +111,10 @@ The SparseAssays API consists of:
  method from \code{\link[S4Vectors]{SimpleList}} doesn't need (and should
  not) validate the returned object.
  \item (c) \code{\link{length}}, \code{\link{NROW}}, \code{\link{names}},
- \code{\link{names<-}}, \code{\link{[[}}, \code{\link{[[<-}}
+ \code{\link{names<-}}, \code{\link{[[}}, \code{\link{[[<-}}.
  \item (d) \code{\link{dim}}, \code{\link{[}}, \code{\link{[<-}},
  \code{\link{rbind}}, \code{\link{cbind}}, \code{\link{combine}},
- \code{\link{densify}}
+ \code{\link{densify}}, \code{\link{SAapply}}.
 }
 
 A SparseAssays concrete subclass needs to implement (b) (required) plus
@@ -117,6 +153,102 @@ when there are lots of features with the same measurement (normally within a
 sample, although SimpleListJointSparseAssays should allow this constraint to
 be removed) and/or lots of NAs per-sample.
 }
+\section{Dimensions}{
+
+The dimensions of a SparseAssays object are defined by nrow = length of
+features (usually the length of the key), and ncol = number of samples.
+}
+
+\section{Subsetting}{
+
+Subsetting with \code{[} uses \code{i} to subset rows/features in each
+sparse assay and \code{j} to subset samples in each sparse assay.
+\strong{NOTE}: Use \code{[[} with \code{i} to select the \code{i}-th sparse
+assay.
+}
+
+\section{Combining}{
+
+SparseAssays objects can be combined in three different ways.
+\enumerate{
+ \item \code{rbind} Suitable for when each object has the same samples.
+ \item \code{cbind} Suitable for when each object has unique samples.
+ \item \code{combine} Suitable in either case, \strong{however}, requires
+ that \code{dimnames} are set on each object and that all objects have an
+ identical number of sparse assays with identical names.
+}
+}
+
+\section{Densify}{
+
+SparseAssays objects can be \emph{densified} (expanded) using the
+\code{densify()} method. For each sample, the densified data for a single
+sparse assay is returned as a matrix. Therefore, the \code{densify} generic
+returns a \link[S4Vectors]{SimpleList} of length = \code{length(i)}, each
+containing a \code{\link[S4Vectors]{SimpleList}} of length =
+\code{length{j}}, each containing a \code{matrix} of the densified data for
+that sample in that sparse assay.
+
+\strong{WARNING}: It is generally advisable to not simulatenously densify
+all sparse assays in all samples since the entire point of using
+SparseAssays is to use a more memory-efficient storage of the data.
+Therefore, users must provide at least one of \code{i} (to select sparse
+assays) and \code{j} (to select samples). If you \emph{really} wish to
+simultaneously densify all sparse assays and samples, then use
+\code{densify(x, seq_len(length(x)), seq_len(ncol(x)))}. If \code{i} (resp.
+\code{j}) is missing then effectively \code{i = seq_len(length(x))} (resp.
+\code{j = seq_len(ncol(x))}).
+}
+
+\section{Coercion}{
+
+SparseAssays objects can be coerced into a
+\link[SummarizedExperiment]{ShallowSimpleListAssays} object (from the
+\pkg{SummarizedExperiment} package); this will also densify the object.
+This can be done using \code{as(x, "ShallowSimpleListAssays")}, where
+\code{x} is a SparseAssays object. \emph{WARNING}: The resulting
+\link[SummarizedExperiment]{ShallowSimpleListAssays} object will typically
+require much more memory than the equivalent SparseAssays object.
+}
+
+\section{Applying a function to a SparseAssays object (\code{SAapply})}{
+
+A common use case is to apply a function to a SparseAssays object. For
+example, we might wish to compute the column-wise mean(s) for each sample
+in a sparse assay. \code{SAapply} is designed to do this in an efficient
+manner with an interface that is modelled on the \code{\link{lapply}}
+functional in base R.
+
+\code{SAapply} takes a SparseAssays object (\code{X}) and
+applies a single function (\code{FUN}) to each sample in each sparse assay.
+It is worth emphasising that this means that the same function is applied to
+all samples and sparse assays in \code{X} (use \code{sparseAssay()} with the
+\code{i} argument to extract specific sparse assays).
+
+While it is desirable to apply \code{FUN} to the data in its sparse form,
+this is not always possible and the data may need to be densified prior to
+\code{FUN} being applied. The \code{SAapply} method simplifies this process
+in two ways:
+
+\enumerate{
+ \item \code{SAapply} allows the user to pass a function, \code{FUN}, that
+   works on sparse or dense data. The \code{densify} argument specifies
+   whether the data need to be densified prior to \code{FUN} being applied.
+ \item If the data need to be densified, then \code{SAaaply} does this in a
+   memory-efficient manner. For example, it will serially densify each
+   sample in each sparse assay and apply \code{FUN} before moving onto the
+   next sample's data (this is appropriately generalised if the user
+   specifies a non-serial \code{\link[BiocParallel]{BiocParallelParam}}
+   backend via the \code{BPPARAM} argument).
+}
+
+Parallelisation is implemented via the \pkg{BiocParallel} package. Please
+consult its documentation for further details on parallelisation options,
+in particular the \code{?\link[BiocParallel]{BiocParallelParam}} help page.
+
+\strong{NOTE}: The generic is called \code{SAapply} rather than
+\code{saapply} to reduce the confusion/typo-rate with \code{\link{sapply}}.
+}
 \examples{
 # See ?SimpleListSparseAssays
 
@@ -126,8 +258,10 @@ Peter Hickey, \email{peter.hickey@gmail.com}
 }
 \seealso{
 \itemize{
- \item \link{SparseSummarizedExperiment} objects.
- \item \link[S4Vectors]{SimpleList} objects in the \pkg{S4Vectors} package.
+ \item \link{SimpleListSparseAssays} objects, the current default concrete
+   subclass of the SparseAssays virtual class.
+ \item \link{SparseSummarizedExperiment} objects, which use a SparseAssays
+   object in the \code{sparseAssays} slot.
 }
 }
 

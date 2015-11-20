@@ -46,6 +46,9 @@ of this argument.}
 }
 \description{
 A concrete subclass of the \link{SparseAssays} virtual class.
+As such, all the methods documented in
+\code{?}\link{SparseAssays} also work on a SimpleListSparseAssays object.
+See \link{SparseAssays} for details.
 }
 \details{
 The SimpleListSparseAssays class has a nested-list structure. This
@@ -75,54 +78,12 @@ SimpleListSparseAssays
 |   |   |-- value
 }
 
-Each "key" is an integer vector and all key elements must have identical
-length. Each "value" element is a matrix object (an assay with a
-1-dimensional measurement is stored as a 1-column matrix). Each value
-element may have a different number of rows but the maximum number of rows
-must be less than or equal to the length of the key elements. A row of the
-value element may be pointed to multiple times by the key element within
-the same sample and asssay.
-}
-\section{Dimensions}{
-
-The dimensions of a SimpleListSparseAssays object are defined by nrow =
-length of key, and ncol = number of samples.
-}
-
-\section{Subsetting}{
-
-Subsetting with \code{[} uses \code{i} to subset \emph{rows} in each
-sparse assay and \code{j} to subset samples in each sparse assay. Use
-\code{[[} to select the \code{i}-th sparse assay.
-}
-
-\section{Combining}{
-
-SimpleListSparseAssays objects can be combined in three different ways.
-\enumerate{
- \item \code{rbind} Suitable for when each object has the same samples.
- \item \code{cbind} Suitable for when each object has unique samples.
- \item \code{combine} Suitable in either case, \strong{however}, requires
- that \code{dimnames} are set on each object and that all objects have an
- identical number of sparse assays with identical names.
-}
-}
-
-\section{Densifying and coercion}{
-
-SimpleListSparseAssays objects can densified using the
-\code{\link{densify}} method. It is generally advisable to only
-densify a single sample and an sparse assay at a time; see
-\code{\link{densify}} for details.
-
-SimpleListSparseAssays objects can also coerced
-into a
-\link[SummarizedExperiment]{ShallowSimpleListAssays} object (from the
-\pkg{SummarizedExperiment} package); this will also densify the object.
-This can be done using \code{as(x, "ShallowSimpleListAssays")}, where
-\code{x} is a SimpleListSparseAssays object. \emph{WARNING}: The resulting
-\link[SummarizedExperiment]{ShallowSimpleListAssays} object will typically
-require much more memory than the equivalent SimpleListSparseAssays object.
+Each \sQuote{key} is an integer vector and all key elements must have
+identical length. Each \sQuote{value} element is a matrix object. Each
+value element may have a different number of rows but the maximum number of
+rows must be less than or equal to the length of the key elements. A row of
+the value element may be pointed to multiple times by the key element
+within the same sample and asssay.
 }
 \examples{
 # TODO: Get old examples from docs
@@ -177,7 +138,8 @@ Peter Hickey, \email{peter.hickey@gmail.com}
 }
 \seealso{
 \itemize{
- \item \link{SparseAssays} objects for additional methods.
+ \item \link{SparseAssays} objects for a description of the available
+   methods.
 }
 }
 

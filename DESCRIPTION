@@ -1,6 +1,6 @@
 Package: SparseSummarizedExperiment
 Title: SparseSummarizedExperiment Container
-Version: 0.0.0.9011
+Version: 0.0.0.9012
 Authors@R: c(person("Peter", "Hickey", role = c("aut", "cre"),
     email = "peter.hickey@gmail.com"))
 Description: An experimental implementation of a container modeled on the
@@ -12,26 +12,27 @@ Description: An experimental implementation of a container modeled on the
 Depends:
     R (>= 3.3.0),
     GenomicRanges (>= 1.23.3),
-    S4Vectors (>= 0.9.7),
+    S4Vectors (>= 0.9.9),
     SummarizedExperiment (>= 1.1.2)
 Imports:
     methods,
     BiocGenerics (>= 0.17.1),
     data.table (>= 1.9.6),
-    IRanges (>= 2.5.4),
-    GenomeInfoDb (>= 1.7.3)
+    IRanges (>= 2.5.7),
+    GenomeInfoDb (>= 1.7.3),
+    BiocParallel (>= 1.5.0)
 License: MIT + file LICENSE
 LazyData: true
 Collate:
-    'GenomicRanges-pkg.R'
-    'S4Vectors-pkg.R'
-    'SparseSummarizedExperiment.R'
     'AllGenerics.R'
+    'GenomicRanges-pkg.R'
     'SparseAssays-class.R'
     'SimpleListSparseAssays-class.R'
     'SparseSummarizedExperiment-class.R'
     'RangedSparseSummarizedExperiment-class.R'
+    'S4Vectors-pkg.R'
+    'SAapply.R'
+    'SparseSummarizedExperiment.R'
     'SummarizedExperiment-pkg.R'
-    'saapply.R'
     'sparsify.R'
 RoxygenNote: 5.0.1
