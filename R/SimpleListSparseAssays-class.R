@@ -124,8 +124,7 @@ setClass("SimpleListSparseAssays",
 
 .valid.SimpleListSparseAssays <- function(x) {
 
-  # TODO: I should be passing strict = FALSE but this doesn't work
-  sparse_assays <- as(x, "SimpleList", strict = TRUE)
+  sparse_assays <- as(x, "SimpleList", strict = FALSE)
 
   if (!is(sparse_assays, "SimpleList")) {
     return("'sparseAssays' must be a SimpleList object")
@@ -146,8 +145,8 @@ setClass("SimpleListSparseAssays",
     !identical(en, c("key", "value")) && !identical(en, c("value", "key"))
   }, logical(1L)))) {
     return(paste0("All sample-level data within each sparse assay of a '",
-                  class(x), "' object must have one element named 'key', an ",
-                  "element named 'value' and nothing else."))
+                  class(x), "' object must have one element named 'key', one ",
+                  "element named 'value', and nothing else."))
   }
 
   # Check all key elements are integer vectors.
@@ -822,8 +821,7 @@ setMethod("combine", c("SimpleListSparseAssays", "SimpleListSparseAssays"),
   nr <- nrow(x)
   nc <- ncol(x)
   if (is(x, "SimpleListSparseAssays")) {
-    # TODO: I should be passing strict = FALSE but this doesn't work
-    x <- as(x, "SimpleList")
+    x <- as(x, "SimpleList", strict = FALSE)
   }
 
   if (ShallowSimpleListAssays) {
@@ -880,8 +878,7 @@ setMethod("densify", c("SimpleListSparseAssays", "numeric", "missing"),
           function(x, i, j, ...) {
 
             tryCatch({
-              # TODO: I should be passing strict = FALSE but this doesn't work
-              sparse_assays <- as(x, "SimpleList")[i]
+              sparse_assays <- as(x, "SimpleList", strict = FALSE)[i]
             }, error = function(err) {
               stop("'densify(<", class(x), ">, i=\"numeric\", j=\"missing\",  ",
                    "...)' invalid subscript 'i'\n", conditionMessage(err))
@@ -955,8 +952,7 @@ setMethod("densify", c("SimpleListSparseAssays", "numeric", "numeric"),
                    "...)' invalid subscript 'j'\n", conditionMessage(err))
             })
             tryCatch({
-              # TODO: I should be passing strict = FALSE but this doesn't work
-              sparse_assays <- as(x, "SimpleList")[i]
+              sparse_assays <- as(x, "SimpleList", strict = FALSE)[i]
             }, error = function(err) {
               stop("'densify(<", class(x), ">, i=\"numeric\", j=\"numeric\",  ",
                    "...)' invalid subscript 'i'\n",
@@ -980,8 +976,7 @@ setMethod("densify", c("SimpleListSparseAssays", "numeric", "character"),
               stop(msg, "\n", conditionMessage(err))
             })
             tryCatch({
-              # TODO: I should be passing strict = FALSE but this doesn't work
-              sparse_assays <- as(x, "SimpleList")[i]
+              sparse_assays <- as(x, "SimpleList", strict = FALSE)[i]
             }, error = function(err) {
               stop("'densify(<", class(x), ">, i=\"numeric\", ",
                    "j=\"character\", ...)' invalid subscript 'i'\n",
@@ -1007,7 +1002,7 @@ setMethod("densify", c("SimpleListSparseAssays", "character", "numeric"),
             msg <- paste0("'densify(<", class(x), ">, i=\"character\", ",
                           "j=\"numeric\", ...)' invalid subscript 'i'")
             tryCatch({
-              sparse_assays <- as(x, "SimpleList")[i]
+              sparse_assays <- as(x, "SimpleList", strict = FALSE)[i]
             }, error = function(err) {
               stop(msg, "\n", conditionMessage(err))
             })
@@ -1031,7 +1026,7 @@ setMethod("densify", c("SimpleListSparseAssays", "character", "character"),
             msg <- paste0("'densify(<", class(x), ">, i=\"character\", ",
                           "j=\"character\", ...)' invalid subscript 'i'")
             tryCatch({
-              sparse_assays <- as(x, "SimpleList")[i]
+              sparse_assays <- as(x, "SimpleList", strict = FALSE)[i]
             }, error = function(err) {
               stop(msg, "\n", conditionMessage(err))
             })

@@ -455,24 +455,7 @@ makeSEFromSSE <- function(x) {
 #' @keywords internal
 .sparseAssays.SSE <- function(x, ..., withDimnames = TRUE) {
 
-  # TODO: Why doesn't strict = FALSE work; why and is it necessary?
-  # val <- as(x@sparseAssays, "SimpleList", strict = TRUE)
   sparse_assays <- x@sparseAssays
-  # if (!missing(j)) {
-  #   # NOTE: Need to convert character 'j' to numeric because converting the
-  #   #       sparseAssays slot to a SimpleList does not include the sample names.
-  #   if (is.character(j)) {
-  #     j <- match(j, colnames(x))
-  #     if (any(is.na(j))) {
-  #       stop("'sparseAssays(<", class(x), ">, j=\"character\", ...)' ",
-  #            "invalid subscript 'j'\n")
-  #     }
-  #   }
-  #   # TODO: This line (specifically, endoapply) seems to be broken; why?
-  #   val <- endoapply(val, "[", j)
-  # } else {
-  #   j <- seq_len(ncol(x))
-  # }
 
   if (withDimnames) {
     sparse_assays <- endoapply(sparse_assays, function(sparse_assay) {
@@ -566,22 +549,8 @@ setReplaceMethod("sparseAssays",
   if (length(sparse_assays) == 0L)
     stop("'sparseAssay(<", class(x), ">, i=\"missing\", ...) ",
          "length(sparseAssays(<", class(x), ">)) is 0'")
-  # val <- sparse_assays[[1]]
-  #
-  # if (densify) {
-  #   val <- setNames(SparseAssays(SimpleList(val)),
-  #                   sparseAssayNames(x)[1])
-  #   # TODO: Why was this line ever there?
-  #   # val <- as(val, "ShallowSimpleListAssays")[[1]]
-  #   # if (!missing(withDimnames) && withDimnames) {
-  #   #   # TODO: Check withDimnames works
-  #   #   dimnames(val) <- dimnames(x)
-  #   # }
-  # }
-  #
-  # val
   subclass <- class(x@sparseAssays)
-  as(as(sparse_assays, "SimpleList", strict = TRUE)[1L], subclass)
+  as(as(sparse_assays, "SimpleList", strict = FALSE)[1L], subclass)
 }
 
 #' @importFrom methods setMethod
@@ -598,33 +567,12 @@ setMethod("sparseAssay", c("SparseSummarizedExperiment", "missing"),
 #' @keywords internal
 .sparseAssay.SSE.numeric <- function(x, i, ...) {
   tryCatch({
-    # Don't want to densify all the sparseAssays, just the one being
-    # extracted, so don't densify just yet.
-    # if (!missing(j)) {
-    #   val <- sparseAssays(x, j, densify = FALSE, ...)[[i]]
-    # } else {
-    # TODO: Why doesn't strict = FALSE work; why and is it necessary?
     subclass <- class(x@sparseAssays)
-    as(as(sparseAssays(x, ...), "SimpleList", strict = TRUE)[i], subclass)
-    # }
+    as(as(sparseAssays(x, ...), "SimpleList", strict = FALSE)[i], subclass)
   }, error = function(err) {
     stop("'sparseAssay(<", class(x), ">, i=\"numeric\", ...)' ",
          "invalid subscript 'i'\n", conditionMessage(err))
   })
-
-  # if (densify) {
-  #   val <- setNames(SparseAssays(SimpleList(val)),
-  #                   sparseAssayNames(x)[i])
-  #   # extract first element, not i-th element, because this only has
-  #   # length 1.
-  #   # TODO: Why was this line ever there?
-  #   # val <- as(val, "ShallowSimpleListAssays")[[1]]
-  #   if (withDimnames) {
-  #     # TODO: Check withDimnames works
-  #     dimnames(val) <- dimnames(x)
-  #   }
-  # }
-  # val
 }
 
 #' @importFrom methods setMethod
@@ -644,15 +592,8 @@ setMethod("sparseAssay", c("SparseSummarizedExperiment", "numeric"),
   msg <- paste0("'sparseAssay(<", class(x), ">, i=\"character\",",
                 "...)' invalid subscript 'i'")
   val <- tryCatch({
-    # Don't want to densify all the sparseAssays, just the one being
-    # extracted, so don't densify just yet.
-    # if (!missing(j)) {
-    #   val <- sparseAssays(x, j, densify = FALSE, ...)[[i]]
-    # } else {
-    #   val <- sparseAssays(x, densify = FALSE, ...)[[i]]
-    # }
     subclass <- class(x@sparseAssays)
-    as(as(sparseAssays(x, ...), "SimpleList", strict = TRUE)[i], subclass)
+    as(as(sparseAssays(x, ...), "SimpleList", strict = FALSE)[i], subclass)
   }, error = function(err) {
     stop(msg, "\n", conditionMessage(err))
   })
@@ -661,20 +602,6 @@ setMethod("sparseAssay", c("SparseSummarizedExperiment", "numeric"),
     stop(msg, "\n'i' not in names(sparseAssays(<", class(x), ">))")
   }
   val
-
-  # if (densify) {
-  #   val <- setNames(SparseAssays(SimpleList(val)),
-  #                   sparseAssayNames(x)[i])
-  #   # extract first element, not i-th element, because this only has
-  #   # length 1.
-  #   # TODO: Why was this line ever there?
-  #   # val <- as(val, "ShallowSimpleListAssays")[[1]]
-  #   if (withDimnames) {
-  #     # TODO: Check withDimnames works
-  #     dimnames(val) <- dimnames(x)
-  #   }
-  # }
-  # val
 }
 
 #' @importFrom methods setMethod

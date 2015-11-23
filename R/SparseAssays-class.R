@@ -266,10 +266,15 @@ setClass("SparseAssays")
 .valid.SparseAssays <- function(x) {
 
   sparse_assays <- as(x, "SimpleList", strict = FALSE)
-
   if (!is(sparse_assays, "SimpleList")) {
     return("'sparseAssays' must be a SimpleList object")
   }
+  if (length(sparse_assays) == 0L) {
+    return(NULL)
+  }
+
+  # NOTE: Unlike SummarizedExperiment:::.valid.Assays(), we can't check dims.
+  #       because the dim() method is subclass-dependent.
 
   NULL
 }
@@ -330,15 +335,22 @@ setValidity2("SparseAssays", .valid.SparseAssays)
   sparse_assays
 }
 
-#' @importFrom methods as validObject
+#' @importFrom methods as inherits validObject
 #' @importFrom S4Vectors SimpleList
 #' @export
 SparseAssays <- function(sparse_assays = SimpleList(), subclass) {
   if (missing(subclass)) {
     subclass <- "SimpleListSparseAssays"
   }
-  # TODO: Some check that subclass is a valid concrete subclass of the
-  #       virtual SparseAssays class.
+  # Check whether subclass is a valid subclass of SparseAssays.
+  # NOTE: Kind of convoluted, but extends() doesn't seemt to work.
+  error_msg <- paste0("'subclass' error: '", subclass,
+                      "' does not extend 'SparseAssays'")
+  is_valid_subclass <- try(inherits(new(subclass), "SparseAssays"),
+      silent = TRUE)
+  if (is(is_valid_subclass, "try-error") || !isTRUE(is_valid_subclass)) {
+    stop(error_msg)
+  }
 
   # Normalise the arguments
   sparse_assays <- .normarg.sparse_assays(sparse_assays)
