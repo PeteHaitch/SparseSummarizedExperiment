@@ -10,6 +10,11 @@ NULL
 # the keys, identify the unique rows of the data.table and map each row of
 # 'x' to these unique rows.
 #
+# NOTE: The sparsify generic and associated methods are currently internal
+#       and are not exported. This is because I don't want to encourage users
+#       to manually sparsify their data. Rather, I want them to use the
+#       SparseAssays() constructor, along with the combine() method.
+#
 # WARNING: The relative row-order of 'x' is not preserved in the returned 'data'.
 #          However, the following should be TRUE when 'x' is
 #          matrix:
@@ -24,6 +29,7 @@ NULL
 #' @importFrom data.table := .GRP .I key setkey setkeyv
 #' @importFrom S4Vectors SimpleList
 #'
+#' @keywords internal
 .sparsify.SimpleList <- function(x,
                                  value_class =
                                    c("matrix", "data.frame", "data.table")) {
@@ -66,7 +72,7 @@ globalVariables(c(".myI", ".myKey"))
 #' @importFrom data.table as.data.table
 #' @importFrom methods setMethod
 #'
-#' @export
+#' @keywords internal
 setMethod("sparsify", c("matrix", "character"),
           function(x, return_class, ...) {
             # Convert input to data.table
@@ -78,7 +84,7 @@ setMethod("sparsify", c("matrix", "character"),
 #' @importFrom data.table setDT
 #' @importFrom methods setMethod
 #'
-#' @export
+#' @keywords internal
 setMethod("sparsify", c("data.frame", "character"),
           function(x, return_class, ...) {
             # Convert input to data.table by reference
@@ -89,7 +95,7 @@ setMethod("sparsify", c("data.frame", "character"),
 
 #' @importFrom methods setMethod
 #'
-#' @export
+#' @keywords internal
 setMethod("sparsify", c("data.table", "character"),
           function(x, return_class, ...) {
             # Input is already a data.table

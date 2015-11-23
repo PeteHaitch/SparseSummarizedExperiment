@@ -65,6 +65,7 @@ NULL
 #'
 #' @examples
 #' # TODO: Get old examples from docs
+#' # TODO: Use SparseAssays(matrix) in examples?
 #' ## ---------------------------------------------------------------------
 #' ## DIRECT MANIPULATION OF SparseAssays OBJECTS
 #' ## ---------------------------------------------------------------------
@@ -123,7 +124,8 @@ setClass("SimpleListSparseAssays",
 
 .valid.SimpleListSparseAssays <- function(x) {
 
-  sparse_assays <- as(x, "SimpleList", strict = FALSE)
+  # TODO: I should be passing strict = FALSE but this doesn't work
+  sparse_assays <- as(x, "SimpleList", strict = TRUE)
 
   if (!is(sparse_assays, "SimpleList")) {
     return("'sparseAssays' must be a SimpleList object")
@@ -546,6 +548,7 @@ setReplaceMethod("[", "SimpleListSparseAssays",
   sample_names <- lapply(lst, function(e) {
     lapply(e, names)
   })
+  # TODO: Allow for all NULL sample_names
   # Don't need check the first element against itself
   sample_names_identical <- vapply(sample_names[-1L], function(sn, sn1) {
     identical(sn, sn1)

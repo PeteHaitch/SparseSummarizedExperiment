@@ -18,6 +18,9 @@ setGeneric("densify",
 
 #' Sparsify a matrix-like object.
 #'
+#' \strong{WARNING}: This is intended for developers and not end-users; see
+#' \sQuote{Note for Developers}.
+#'
 #' A generic function to sparsify a matrix-like object, e.g.,
 #' \code{\link[base]{matrix}}, \code{\link[base]{data.frame}}, or
 #' \code{\link[data.table]{data.table}}.
@@ -40,6 +43,18 @@ setGeneric("densify",
 #' \link[S4Vectors]{SimpleList} object with an \code{integer} \code{key}
 #' element and a \code{matrix} \code{value} element.
 #'
+#' @section Note for Developers:
+#' This generic and method are used internally by the
+#' \pkg{SparseSummarizedExperiment} package but are not intended for use by
+#' end-users. End-users with their data as dense \code{\link[base]{matrix}}
+#' objects should use the \code{\link{SparseAssays}} constructor in conjunction
+#' with the associated \code{\link{combine}} method to sparify their data and
+#' return a valid SparseAssays object.
+#'
+#' One particular word of warning, the 'value' element returned by
+#' \code{sparsify} may contain the \code{NA}-row and will not have \code{NA}s
+#' in the 'key' element.
+#'
 #' @author Peter Hickey, \email{peter.hickey@@gmail.com}
 #'
 #' @seealso
@@ -56,7 +71,7 @@ setGeneric("densify",
 #'
 #' @importFrom methods setGeneric
 #'
-#' @export
+#' @keywords internal
 setGeneric("sparsify",
            function(x, return_class, ...)
              standardGeneric("sparsify"),

@@ -280,6 +280,14 @@ setValidity2("SparseAssays", .valid.SparseAssays)
 
 #' Normalise argument passed to SparseAssays constructor.
 #'
+#' If a matrix is supplied as 'sparse_assays', this function assumes a very
+#' specific structure of the sparsified data. Namely, it assumes that the
+#' NA-row, if present, is the first row of the value element. This should be
+#' TRUE because data.table::setkey() is consistent with
+#' base::sort(x, na.last = FALSE), however, we include an explict check and
+#' return an error if this assumption is violated.
+#'
+#' @param sparse_assays A SimpleList, list, or matrix.
 #'
 #' @return A SimpleList or an error if x is not a SimpleList or list instance.
 #'
@@ -292,8 +300,30 @@ setValidity2("SparseAssays", .valid.SparseAssays)
   if (!is(sparse_assays, "SimpleList")) {
     if (is.list(sparse_assays)) {
       sparse_assays <- SimpleList(sparse_assays)
+    } else if (is.matrix(sparse_assays)) {
+      sparsified <- sparsify(sparse_assays, "matrix")
+      value <- sparsified[["value"]]
+      key <- sparsified[["key"]]
+      # TODO: any(is.na(x)) is slow: (1) it creates a matrix of the same
+      #       dimension as x; (2) it checks each element of this matrix.
+      #       There are surely faster ways to do this. One solution would be to
+      #       use Rcpp (or .Call() to avoid the Rcpp dependency).
+      if (isTRUE(all(is.na(value[1L, ])))) {
+        # Need to drop the first row of the value, which is the NA-row, and
+        # finesse the key.
+        key <- key - 1L
+        key[key == 0] <- NA_integer_
+        value <- value[-1L, ]
+      } else if (any(is.na(value))) {
+          stop("Could not sparsify data. Please file an issue at ",
+               "https://github.com/PeteHaitch/SparseSummarizedExperiment")
+      }
+      # TODO: This horrible nested structure is specific to
+      #       SimpleListSparseAssays.
+      sparse_assays <- SimpleList(
+        SimpleList(SimpleList(key = key, value = value)))
     } else {
-      stop("'sparse_assays' must be a SimpleList or list")
+      stop("'sparse_assays' must be a SimpleList, list, or matrix")
     }
   }
   sparse_assays
@@ -308,6 +338,8 @@ SparseAssays <- function(sparse_assays = SimpleList(), subclass) {
   }
   # TODO: Some check that subclass is a valid concrete subclass of the
   #       virtual SparseAssays class.
+
+  # Normalise the arguments
   sparse_assays <- .normarg.sparse_assays(sparse_assays)
 
   ans <- as(sparse_assays, subclass)

@@ -87,6 +87,7 @@ within the same sample and asssay.
 }
 \examples{
 # TODO: Get old examples from docs
+# TODO: Use SparseAssays(matrix) in examples?
 ## ---------------------------------------------------------------------
 ## DIRECT MANIPULATION OF SparseAssays OBJECTS
 ## ---------------------------------------------------------------------

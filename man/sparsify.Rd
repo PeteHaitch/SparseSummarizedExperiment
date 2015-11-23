@@ -26,16 +26,32 @@ specific return value is left to individual methods. For example, the
 element and a \code{matrix} \code{value} element.
 }
 \description{
+\strong{WARNING}: This is intended for developers and not end-users; see
+\sQuote{Note for Developers}.
+}
+\details{
 A generic function to sparsify a matrix-like object, e.g.,
 \code{\link[base]{matrix}}, \code{\link[base]{data.frame}}, or
 \code{\link[data.table]{data.table}}.
-}
-\details{
+
 While the concepts of "sparsify" and "densify" are inverse
 operations, in general, \code{identical(densify(sparsify(x)), x)} is
 \strong{\code{FALSE}}. This is because the return value of \code{sparsify()}
 is generally not compatible with the signature of a
 \code{\link{densify}()} method.
+}
+\section{Note for Developers}{
+
+This generic and method are used internally by the
+\pkg{SparseSummarizedExperiment} package but are not intended for use by
+end-users. End-users with their data as dense \code{\link[base]{matrix}}
+objects should use the \code{\link{SparseAssays}} constructor in conjunction
+with the associated \code{\link{combine}} method to sparify their data and
+return a valid SparseAssays object.
+
+One particular word of warning, the 'value' element returned by
+\code{sparsify} may contain the \code{NA}-row and will not have \code{NA}s
+in the 'key' element.
 }
 \examples{
 # See ?SimpleListSparseAssays
@@ -49,4 +65,5 @@ Peter Hickey, \email{peter.hickey@gmail.com}
  \item \link{SimpleListSparseAssays}
 }
 }
+\keyword{internal}
 
