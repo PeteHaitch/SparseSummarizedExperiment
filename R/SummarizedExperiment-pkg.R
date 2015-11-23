@@ -10,25 +10,12 @@
 ### probably belongs in the SummarizedExperiment package.
 
 # NOTE: Not exported
+#' @keywords internal
 .combine.NAMES <- function(x, y, ...) {
   shared_names <- intersect(x, y)
   c(x, setdiff(y, shared_names))
 }
 
-
-# NOTE: Any class that extends the SummarizedExperiment0 or
-#       RangedSummarizedExperiment class by adding additional slots will need
-#       to be careful when defining a combine() method for the new class if it
-#       wants to call combine,SummarizedExperiment0-method by inheritance
-#       through callNextMethod(). Specifically, the combine() method will need
-#       to first update these additional slots, update the corresponding slots
-#       in 'x' (thus likely making 'x' an invalid object), and then calling
-#       callNextMethod(). An alternative would be to set 'check = FALSE' when
-#       replacing the slots in the
-#       combine,SummarizedExperiment0,SummarizedExperiment0-method, but this
-#       would require that the validity of each slot was checked in some other
-#       way to guard against generally returning of unvalidated
-#       SummarizedExperiment0 or RangedSummarizedExperiment objects.
 # TODO: Avoid unnecessary (and possibly costly) object validation where
 #       possible to safely do so.
 #' Combining SummarizedExperiment0/RangedSummarizedExperiment objects
@@ -44,6 +31,23 @@
 #' currently work if the \code{rowRanges} slot of \code{x}, \code{y}, or
 #' \code{...} is a \link[GenomicRanges]{GRangesList} objets.
 #'
+#' @section Note for Developers:
+#' Any class that extends the
+#' \link[SummarizedExperiment]{SummarizedExperiment0} or
+#' \link[SummarizedExperiment]{RangedSummarizedExperiment} class by adding
+#' additional slots will need to be careful when defining a combine() method
+#' for the new class if it wants to call
+#' \code{combine,SummarizedExperiment0-method} by inheritance through
+#' \code{callNextMethod()}. Specifically, the \code{combine()} method will need
+#' to first update these additional slots, update the corresponding slots in
+#' \code{x} (thus likely making \code{x} an invalid object), and then calling
+#' \code{callNextMethod()}. An alternative would be to set \code{check = FALSE}
+#' when replacing the slots in the
+#' \code{combine,SummarizedExperiment0,SummarizedExperiment0-method}, but this
+#' would require that the validity of each slot was checked in some other way
+#' to guard against generally returning of unvalidated
+#' \link[SummarizedExperiment]{SummarizedExperiment0} or
+#' \link[SummarizedExperiment]{RangedSummarizedExperiment} objects.
 #'
 #' @param x A \link[S4Vectors]{DataFrame} object.
 #' @param y A \link[S4Vectors]{DataFrame} object.
@@ -105,11 +109,16 @@ setMethod("combine", c("SummarizedExperiment0", "SummarizedExperiment0"),
                    "' objects because only one of these has 'rowRanges'")
             }
 
+            if (!is(x, "RangedSummarizedExperiment") &&
+                (is.null(names(x)) || is.null(names(y)))) {
+              stop("Cannot combine '", class(x), "' objects with NULL 'names'")
+            }
+
             # Check colnames are set
             x_cn <- colnames(x)
             y_cn <- colnames(y)
             if (is.null(x_cn) || is.null(y_cn)) {
-              stop("Cannot combine '", class(x), "' with NULL 'colnames'")
+              stop("Cannot combine '", class(x), "' objects with NULL 'colnames'")
             }
 
             # Combine slots
@@ -126,7 +135,7 @@ setMethod("combine", c("SummarizedExperiment0", "SummarizedExperiment0"),
               # NOTE: Can't handle internal duplicate ranges in x or y.
               if (any(duplicated(rowRanges(x))) ||
                   any(duplicated(rowRanges(y)))) {
-                stop("Cannot combine '", class(x), "' with internal ",
+                stop("Cannot combine '", class(x), "' objects with internal ",
                      "duplicate 'rowRanges'")
               }
               # NOTE: mcols(x) and mcols(y)
@@ -156,7 +165,7 @@ setMethod("combine", c("SummarizedExperiment0", "SummarizedExperiment0"),
               mcols(rowRanges) <- combine(x_em, y_em)
             } else {
               if (anyDuplicated(names(x)) || anyDuplicated(names(y))) {
-                stop("Cannot combine '", class(x), "' with internal ",
+                stop("Cannot combine '", class(x), "' objects with internal ",
                      "duplicate 'names'")
               }
               NAMES <- .combine.NAMES(names(x), names(y))

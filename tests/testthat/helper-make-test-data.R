@@ -93,4 +93,6 @@ rsse <- as(rse, "RangedSparseSummarizedExperiment")
 sa <- simSLSA(m, n, d, p)
 sparseAssays(rsse) <- sa
 sse <- as(rsse, "SparseSummarizedExperiment")
+names(sse) <- paste0("F", seq_len(nrow(sse)))
 se0 <- as(rse, "SummarizedExperiment0")
+names(se0) <- paste0("F", seq_len(nrow(se0)))

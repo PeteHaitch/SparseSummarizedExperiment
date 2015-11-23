@@ -3,7 +3,7 @@ context("Functionality that probably belongs in the GenomicRanges package")
 test_that("combine,GRanges,GRanges-method works", {
   set.seed(666)
   x <- simGR(10)
-  expect_identical(combine(x), x)
+  expect_identical(combine(x, GRanges()), x)
   expect_identical(combine(GRanges(), x), x)
   expect_identical(combine(x, x, x), x)
   expect_identical(combine(x[1:7], x[3:9]), x[1:9])
@@ -14,7 +14,7 @@ test_that("combine,GRangesList,GRangesList-method works", {
   set.seed(666)
   gr <- simGR(10)
   x <- GenomicRanges::GRangesList(gr[1:4], gr[5:10])
-  expect_identical(combine(x), x)
+  expect_identical(combine(x, GRangesList()), x)
   expect_identical(combine(GRangesList(), x), x)
   x1 <- x[1]
   x2 <- x[2]
