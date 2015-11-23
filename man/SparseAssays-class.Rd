@@ -14,6 +14,7 @@
 \alias{densify,SimpleListSparseAssays,character,missing-method}
 \alias{densify,SimpleListSparseAssays,character,numeric-method}
 \alias{densify,SimpleListSparseAssays,missing,character-method}
+\alias{densify,SimpleListSparseAssays,missing,missing-method}
 \alias{densify,SimpleListSparseAssays,missing,numeric-method}
 \alias{densify,SimpleListSparseAssays,numeric,character-method}
 \alias{densify,SimpleListSparseAssays,numeric,missing-method}
@@ -195,8 +196,8 @@ SparseAssays is to use a more memory-efficient storage of the data.
 Therefore, users must provide at least one of \code{i} (to select sparse
 assays) and \code{j} (to select samples). If you \emph{really} wish to
 simultaneously densify all sparse assays and samples, then use
-\code{densify(x, seq_len(length(x)), seq_len(ncol(x)))}. If \code{i} (resp.
-\code{j}) is missing then effectively \code{i = seq_len(length(x))} (resp.
+\code{densify(x, seq_along(x), seq_len(ncol(x)))}. If \code{i} (resp.
+\code{j}) is missing then effectively \code{i = seq_along(x)} (resp.
 \code{j = seq_len(ncol(x))}).
 }
 

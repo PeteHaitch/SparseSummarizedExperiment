@@ -167,8 +167,8 @@ NULL
 #' Therefore, users must provide at least one of \code{i} (to select sparse
 #' assays) and \code{j} (to select samples). If you \emph{really} wish to
 #' simultaneously densify all sparse assays and samples, then use
-#' \code{densify(x, seq_len(length(x)), seq_len(ncol(x)))}. If \code{i} (resp.
-#' \code{j}) is missing then effectively \code{i = seq_len(length(x))} (resp.
+#' \code{densify(x, seq_along(x), seq_len(ncol(x)))}. If \code{i} (resp.
+#' \code{j}) is missing then effectively \code{i = seq_along(x)} (resp.
 #' \code{j = seq_len(ncol(x))}).
 #'
 #' @section Coercion:
@@ -238,6 +238,7 @@ NULL
 #'          densify,SimpleListSparseAssays,character,missing-method
 #'          densify,SimpleListSparseAssays,character,numeric-method
 #'          densify,SimpleListSparseAssays,missing,character-method
+#'          densify,SimpleListSparseAssays,missing,missing-method
 #'          densify,SimpleListSparseAssays,missing,numeric-method
 #'          densify,SimpleListSparseAssays,numeric,character-method
 #'          densify,SimpleListSparseAssays,numeric,missing-method

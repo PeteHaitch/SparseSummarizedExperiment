@@ -865,6 +865,17 @@ setMethod("combine", c("SimpleListSparseAssays", "SimpleListSparseAssays"),
 #' @importFrom methods setMethod
 #'
 #' @export
+setMethod("densify", c("SimpleListSparseAssays", "missing", "missing"),
+          function(x, i, j, ...) {
+            stop("It is strongly recommended that you specify at least one of ",
+                 "'i' or 'j'; see ?densify for reasons why. If you still ",
+                 "really want to densify all sparse assays and samples, then ",
+                 "use 'densify(x, seq_along(x), seq_len(ncol(x)))")
+          })
+
+#' @importFrom methods setMethod
+#'
+#' @export
 setMethod("densify", c("SimpleListSparseAssays", "numeric", "missing"),
           function(x, i, j, ...) {
 
