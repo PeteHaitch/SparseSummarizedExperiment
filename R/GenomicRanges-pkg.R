@@ -109,8 +109,10 @@ setMethod("combine", c("GRangesList", "GRangesList"),
             }
 
             shared_elements <- intersect(names(x), names(y))
-            x[shared_elements] <- mendoapply(combine, x[shared_elements],
+            if (length(shared_elements)) {
+              x[shared_elements] <- mendoapply(combine, x[shared_elements],
                                              y[shared_elements])
+            }
             c(x, y[setdiff(names(y), shared_elements)])
           }
 )
