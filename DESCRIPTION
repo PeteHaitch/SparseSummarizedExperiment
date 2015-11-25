@@ -1,6 +1,6 @@
 Package: SparseSummarizedExperiment
 Title: SparseSummarizedExperiment Container
-Version: 0.0.0.9013
+Version: 0.0.0.9014
 Authors@R: c(person("Peter", "Hickey", role = c("aut", "cre"),
     email = "peter.hickey@gmail.com"))
 Description: An experimental implementation of a container modeled on the

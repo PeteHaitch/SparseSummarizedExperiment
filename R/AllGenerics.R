@@ -7,7 +7,7 @@
 #'
 #' @export
 setGeneric("densify",
-           function(x, i, j, ...)
+           function(x, i, j, ..., withRownames = TRUE)
              standardGeneric("densify"),
            signature = c("x", "i", "j")
 )
@@ -175,7 +175,8 @@ setGeneric("SparseSummarizedExperiment",
 #'
 #' @export
 setGeneric("SAapply",
-           function(X, FUN, densify = TRUE, ..., BPREDO = list(),
+           function(X, FUN, densify = TRUE, sparsify = !densify,
+                    withRownames = TRUE, ..., BPREDO = list(),
                     BPPARAM = bpparam())
              standardGeneric("SAapply"),
            signature = "X"

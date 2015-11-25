@@ -44,11 +44,13 @@ SparseAssays(sparse_assays = SimpleList(), subclass)
 
 ## Densify a SparseAssays object
 
-densify(x, i, j, ...)
+densify(x, i, j, ..., withRownames = TRUE)
 
 ## Apply a function to a SparseAssays object
 
-SAapply(X, FUN, densify = TRUE, ..., BPREDO = list(), BPPARAM = bpparam())
+SAapply(X, FUN, densify = TRUE, sparsify = !densify,
+        withRownames = TRUE, ...,
+        BPREDO = list(), BPPARAM = bpparam())
 }
 \arguments{
 \item{sparse_assays}{A SimpleList or list that can be used to construct a
@@ -71,6 +73,15 @@ SparseAssays instance; see \sQuote{Examples}.}
 \item{value}{An object of a class specified in the S4 method signature or as
 outlined in \sQuote{Details}.}
 
+\item{withRownames}{A \code{logical(1)}, indicating whether rownames should
+       be applied to densified sparse assay elements. Setting
+       \code{withRownames = FALSE} increases the speed and memory efficiency
+       with which sparse assays are extracted. Note that colnames are always
+       added.
+
+       For \code{SAaaply}, \code{withRownames} has no effect if
+       \code{densify = FALSE}.}
+
 \item{X}{A SparseAssays object.}
 
 \item{FUN}{The function to be applied to each element of \code{X}: see
@@ -80,6 +91,11 @@ backquoted or quoted.}
 
 \item{densify}{A \code{logical(1)}, indicating whether the sparse data need
 to be densified prior to applying \code{FUN}.}
+
+\item{sparsify}{A \code{logical(1)}, indicating whether the result should
+be sparsified following the application of \code{FUN}. By default,
+\code{sparsify = !densify}, that is, sparse data will remain sparse
+and densified data will remain densified.}
 
 \item{...}{Optional arguments to \code{FUN} or additional arguments, for use
 in specific methods.}
@@ -246,6 +262,17 @@ in two ways:
 Parallelisation is implemented via the \pkg{BiocParallel} package. Please
 consult its documentation for further details on parallelisation options,
 in particular the \code{?\link[BiocParallel]{BiocParallelParam}} help page.
+
+Finally, the \code{sparsify} argument determines the class of the return
+value of \code{SAapply()}. If \code{sparsify = FALSE}, the return value is a
+nested \link[base]{list} where the first level is the sparse assay and the
+second level is the sample-level data as a dense \link[base]{matrix}. If
+\code{sparsify = TRUE}, the return value is a SparseAssays object
+with the same concrete subclass as \code{X}. By default,
+\code{sparsify = !densify}, that is, sparse data will remain sparse and
+densified data will remain densified. The use of \code{densify = TRUE}
+allows the output of \code{SAapply()} to be used as the \code{value} in a
+call to \code{sparseAssays(x) <- value}; see \sQuote{Examples}.
 
 \strong{NOTE}: The generic is called \code{SAapply} rather than
 \code{saapply} to reduce the confusion/typo-rate with \code{\link{sapply}}.

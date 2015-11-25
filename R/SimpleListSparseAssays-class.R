@@ -64,8 +64,9 @@ NULL
 #'          [,SimpleListSparseAssays,ANY-method
 #'
 #' @examples
-#' # TODO: Get old examples from docs
+#' # TODO: Get old examples from docs?
 #' # TODO: Use SparseAssays(matrix) in examples?
+#' # TODO: Set names on 'key' elements so that can demonstrate combine().
 #' ## ---------------------------------------------------------------------
 #' ## DIRECT MANIPULATION OF SparseAssays OBJECTS
 #' ## ---------------------------------------------------------------------
@@ -80,7 +81,7 @@ NULL
 #'                   value = matrix(1:2, ncol = 1)),
 #'   s2 = SimpleList(key = as.integer(c(1, 1, 1, 2, NA, NA, NA, NA, NA, NA)),
 #'                   value = matrix(4:3, ncol = 1)))
-#' sa <- SparseAssays(SimpleList(sl1, sl2))
+#' sa <- SparseAssays(SimpleList(sa1 = sl1, sa2 = sl2))
 #' sa
 #'
 #' as(sa, "SimpleList")
@@ -105,11 +106,15 @@ NULL
 #'   # ERROR: cbind-ing requires unique sample names
 #'   cbind(sa, sa)
 #' }
+#' # Works because unique sample names
+#' cbind(sa[, 1], sa[, 2])
 #' \dontrun{
-#'   # ERROR: missing dimnames (which can't because there is no
-#'   #        dimnames,SparseAssays-method.
-#'   combine(sa[1:7, 1], sa[3:10, 2])
+#'   # ERROR: combine() requires named 'key' elements
+#'   combine(sa[1:7, 1], sa[3:8, 1])
+#'   # ERROR: combine() requires named 'key' elements
+#'   combine(sa[1:7, 1], sa[3:8, 2])
 #' }
+#' # TODO: An example of combine() that works because keys are named.
 #'
 #' @importFrom methods setClass
 #'
@@ -124,14 +129,19 @@ setClass("SimpleListSparseAssays",
 
 .valid.SimpleListSparseAssays <- function(x) {
 
-  sparse_assays <- as(x, "SimpleList", strict = FALSE)
-
-  if (!is(sparse_assays, "SimpleList")) {
-    return("'sparseAssays' must be a SimpleList object")
-  }
-  if (length(sparse_assays) == 0L) {
+  if (length(x) == 0L) {
     return(NULL)
   }
+
+  # NOTE: Checks the virtual class validity. .valid.SparseAssays() is normally
+  #       called **after** .valid.SimpleListSparseAssays() is called (via
+  #       validObject()), however, I also need it to be run up-front.
+  val <- .valid.SparseAssays(x)
+  if (!is.null(val)) {
+    return(val)
+  }
+
+  sparse_assays <- as(x, "SimpleList", strict = FALSE)
 
   # Check that sample level data has an element named 'key', an element named
   # 'value', and nothing else.
@@ -147,6 +157,13 @@ setClass("SimpleListSparseAssays",
     return(paste0("All sample-level data within each sparse assay of a '",
                   class(x), "' object must have one element named 'key', one ",
                   "element named 'value', and nothing else."))
+  }
+
+  # Check each sparse assay has the same number of samples.
+  n_samples <- vapply(sparse_assays, length, integer(1L))
+  if (any(n_samples != n_samples[1])) {
+    return(paste0("All sparse assays of a '", class(x), "' object must have ",
+                  "an identical number of samples."))
   }
 
   # Check all key elements are integer vectors.
@@ -178,13 +195,6 @@ setClass("SimpleListSparseAssays",
                   "numeric matrix objects."))
   }
 
-  # Check each sparse assay has the same number of samples.
-  n_samples <- vapply(sparse_assays, length, integer(1L))
-  if (any(n_samples != n_samples[1])) {
-    return(paste0("All sparse assays of a '", class(x), "'must have an ",
-                  "identical number of samples."))
-  }
-
   # Check sample names are identical across sparse assays.
   sample_names <- lapply(sparse_assays, function(sparse_assay) {
     names(sparse_assay)
@@ -192,7 +202,7 @@ setClass("SimpleListSparseAssays",
   if (any(vapply(sample_names, function(sn, sn1) {
     !identical(sn, sn1)
   }, logical(1L), sn1 = sample_names[[1L]]))) {
-    return(paste0("All sparse assays of a '", class(x), "'must have ",
+    return(paste0("All sparse assays of a '", class(x), "' object must have ",
                   "identical sample names."))
   }
 
@@ -282,6 +292,7 @@ setMethod("dim", "SimpleListSparseAssays",
 
 ### dimnames
 
+# TODO: Remove if not used in code.
 .dimnames.SimpleListSparseAssays <- function(x) {
 
   # NOTE: Uses rownames from first sparse assay-sample with no check
@@ -547,22 +558,36 @@ setReplaceMethod("[", "SimpleListSparseAssays",
   sample_names <- lapply(lst, function(e) {
     lapply(e, names)
   })
-  # TODO: Allow for all NULL sample_names
   # Don't need check the first element against itself
   sample_names_identical <- vapply(sample_names[-1L], function(sn, sn1) {
     identical(sn, sn1)
   }, FUN.VALUE = logical(1L), sn1 = sample_names[[1L]])
   if (identical(bind, cbind)) {
-    if (any(sample_names_identical)) {
+    # NOTE: Error not called if all sample names are NULL.
+    if (any(sample_names_identical) && !all(is.null(unlist(sample_names)))) {
       stop("Sample names (if present) must be unique when calling 'cbind()' ",
            "on '", class(lst[[1L]]), "'.")
     }
   } else {
+    # NOTE: This allows all sample names to be NULL.
     if (!all(sample_names_identical)) {
       stop("Sample names (if present) must be identical when calling ",
            "'rbind()' on '", class(lst[[1L]]), "'")
     }
   }
+  # If all sample names are NULL and rbind()-ing, need to check that the
+  # number of samples (ncol) in each SparseAssays object are identical.
+  if (all(is.null(unlist(sample_names, use.names = FALSE)))) {
+    nc <- lapply(lst, ncol)
+    nc_identical <- vapply(nc, function(nc, nc1) {
+      identical(nc, nc1)
+    }, FUN.VALUE = logical(1L), nc1 = nc[[1L]])
+    if (!all(nc_identical)) {
+      stop("Can only rbind '", class(lst[[1L]]), "' objects when each object ",
+           "has the same number of samples (ncol).")
+    }
+  }
+
 
   # Check all elements of lst have the same sparse assay names
   sparse_assay_names <- lapply(lst, names)
@@ -573,6 +598,13 @@ setReplaceMethod("[", "SimpleListSparseAssays",
          "assay names.")
   }
   sparse_assay_names <- sparse_assay_names[[1L]]
+  # NOTE: If sparse assay names don't exist, then match by position.
+  if (all(is.null(sparse_assay_names))) {
+    sparse_assay_names <- seq_along(lst[[1L]])
+    unname <- TRUE
+  } else {
+    unname <- FALSE
+  }
 
   if (identical(bind, rbind)) {
     # If rbind-ing, need to check that all data elements within each sparse
@@ -634,6 +666,10 @@ setReplaceMethod("[", "SimpleListSparseAssays",
     val <- as(setNames(SimpleList(val), sparse_assay_names), class(lst[[1L]]))
   }
 
+  if (unname) {
+    val <- unname(val)
+  }
+
   val
 }
 
@@ -684,9 +720,13 @@ setMethod("cbind", "SimpleListSparseAssays",
 .combine_sample_level.SimpleListSparseAssays <- function(x, y) {
 
   xe <- .densify.SimpleListSparseAssays.sample(x)
-  dimnames(xe) <- list(names(x[["key"]]), paste0("V", seq_len(ncol(xe))))
+  if (is.null(colnames(xe))) {
+    colnames(xe) <- paste0("V", seq_len(ncol(xe)))
+  }
   ye <- .densify.SimpleListSparseAssays.sample(y)
-  dimnames(ye) <- list(names(y[["key"]]), paste0("V", seq_len(ncol(ye))))
+  if (is.null(colnames(ye))) {
+    colnames(ye) <- paste0("V", seq_len(ncol(ye)))
+  }
   # NOTE: If the key is all NAs then the 'expanded' data are logical NA,
   #       which will cause problems when we try to combine this with a
   #       non-logical matrix.
@@ -697,10 +737,13 @@ setMethod("cbind", "SimpleListSparseAssays",
     storage.mode(ye) <- storage.mode(xe)
   }
 
-  sparsified <- sparsify(combine(xe, ye), "SimpleList")
+  z <- combine(xe, ye)
+  sparsified <- sparsify(z, "SimpleList")
 
   key <- sparsified[["key"]]
+  names(key) <- rownames(z)
   value <- sparsified[["value"]]
+  colnames(value) <- colnames(z)
   NA_idx <- which(!complete.cases(value))
   if (length(NA_idx)) {
     # Take care of NA rows
@@ -709,6 +752,7 @@ setMethod("cbind", "SimpleListSparseAssays",
     value <- value[-NA_idx, , drop = FALSE]
     # Update key element to replace index by NA for NA rows
     # TODO (longterm): Probably more efficient ways to do this
+    names(key)[key == NA_idx] <- NA
     key[key == NA_idx] <- NA
     key[!is.na(key) & key > NA_idx] <- key[!is.na(key) & key > NA_idx] - 1L
   }
@@ -738,6 +782,27 @@ setMethod("combine", c("SimpleListSparseAssays", "SimpleListSparseAssays"),
               return(x)
             } else if (length(x) == 0L) {
               return(y)
+            }
+
+            # Check that key element is named, otherwise densified data is
+            # unnamed and unnamed matrices cannot be combined.
+            x_unnamed <- lapply(x, function(sparse_assay) {
+              lapply(sparse_assay, function(sample) {
+                is.null(names(sample[["key"]]))
+              })
+            })
+            if (any(unlist(x_unnamed))) {
+              stop("Cannot combine '", class(x), "' objects with unnamed ",
+                   "'key' elements")
+            }
+            y_unnamed <- lapply(x, function(sparse_assay) {
+              lapply(sparse_assay, function(sample) {
+                is.null(names(sample[["key"]]))
+              })
+            })
+            if (any(unlist(y_unnamed))) {
+              stop("Cannot combine '", class(y), "' objects with unnamed ",
+                   "'key' elements")
             }
 
             mendoapply(function(x_sa, y_sa) {
@@ -808,23 +873,30 @@ setMethod("combine", c("SimpleListSparseAssays", "SimpleListSparseAssays"),
 ###
 
 # NOTE: Useful if wanting to densify/expand one sample's worth of data at a
-#       time.
-.densify.SimpleListSparseAssays.sample <- function(sample) {
-  sample[["value"]][sample[["key"]], , drop = FALSE]
+#       time. dimnames are taken from sample.
+.densify.SimpleListSparseAssays.sample <- function(sample, withRownames = TRUE) {
+  val <- sample[["value"]][sample[["key"]], , drop = FALSE]
+  if (withRownames) {
+    row.names(val) <- names(sample[["key"]])
+  }
+  val
 }
 
 #' @param x A SimpleListSparseAssays or SimpleList object.
 #'
 #' @importClassesFrom GenomicRanges ShallowSimpleListAssays
-.densify.SimpleListSparseAssays <- function(x, ShallowSimpleListAssays = FALSE) {
+.densify.SimpleListSparseAssays <- function(x, withRownames = TRUE,
+                                            ShallowSimpleListAssays = FALSE) {
 
   nr <- nrow(x)
   nc <- ncol(x)
   if (is(x, "SimpleListSparseAssays")) {
-    x <- as(x, "SimpleList", strict = FALSE)
+    # NOTE: Use strict = TRUE to ensure lapply() works as expected.
+    x <- as(x, "SimpleList", strict = TRUE)
   }
 
   if (ShallowSimpleListAssays) {
+    # NOTE: Want to be able to copy dimnames but drop when doing SSE -> SE
     l <- lapply(x, function(sparse_assay) {
       # A kludge to guess whether the data are integer or numeric. If multiple
       # data storage modes are found then assume numeric.
@@ -848,13 +920,21 @@ setMethod("combine", c("SimpleListSparseAssays", "SimpleListSparseAssays"),
         val[ , sample, ] <- sparse_assay[[sample]][["value"]][
           sparse_assay[[sample]][["key"]], , drop = FALSE]
       }
+      # NOTE: colnames of sparse assay should alway be copied, but note that
+      #       these are not colnames of val.
+      dimnames(val)[[3L]] <- colnames(sparse_assay[[1L]][["value"]])
+
+      if (withRownames) {
+        dimnames(val)[[1L]] <- names(sparse_assay[[1L]][["key"]])
+      }
       val
     })
     return(Assays(l))
 
   } else {
     l <- lapply(x, function(sparse_assay) {
-      lapply(sparse_assay, .densify.SimpleListSparseAssays.sample)
+      lapply(sparse_assay, .densify.SimpleListSparseAssays.sample,
+             withRownames = withRownames)
     })
     SimpleList(l)
   }
@@ -864,26 +944,29 @@ setMethod("combine", c("SimpleListSparseAssays", "SimpleListSparseAssays"),
 #'
 #' @export
 setMethod("densify", c("SimpleListSparseAssays", "missing", "missing"),
-          function(x, i, j, ...) {
+          function(x, i, j, ..., withRownames = TRUE) {
             stop("It is strongly recommended that you specify at least one of ",
                  "'i' or 'j'; see ?densify for reasons why. If you still ",
                  "really want to densify all sparse assays and samples, then ",
-                 "use 'densify(x, seq_along(x), seq_len(ncol(x)))")
+                 "use 'densify(x, seq_along(x), seq_len(ncol(x)), ...)'")
           })
 
 #' @importFrom methods setMethod
 #'
 #' @export
 setMethod("densify", c("SimpleListSparseAssays", "numeric", "missing"),
-          function(x, i, j, ...) {
+          function(x, i, j, ..., withRownames = TRUE) {
 
             tryCatch({
-              sparse_assays <- as(x, "SimpleList", strict = FALSE)[i]
+              # NOTE: Need strict = TRUE otherwise
+              # [,SimpleListSparseAssays-method is called instead of
+              # [,SimpleList-method
+              sparse_assays <- as(x, "SimpleList", strict = TRUE)[i]
             }, error = function(err) {
               stop("'densify(<", class(x), ">, i=\"numeric\", j=\"missing\",  ",
                    "...)' invalid subscript 'i'\n", conditionMessage(err))
             })
-            .densify.SimpleListSparseAssays(sparse_assays)
+            .densify.SimpleListSparseAssays(sparse_assays, withRownames)
           }
 )
 
@@ -891,17 +974,20 @@ setMethod("densify", c("SimpleListSparseAssays", "numeric", "missing"),
 #'
 #' @export
 setMethod("densify", c("SimpleListSparseAssays", "character", "missing"),
-          function(x, i, j, ...) {
+          function(x, i, j, ..., withRownames = TRUE) {
 
             msg <- paste0("'densify(<", class(x), ">, i=\"character\", ",
                           "j=\"missing\", ...)' invalid subscript 'i'")
             tryCatch({
-              sparse_assays <- as(x, "SimpleList")[i]
+              # NOTE: Need strict = TRUE otherwise
+              # [,SimpleListSparseAssays-method is called instead of
+              # [,SimpleList-method
+              sparse_assays <- as(x, "SimpleList", strict = TRUE)[i]
             }, error = function(err) {
               stop(msg, "\n", conditionMessage(err))
             })
 
-            .densify.SimpleListSparseAssays(sparse_assays)
+            .densify.SimpleListSparseAssays(sparse_assays, withRownames)
           }
 )
 
@@ -909,7 +995,7 @@ setMethod("densify", c("SimpleListSparseAssays", "character", "missing"),
 #'
 #' @export
 setMethod("densify", c("SimpleListSparseAssays", "missing", "numeric"),
-          function(x, i, j, ...) {
+          function(x, i, j, ..., withRownames = TRUE) {
 
             tryCatch({
               sparse_assays <- x[, j]
@@ -917,7 +1003,7 @@ setMethod("densify", c("SimpleListSparseAssays", "missing", "numeric"),
               stop("'densify(<", class(x), ">, i=\"missing\", j=\"numeric\",  ",
                    "...)' invalid subscript 'j'\n", conditionMessage(err))
             })
-            .densify.SimpleListSparseAssays(sparse_assays)
+            .densify.SimpleListSparseAssays(sparse_assays, withRownames)
           }
 )
 
@@ -925,7 +1011,7 @@ setMethod("densify", c("SimpleListSparseAssays", "missing", "numeric"),
 #'
 #' @export
 setMethod("densify", c("SimpleListSparseAssays", "missing", "character"),
-          function(x, i, j, ...) {
+          function(x, i, j, ..., withRownames = TRUE) {
 
             msg <- paste0("'densify(<", class(x), ">, i=\"missing\", ",
                           "j=\"character\", ...)' invalid subscript 'j'")
@@ -935,7 +1021,7 @@ setMethod("densify", c("SimpleListSparseAssays", "missing", "character"),
               stop(msg, "\n", conditionMessage(err))
             })
 
-            .densify.SimpleListSparseAssays(sparse_assays)
+            .densify.SimpleListSparseAssays(sparse_assays, withRownames)
           }
 )
 
@@ -943,7 +1029,7 @@ setMethod("densify", c("SimpleListSparseAssays", "missing", "character"),
 #'
 #' @export
 setMethod("densify", c("SimpleListSparseAssays", "numeric", "numeric"),
-          function(x, i, j, ...) {
+          function(x, i, j, ..., withRownames = TRUE) {
 
             tryCatch({
               x <- x[, j]
@@ -952,13 +1038,16 @@ setMethod("densify", c("SimpleListSparseAssays", "numeric", "numeric"),
                    "...)' invalid subscript 'j'\n", conditionMessage(err))
             })
             tryCatch({
-              sparse_assays <- as(x, "SimpleList", strict = FALSE)[i]
+              # NOTE: Need strict = TRUE otherwise
+              # [,SimpleListSparseAssays-method is called instead of
+              # [,SimpleList-method
+              sparse_assays <- as(x, "SimpleList", strict = TRUE)[i]
             }, error = function(err) {
               stop("'densify(<", class(x), ">, i=\"numeric\", j=\"numeric\",  ",
                    "...)' invalid subscript 'i'\n",
                    conditionMessage(err))
             })
-            .densify.SimpleListSparseAssays(sparse_assays)
+            .densify.SimpleListSparseAssays(sparse_assays, withRownames)
           }
 )
 
@@ -966,7 +1055,7 @@ setMethod("densify", c("SimpleListSparseAssays", "numeric", "numeric"),
 #'
 #' @export
 setMethod("densify", c("SimpleListSparseAssays", "numeric", "character"),
-          function(x, i, j, ...) {
+          function(x, i, j, ..., withRownames = TRUE) {
 
             msg <- paste0("'densify(<", class(x), ">, i=\"numeric\", ",
                           "j=\"character\", ...)' invalid subscript 'j'")
@@ -976,13 +1065,16 @@ setMethod("densify", c("SimpleListSparseAssays", "numeric", "character"),
               stop(msg, "\n", conditionMessage(err))
             })
             tryCatch({
-              sparse_assays <- as(x, "SimpleList", strict = FALSE)[i]
+              # NOTE: Need strict = TRUE otherwise
+              # [,SimpleListSparseAssays-method is called instead of
+              # [,SimpleList-method
+              sparse_assays <- as(x, "SimpleList", strict = TRUE)[i]
             }, error = function(err) {
               stop("'densify(<", class(x), ">, i=\"numeric\", ",
                    "j=\"character\", ...)' invalid subscript 'i'\n",
                    conditionMessage(err))
             })
-            .densify.SimpleListSparseAssays(sparse_assays)
+            .densify.SimpleListSparseAssays(sparse_assays, withRownames)
           }
 )
 
@@ -990,7 +1082,7 @@ setMethod("densify", c("SimpleListSparseAssays", "numeric", "character"),
 #'
 #' @export
 setMethod("densify", c("SimpleListSparseAssays", "character", "numeric"),
-          function(x, i, j, ...) {
+          function(x, i, j, ..., withRownames = TRUE) {
 
             tryCatch({
               x <- x[, j]
@@ -1002,11 +1094,14 @@ setMethod("densify", c("SimpleListSparseAssays", "character", "numeric"),
             msg <- paste0("'densify(<", class(x), ">, i=\"character\", ",
                           "j=\"numeric\", ...)' invalid subscript 'i'")
             tryCatch({
-              sparse_assays <- as(x, "SimpleList", strict = FALSE)[i]
+              # NOTE: Need strict = TRUE otherwise
+              # [,SimpleListSparseAssays-method is called instead of
+              # [,SimpleList-method
+              sparse_assays <- as(x, "SimpleList", strict = TRUE)[i]
             }, error = function(err) {
               stop(msg, "\n", conditionMessage(err))
             })
-            .densify.SimpleListSparseAssays(sparse_assays)
+            .densify.SimpleListSparseAssays(sparse_assays, withRownames)
           }
 )
 
@@ -1014,7 +1109,7 @@ setMethod("densify", c("SimpleListSparseAssays", "character", "numeric"),
 #'
 #' @export
 setMethod("densify", c("SimpleListSparseAssays", "character", "character"),
-          function(x, i, j, ...) {
+          function(x, i, j, ..., withRownames = TRUE) {
 
             msg <- paste0("'densify(<", class(x), ">, i=\"character\", ",
                           "j=\"character\", ...)' invalid subscript 'j'")
@@ -1026,11 +1121,14 @@ setMethod("densify", c("SimpleListSparseAssays", "character", "character"),
             msg <- paste0("'densify(<", class(x), ">, i=\"character\", ",
                           "j=\"character\", ...)' invalid subscript 'i'")
             tryCatch({
-              sparse_assays <- as(x, "SimpleList", strict = FALSE)[i]
+              # NOTE: Need strict = TRUE otherwise
+              # [,SimpleListSparseAssays-method is called instead of
+              # [,SimpleList-method
+              sparse_assays <- as(x, "SimpleList", strict = TRUE)[i]
             }, error = function(err) {
               stop(msg, "\n", conditionMessage(err))
             })
-            .densify.SimpleListSparseAssays(sparse_assays)
+            .densify.SimpleListSparseAssays(sparse_assays, withRownames)
           }
 )
 
@@ -1039,7 +1137,10 @@ setMethod("densify", c("SimpleListSparseAssays", "character", "character"),
 #' @export
 setAs("SimpleListSparseAssays", "ShallowSimpleListAssays",
       function(from) {
-        .densify.SimpleListSparseAssays(from, ShallowSimpleListAssays = TRUE)
+        # TODO: Check whether dimanmes are subsequently stripped from assays
+        #       slot if this is called from within makeSEFromSSE
+        .densify.SimpleListSparseAssays(from, withRownames = TRUE,
+                                        ShallowSimpleListAssays = TRUE)
       }
 )
 

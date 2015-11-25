@@ -86,8 +86,9 @@ the value element may be pointed to multiple times by the key element
 within the same sample and asssay.
 }
 \examples{
-# TODO: Get old examples from docs
+# TODO: Get old examples from docs?
 # TODO: Use SparseAssays(matrix) in examples?
+# TODO: Set names on 'key' elements so that can demonstrate combine().
 ## ---------------------------------------------------------------------
 ## DIRECT MANIPULATION OF SparseAssays OBJECTS
 ## ---------------------------------------------------------------------
@@ -102,7 +103,7 @@ sl2 <- SimpleList(
                   value = matrix(1:2, ncol = 1)),
   s2 = SimpleList(key = as.integer(c(1, 1, 1, 2, NA, NA, NA, NA, NA, NA)),
                   value = matrix(4:3, ncol = 1)))
-sa <- SparseAssays(SimpleList(sl1, sl2))
+sa <- SparseAssays(SimpleList(sa1 = sl1, sa2 = sl2))
 sa
 
 as(sa, "SimpleList")
@@ -127,11 +128,15 @@ rbind(sa, sa)
   # ERROR: cbind-ing requires unique sample names
   cbind(sa, sa)
 }
+# Works because unique sample names
+cbind(sa[, 1], sa[, 2])
 \dontrun{
-  # ERROR: missing dimnames (which can't because there is no
-  #        dimnames,SparseAssays-method.
-  combine(sa[1:7, 1], sa[3:10, 2])
+  # ERROR: combine() requires named 'key' elements
+  combine(sa[1:7, 1], sa[3:8, 1])
+  # ERROR: combine() requires named 'key' elements
+  combine(sa[1:7, 1], sa[3:8, 2])
 }
+# TODO: An example of combine() that works because keys are named.
 
 }
 \author{

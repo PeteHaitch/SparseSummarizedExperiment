@@ -28,6 +28,7 @@
 \alias{sparseAssays<-}
 \alias{sparseAssays<-,SparseSummarizedExperiment,SimpleList-method}
 \alias{sparseAssays<-,SparseSummarizedExperiment,SparseAssays-method}
+\alias{sparseAssays<-,SparseSummarizedExperiment,list-method}
 \title{SparseSummarizedExperiment objects}
 \usage{
 ## Constructor
@@ -283,8 +284,7 @@ sl2 <- SimpleList(
                   value = matrix(1:2, ncol = 1)),
   s2 = SimpleList(key = as.integer(c(1, 1, 1, 2, NA, NA, NA, NA, NA, NA)),
                   value = matrix(4:3, ncol = 1)))
-# TODO: Need to require(?) that sparse assays are named
-sa <- SparseAssays(SimpleList("sa1" = sl1, "sa2" = sl2))
+sa <- SparseAssays(SimpleList(sa1 = sl1, sa2 = sl2))
 
 colData <- DataFrame(Genotype = c("WT", "KO"),
                      row.names = c("s1", "s2"))
@@ -297,9 +297,18 @@ sparseAssay(sse)
 # densify the first sparse assay.
 # In general its a bad idea to use densify = TRUE, but these data are small
 # enough not to worry.
+# TODO: Should I use sparseAssay() or sparseAssays() in the example; check
+#       out SummarizedExperiment0 examples.
 densify(sparseAssay(sse), 1, 1:2)[[1]]
-# TODO: Implement saapply
-# sparseAssays(sse) <- saapply(sparseAssays(sse), function(x) x^2)
+SAapply(sparseAssays(sse), function(x) x^2)
+\dontrun{
+ # Need sparsify = TRUE to use the replace method
+ sparseAssays(sse) <- SAapply(sparseAssays(sse), function(x) x^2)
+}
+sparseAssays(sse) <- SAapply(sparseAssays(sse), function(x) x^2,
+                             sparsify = TRUE)
+densify(sparseAssays(sse), 1:2, 1:2)
+
 sparseAssay(sse)
 # densify the first sparse assay
 densify(sparseAssay(sse), 1, 1:2)[[1]]

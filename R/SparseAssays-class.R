@@ -41,6 +41,14 @@ NULL
 #'        \code{j} must be provided; see \sQuote{Densify}.
 #' @param value An object of a class specified in the S4 method signature or as
 #'        outlined in \sQuote{Details}.
+#' @param withRownames A \code{logical(1)}, indicating whether rownames should
+#'        be applied to densified sparse assay elements. Setting
+#'        \code{withRownames = FALSE} increases the speed and memory efficiency
+#'        with which sparse assays are extracted. Note that colnames are always
+#'        added.
+#'
+#'        For \code{SAaaply}, \code{withRownames} has no effect if
+#'        \code{densify = FALSE}.
 #' @param X A SparseAssays object.
 #' @param FUN The function to be applied to each element of \code{X}: see
 #' \sQuote{Applying a function to a SparseAssays object (\code{SAapply})}. In
@@ -48,6 +56,10 @@ NULL
 #' backquoted or quoted.
 #' @param densify A \code{logical(1)}, indicating whether the sparse data need
 #'        to be densified prior to applying \code{FUN}.
+#' @param sparsify A \code{logical(1)}, indicating whether the result should
+#'        be sparsified following the application of \code{FUN}. By default,
+#'        \code{sparsify = !densify}, that is, sparse data will remain sparse
+#'        and densified data will remain densified.
 #' @param ... Optional arguments to \code{FUN} or additional arguments, for use
 #' in specific methods.
 #' @param BPREDO,BPPARAM See \code{?\link[BiocParallel]{bplapply}}.
@@ -73,11 +85,13 @@ NULL
 #'
 #' ## Densify a SparseAssays object
 #'
-#' densify(x, i, j, ...)
+#' densify(x, i, j, ..., withRownames = TRUE)
 #'
 #' ## Apply a function to a SparseAssays object
 #'
-#' SAapply(X, FUN, densify = TRUE, ..., BPREDO = list(), BPPARAM = bpparam())
+#' SAapply(X, FUN, densify = TRUE, sparsify = !densify,
+#'         withRownames = TRUE, ...,
+#'         BPREDO = list(), BPPARAM = bpparam())
 #'
 #' @details SparseAssays objects have a list-like semantics with elements
 #' containing key and value elements.
@@ -214,6 +228,17 @@ NULL
 #' consult its documentation for further details on parallelisation options,
 #' in particular the \code{?\link[BiocParallel]{BiocParallelParam}} help page.
 #'
+#' Finally, the \code{sparsify} argument determines the class of the return
+#' value of \code{SAapply()}. If \code{sparsify = FALSE}, the return value is a
+#' nested \link[base]{list} where the first level is the sparse assay and the
+#' second level is the sample-level data as a dense \link[base]{matrix}. If
+#' \code{sparsify = TRUE}, the return value is a SparseAssays object
+#' with the same concrete subclass as \code{X}. By default,
+#' \code{sparsify = !densify}, that is, sparse data will remain sparse and
+#' densified data will remain densified. The use of \code{densify = TRUE}
+#' allows the output of \code{SAapply()} to be used as the \code{value} in a
+#' call to \code{sparseAssays(x) <- value}; see \sQuote{Examples}.
+#'
 #' \strong{NOTE}: The generic is called \code{SAapply} rather than
 #' \code{saapply} to reduce the confusion/typo-rate with \code{\link{sapply}}.
 #'
@@ -310,6 +335,8 @@ setValidity2("SparseAssays", .valid.SparseAssays)
       sparsified <- sparsify(sparse_assays, "matrix")
       value <- sparsified[["value"]]
       key <- sparsified[["key"]]
+      names(key) <- rownames(sparse_assays)
+      colnames(value) <- colnames(sparse_assays)
       # TODO: any(is.na(x)) is slow: (1) it creates a matrix of the same
       #       dimension as x; (2) it checks each element of this matrix.
       #       There are surely faster ways to do this. One solution would be to
@@ -335,7 +362,7 @@ setValidity2("SparseAssays", .valid.SparseAssays)
   sparse_assays
 }
 
-#' @importFrom methods as inherits validObject
+#' @importFrom methods as validObject
 #' @importFrom S4Vectors SimpleList
 #' @export
 SparseAssays <- function(sparse_assays = SimpleList(), subclass) {

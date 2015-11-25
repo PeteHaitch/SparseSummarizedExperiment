@@ -109,7 +109,7 @@ sl2 <- SimpleList(
   s2 = SimpleList(key = as.integer(c(1, 1, 1, 2, NA, NA, NA, NA, NA, NA)),
                   value = matrix(4:3, ncol = 1)))
 # TODO: Need to require(?) that sparse assays are named
-sa <- SparseAssays(SimpleList("sa1" = sl1, "sa2" = sl2))
+sa <- SparseAssays(SimpleList(sa1 = sl1, sa2 = sl2))
 colData <- DataFrame(Genotype = c("WT", "KO"),
                      row.names = c("s1", "s2"))
 sse <- SparseSummarizedExperiment(sparseAssays = sa,

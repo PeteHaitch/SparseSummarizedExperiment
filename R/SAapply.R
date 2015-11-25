@@ -5,27 +5,53 @@
 # TODO: How to pass down BPREDO and BPPARAM in a sensible fashion
 # TODO: Only SerialParam backend is currently working; why?
 #' @importFrom methods setMethod
+#' @importFrom S4Vectors isTRUEorFALSE
 #' @importFrom BiocParallel bplapply bpparam SerialParam
 #'
 #' @export
 setMethod("SAapply", "SimpleListSparseAssays",
-          # function(X, FUN, densify = TRUE, ..., BPREDO = list(),
+          # function(X, FUN, densify = TRUE, sparsify = !densify,
+          #          withRownames = TRUE, ..., BPREDO = list(),
           #          BPPARAM = bpparam()) {
-          function(X, FUN, densify = TRUE, ..., BPREDO = list(),
+          function(X, FUN, densify = TRUE, sparsify = !densify,
+                   withRownames = TRUE, ..., BPREDO = list(),
                    BPPARAM = SerialParam()) {
+            if (!isTRUEorFALSE(densify) || !isTRUEorFALSE(sparsify)) {
+              stop("'densify' and 'sparsify' must be TRUE or FALSE")
+            }
 
-            # NOTE: Can't pass 'densify' via '...' in bplapply() because it is
-            #       not an argument to 'FUN', so need to use a series of nested
-            #       dummy functions.
-            bplapply(X, FUN = function(sparse_assay, densify, fun, ...) {
-              bplapply(sparse_assay, function(sample, densify, fun, ...) {
+            # NOTE: Can't pass 'densify', 'sparsify', and 'withRownames' via
+            #       '...' in bplapply() because it is not an argument to 'FUN',
+            #       so need to use a series of nested dummy functions.
+            val <- bplapply(X, FUN = function(sparse_assay, densify, sparsify,
+                                              withRownames, fun, ...) {
+              bplapply(sparse_assay, function(sample, densify, sparsify,
+                                              withRownames, fun, ...) {
                 if (densify) {
-                  sample <- .densify.SimpleListSparseAssays.sample(sample)
+                  sample <- .densify.SimpleListSparseAssays.sample(sample,
+                                                                   withRownames)
                 }
-                fun(sample, ...)
-              }, densify = densify, fun = FUN, ..., BPREDO = BPREDO,
+                val <- fun(sample, ...)
+                if (!densify && sparsify) {
+                  return(val)
+                } else if (!densify && !sparsify) {
+                  return(.densify.SimpleListSparseAssays.sample(val,
+                                                                withRownames))
+                } else if (densify && !sparsify) {
+                  return(val)
+                } else if (densify && sparsify) {
+                  return(sparsify(val, "SimpleList"))
+                }
+              }, densify = densify, sparsify = sparsify,
+              withRownames = withRownames, fun = FUN, ..., BPREDO = BPREDO,
               BPPARAM = BPPARAM)
-            }, densify = densify, fun = FUN, ..., BPREDO = BPREDO,
+            }, densify = densify, sparsify = sparsify,
+            withRownames = withRownames, fun = FUN, ..., BPREDO = BPREDO,
             BPPARAM = BPPARAM)
+
+            if (sparsify) {
+              return(SparseAssays(val))
+            }
+            val
           }
 )

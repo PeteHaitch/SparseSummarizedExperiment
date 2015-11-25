@@ -254,6 +254,7 @@ NULL
 #'          sparseAssays
 #'          sparseAssays,SparseSummarizedExperiment-method
 #'          sparseAssays<-
+#'          sparseAssays<-,SparseSummarizedExperiment,list-method
 #'          sparseAssays<-,SparseSummarizedExperiment,SimpleList-method
 #'          sparseAssays<-,SparseSummarizedExperiment,SparseAssays-method
 #'          sparseAssay
@@ -287,8 +288,7 @@ NULL
 #'                   value = matrix(1:2, ncol = 1)),
 #'   s2 = SimpleList(key = as.integer(c(1, 1, 1, 2, NA, NA, NA, NA, NA, NA)),
 #'                   value = matrix(4:3, ncol = 1)))
-#' # TODO: Need to require(?) that sparse assays are named
-#' sa <- SparseAssays(SimpleList("sa1" = sl1, "sa2" = sl2))
+#' sa <- SparseAssays(SimpleList(sa1 = sl1, sa2 = sl2))
 #'
 #' colData <- DataFrame(Genotype = c("WT", "KO"),
 #'                      row.names = c("s1", "s2"))
@@ -301,9 +301,18 @@ NULL
 #' # densify the first sparse assay.
 #' # In general its a bad idea to use densify = TRUE, but these data are small
 #' # enough not to worry.
+#' # TODO: Should I use sparseAssay() or sparseAssays() in the example; check
+#' #       out SummarizedExperiment0 examples.
 #' densify(sparseAssay(sse), 1, 1:2)[[1]]
-#' # TODO: Implement saapply
-#' # sparseAssays(sse) <- saapply(sparseAssays(sse), function(x) x^2)
+#' SAapply(sparseAssays(sse), function(x) x^2)
+#' \dontrun{
+#'  # Need sparsify = TRUE to use the replace method
+#'  sparseAssays(sse) <- SAapply(sparseAssays(sse), function(x) x^2)
+#' }
+#' sparseAssays(sse) <- SAapply(sparseAssays(sse), function(x) x^2,
+#'                              sparsify = TRUE)
+#' densify(sparseAssays(sse), 1:2, 1:2)
+#'
 #' sparseAssay(sse)
 #' # densify the first sparse assay
 #' densify(sparseAssay(sse), 1, 1:2)[[1]]
@@ -422,21 +431,34 @@ setValidity2("SparseSummarizedExperiment", .valid.SSE)
 #       implicit/inherited coercion of SSE to SE is currently relied upon by
 #       several functions in this package (most non-user facing).
 
+#' @param x A SparseSummarizedExperiment object.
+#'
 #' @keywords internal
 #'
 #' @importClassesFrom GenomicRanges ShallowSimpleListAssays
 #' @importFrom methods as is
-.SSE.to.SE <- function(from) {
+.SSE.to.SE <- function(x) {
 
-  extra_assays <- as(sparseAssays(from), "ShallowSimpleListAssays")
-  assays <- Assays(c(assays(from),
+  # NOTE: Use withDimnames = TRUE so that sample names are retrieved, but then
+  #       strip from extra_assays like the SummarizedExperiment() constructor.
+
+  extra_assays <- sparseAssays(x, withDimnames = TRUE)
+  extra_assays <- endoapply(extra_assays, function(sparse_assay) {
+    names(sparse_assay) <- NULL
+    endoapply(sparse_assay, function(sample) {
+      names(sample[["key"]]) <- NULL
+      sample
+    })
+  })
+  extra_assays <- as(extra_assays, "ShallowSimpleListAssays")
+  assays <- Assays(c(assays(x),
                      as(extra_assays, "SimpleList", strict = FALSE)))
-  if (is(from, "RangedSparseSummarizedExperiment")) {
-    from <- as(from, "RangedSummarizedExperiment")
+  if (is(x, "RangedSparseSummarizedExperiment")) {
+    x <- as(x, "RangedSummarizedExperiment")
   } else {
-    from <- as(from, "SummarizedExperiment0")
+    x <- as(x, "SummarizedExperiment0")
   }
-  BiocGenerics:::replaceSlots(from,
+  BiocGenerics:::replaceSlots(x,
                               assays = assays)
 }
 
@@ -485,7 +507,7 @@ setMethod("sparseAssays", "SparseSummarizedExperiment",
   # names(sparseAssays(se, withDimnames = FALSE)) <- value
 
   ok <- vapply(value, function(sa, x_dimnames) {
-    # TODO: Replace with dimnames() when there is a
+    # TODO: Replace with dimnames() if/when there is a
     # dimnames,SparseAssay[[1]]-method (i.e., one that acts on an element
     # of a SparseAssays object).
     sa_dimnames <- list(names(sa[[1]][["key"]]),
@@ -531,6 +553,20 @@ setReplaceMethod("sparseAssays",
                  }
 )
 
+#' @importFrom methods setReplaceMethod
+#'
+#' @export
+setReplaceMethod("sparseAssays",
+                 c("SparseSummarizedExperiment", "list"),
+                 function(x, ..., withDimnames, value) {
+                   value <- SparseAssays(value)
+                   .sparseAssaysReplace.SSE(x,
+                                            ...,
+                                            withDimnames = withDimnames,
+                                            value = value)
+                 }
+)
+
 ## convenience for common use case
 
 #' @importClassesFrom GenomicRanges ShallowSimpleListAssays
@@ -550,7 +586,9 @@ setReplaceMethod("sparseAssays",
     stop("'sparseAssay(<", class(x), ">, i=\"missing\", ...) ",
          "length(sparseAssays(<", class(x), ">)) is 0'")
   subclass <- class(x@sparseAssays)
-  as(as(sparse_assays, "SimpleList", strict = FALSE)[1L], subclass)
+  # NOTE: Need strict = TRUE otherwise [,SimpleListSparseAssays-method is
+  #       called instead of [,SimpleList-method
+  as(as(sparse_assays, "SimpleList", strict = TRUE)[1L], subclass)
 }
 
 #' @importFrom methods setMethod
@@ -568,7 +606,9 @@ setMethod("sparseAssay", c("SparseSummarizedExperiment", "missing"),
 .sparseAssay.SSE.numeric <- function(x, i, ...) {
   tryCatch({
     subclass <- class(x@sparseAssays)
-    as(as(sparseAssays(x, ...), "SimpleList", strict = FALSE)[i], subclass)
+    # NOTE: Need strict = TRUE otherwise [,SimpleListSparseAssays-method is
+    #       called instead of [,SimpleList-method
+    as(as(sparseAssays(x, ...), "SimpleList", strict = TRUE)[i], subclass)
   }, error = function(err) {
     stop("'sparseAssay(<", class(x), ">, i=\"numeric\", ...)' ",
          "invalid subscript 'i'\n", conditionMessage(err))
@@ -593,7 +633,9 @@ setMethod("sparseAssay", c("SparseSummarizedExperiment", "numeric"),
                 "...)' invalid subscript 'i'")
   val <- tryCatch({
     subclass <- class(x@sparseAssays)
-    as(as(sparseAssays(x, ...), "SimpleList", strict = FALSE)[i], subclass)
+    # NOTE: Need strict = TRUE otherwise [,SimpleListSparseAssays-method is
+    #       called instead of [,SimpleList-method
+    as(as(sparseAssays(x, ...), "SimpleList", strict = TRUE)[i], subclass)
   }, error = function(err) {
     stop(msg, "\n", conditionMessage(err))
   })
@@ -614,7 +656,9 @@ setMethod("sparseAssay", c("SparseSummarizedExperiment", "character"),
 #' @keywords internal
 .sparseAssayReplace.SSE.missing <- function(x, i, ..., value) {
 
-  if (length(sparseAssays(x, withDimnames = FALSE)) == 0L) {
+  # NOTE: Need strict = TRUE otherwise [,SimpleListSparseAssays-method is
+  #       called instead of [,SimpleList-method
+  if (length(sparseAssays(x, withDimnames = TRUE)) == 0L) {
     stop("'sparseAssay(<", class(x), ">) <- value' ", "length(sparseAssays(<",
          class(x), ">)) is 0")
   }

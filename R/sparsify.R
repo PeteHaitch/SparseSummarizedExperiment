@@ -61,8 +61,7 @@ NULL
   value <- unname(as.matrix(value))
 
   # Return the result
-  SimpleList(key = key,
-             value = value)
+  SimpleList(key = key, value = value)
 }
 # To avoid WARNINGs about "Undefined global functions or variables" in
 # R CMD check caused by the .sparsify.SimpleList() function.

@@ -30,6 +30,25 @@ based on finding matching genomic ranges. \strong{WARNING}: Does not
 currently work if the \code{rowRanges} slot of \code{x}, \code{y}, or
 \code{...} is a \link[GenomicRanges]{GRangesList} objets.
 }
+\section{Note for Developers}{
+
+Any class that extends the
+\link[SummarizedExperiment]{SummarizedExperiment0} or
+\link[SummarizedExperiment]{RangedSummarizedExperiment} class by adding
+additional slots will need to be careful when defining a combine() method
+for the new class if it wants to call
+\code{combine,SummarizedExperiment0-method} by inheritance through
+\code{callNextMethod()}. Specifically, the \code{combine()} method will need
+to first update these additional slots, update the corresponding slots in
+\code{x} (thus likely making \code{x} an invalid object), and then calling
+\code{callNextMethod()}. An alternative would be to set \code{check = FALSE}
+when replacing the slots in the
+\code{combine,SummarizedExperiment0,SummarizedExperiment0-method}, but this
+would require that the validity of each slot was checked in some other way
+to guard against generally returning of unvalidated
+\link[SummarizedExperiment]{SummarizedExperiment0} or
+\link[SummarizedExperiment]{RangedSummarizedExperiment} objects.
+}
 \examples{
 nrows <- 200; ncols <- 6
 counts <- matrix(runif(nrows * ncols, 1, 1e4), nrows)
