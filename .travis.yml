@@ -13,8 +13,14 @@ before_install:
 install:
   - ./pkg-build.sh install_bioc_deps
 
+r_install:
+  - covr
+
 script:
    - ./pkg-build.sh run_tests
+
+after_success:
+  - Rscript -e "covr::codecov()"
 
 after_failure:
   - ./pkg-build.sh dump_logs
