@@ -332,7 +332,10 @@ setValidity2("SparseAssays", .valid.SparseAssays)
     if (is.list(sparse_assays)) {
       sparse_assays <- SimpleList(sparse_assays)
     } else if (is.matrix(sparse_assays)) {
-      sparsified <- sparsify(sparse_assays, "matrix")
+      if (identical(sparse_assays, matrix())) {
+        return(SimpleList())
+      }
+      sparsified <- sparsify(sparse_assays, "SimpleList")
       value <- sparsified[["value"]]
       key <- sparsified[["key"]]
       names(key) <- rownames(sparse_assays)

@@ -316,7 +316,14 @@ setMethod("dim", "SimpleListSparseAssays",
   if (!missing(i) && !missing(j)) {
 
     # normalize i
-    i <- normalizeSingleBracketSubscript(i, x, as.NSBS = FALSE)
+    if (is.character(i)) {
+      if (any(!i %in% names(x[[1L]][[1L]][["key"]]))) {
+        stop("subscript contains NAs or out-of-bounds indices")
+      }
+    }
+    if (!is.character(i)) {
+      i <- normalizeSingleBracketSubscript(i, x, as.NSBS = FALSE)
+    }
 
     fun <- function(sparse_assay) {
       endoapply(sparse_assay[j], function(sample) {
@@ -324,6 +331,8 @@ setMethod("dim", "SimpleListSparseAssays",
         ii <- na.omit(sample[["key"]][i])
         # Extract using mapped i
         data <- sample[["value"]][ii, , drop = FALSE]
+        # Add rownames (temporary)
+        rownames(data) <- names(ii)
         # Sparsify the data
         sparsified <- sparsify(data, "SimpleList")
         # Update the key
@@ -343,7 +352,14 @@ setMethod("dim", "SimpleListSparseAssays",
   } else if (!missing(i)) {
 
     # normalize i
-    i <- normalizeSingleBracketSubscript(i, x, as.NSBS = FALSE)
+    if (is.character(i)) {
+      if (any(!i %in% names(x[[1L]][[1L]][["key"]]))) {
+        stop("subscript contains NAs or out-of-bounds indices")
+      }
+    }
+    if (!is.character(i)) {
+      i <- normalizeSingleBracketSubscript(i, x, as.NSBS = FALSE)
+    }
 
     fun <- function(sparse_assay) {
       endoapply(sparse_assay, function(sample) {
@@ -351,6 +367,8 @@ setMethod("dim", "SimpleListSparseAssays",
         ii <- na.omit(sample[["key"]][i])
         # Extract using mapped i
         data <- sample[["value"]][ii, , drop = FALSE]
+        # Add rownames (temporary)
+        rownames(data) <- names(ii)
         # Sparsify the data
         sparsified <- sparsify(data, "SimpleList")
         # Update the key

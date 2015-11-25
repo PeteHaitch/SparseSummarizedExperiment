@@ -231,14 +231,64 @@ test_that("[,SimplelistSparseAssays-method works", {
                    densify(w,
                            seq_along(w[seq_len(nrow(w)), ]),
                            seq_len(ncol(w[seq_len(nrow(w)), ]))))
-  # UP TO HERE: Some non-contiguous, vector i and j
-  expect_false("UP TO HERE: Test with non contiguous i and j (test for identical should use densify")
-  x <- matrix(1:10, ncol = 2)
+  # Testing non-contiguous i and j.
+  x <- matrix(1:10, ncol = 2, dimnames = list(letters[1:5], LETTERS[1:2]))
   xx <- SparseAssays(x)
-  cbind(xx, xx, xx)
+  names(xx[[1L]]) <- "X"
+  y <- matrix(101:110, ncol = 2, dimnames = list(letters[1:5], LETTERS[1:2]))
+  yy <- SparseAssays(y)
+  names(yy[[1L]]) <- "Y"
+  z <- matrix(1001:1010, ncol = 2, dimnames = list(letters[1:5], LETTERS[1:2]))
+  zz <- SparseAssays(z)
+  names(zz[[1L]]) <- "Z"
+  w <- cbind(xx, yy, zz)
+  expect_identical(densify(xx[c(1, 4, 2), ], 1, 1)[[1]][[1]],
+                   matrix(as.integer(c(1, 4, 2, 6, 9, 7)), ncol = 2,
+                          dimnames = list(c("a", "d", "b"), c("A", "B"))))
+  expect_identical(w[, c(3, 1)], cbind(zz, xx))
+  expect_identical(densify(w[c(1, 4, 2), c(3, 1)], 1, 1:2),
+                   SimpleList(
+                     list(list(Z = matrix(as.integer(c(1, 4, 2, 6, 9, 7)) + 1000L,
+                                          ncol = 2,
+                                          dimnames = list(c("a", "d", "b"),
+                                                          c("A", "B"))),
+                               X = matrix(as.integer(c(1, 4, 2, 6, 9, 7)),
+                                          ncol = 2,
+                                          dimnames = list(c("a", "d", "b"),
+                                                          c("A", "B")))))))
+
+  # Testing non-numeric i and j
+  expect_identical(densify(xx[c("a", "d", "b"), ], 1, 1)[[1]][[1]],
+                   matrix(as.integer(c(1, 4, 2, 6, 9, 7)), ncol = 2,
+                          dimnames = list(c("a", "d", "b"), c("A", "B"))))
+  expect_identical(w[, c(3, 1)], cbind(zz, xx))
+  expect_identical(densify(w[c("a", "d", "b"), c("Z", "X")], 1, 1:2),
+                   SimpleList(
+                     list(list(Z = matrix(as.integer(c(1, 4, 2, 6, 9, 7)) + 1000L,
+                                          ncol = 2,
+                                          dimnames = list(c("a", "d", "b"),
+                                                          c("A", "B"))),
+                               X = matrix(as.integer(c(1, 4, 2, 6, 9, 7)),
+                                          ncol = 2,
+                                          dimnames = list(c("a", "d", "b"),
+                                                          c("A", "B")))))))
+  # Test out-of-bounds indices
+  msg <- "subscript contains NAs or out-of-bounds indices"
+  expect_error(xx[nrow(xx) + 1, ], msg)
+  expect_error(xx["bad_idx", ], msg)
+  expect_error(xx[nrow(x) + 1, 1], msg)
+  expect_error(xx["bad_idx", 1], msg)
+  expect_error(xx[, ncol(x) + 1], msg)
+  expect_error(xx[, "bad_idx"], "subscript contains invalid names")
+  expect_error(xx[nrow(x) + 1, ncol(x) + 1], msg)
+  expect_error(xx["bad_idx", "another_bad_idx"], msg)
+
+  # Trigger warning re drop argument
+  expect_warning(xx[1, , drop = TRUE],
+                 "'drop' ignored '\\[,SimpleListSparseAssays,ANY,ANY-method'")
 })
 
-test_that("TODO", {
-  # Test all code in R/SimpleListSparseAssays-class.R
-  expect_false("TODO: Remaining Accessors (and beyond)")
+# Test all code in R/SimpleListSparseAssays-class.R
+test_that("UP TO HERE: Test [<-, then rest of R/SimpleListSparseAssays-class.R", {
+  expect_true(TRUE)
 })
