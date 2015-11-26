@@ -901,8 +901,6 @@ setMethod("combine", c("SimpleListSparseAssays", "SimpleListSparseAssays"),
 }
 
 #' @param x A SimpleListSparseAssays or SimpleList object.
-#'
-#' @importClassesFrom GenomicRanges ShallowSimpleListAssays
 .densify.SimpleListSparseAssays <- function(x, withRownames = TRUE,
                                             ShallowSimpleListAssays = FALSE) {
 

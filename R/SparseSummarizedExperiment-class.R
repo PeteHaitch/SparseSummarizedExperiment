@@ -435,7 +435,6 @@ setValidity2("SparseSummarizedExperiment", .valid.SSE)
 #'
 #' @keywords internal
 #'
-#' @importClassesFrom GenomicRanges ShallowSimpleListAssays
 #' @importFrom methods as is
 .SSE.to.SE <- function(x) {
 
@@ -569,7 +568,6 @@ setReplaceMethod("sparseAssays",
 
 ## convenience for common use case
 
-#' @importClassesFrom GenomicRanges ShallowSimpleListAssays
 #' @importFrom methods as
 #' @importFrom stats setNames
 #' @keywords internal
@@ -598,7 +596,6 @@ setMethod("sparseAssay", c("SparseSummarizedExperiment", "missing"),
           .sparseAssay.SSE.missing
 )
 
-#' @importClassesFrom GenomicRanges ShallowSimpleListAssays
 #' @importFrom methods as
 #' @importFrom S4Vectors SimpleList
 #' @importFrom stats setNames
@@ -622,7 +619,6 @@ setMethod("sparseAssay", c("SparseSummarizedExperiment", "numeric"),
           .sparseAssay.SSE.numeric
 )
 
-#' @importClassesFrom GenomicRanges ShallowSimpleListAssays
 #' @importFrom methods as
 #' @importFrom S4Vectors SimpleList
 #' @importFrom stats setNames
