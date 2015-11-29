@@ -76,6 +76,25 @@ simSE0 <- function(m, n) {
 }
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Helper functions
+###
+
+#' Test whether 2 SparseAssays are identical.
+#'
+#' Two SparseAssays are considered identical if their densified forms are
+#' identical, i.e. identical_SparseAssays(x, y) is TRUE. Importantly, their
+#' sparsified forms need be identical, i.e, identical(x, y) may be FALSE.
+#' @param x A SparseAssays object.
+#' @param y A SparseAssays object.
+#'
+#' @return TRUE or FALSE
+identical_SparseAssays <- function(x, y) {
+  xx <- densify(x, seq_along(x), seq_len(ncol(x)))
+  yy <- densify(y, seq_along(y), seq_len(ncol(y)))
+  identical(xx, yy)
+}
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Simulated objects used in tests
 ###
 
@@ -96,3 +115,40 @@ sse <- as(rsse, "SparseSummarizedExperiment")
 names(sse) <- paste0("F", seq_len(nrow(sse)))
 se0 <- as(rse, "SummarizedExperiment0")
 names(se0) <- paste0("F", seq_len(nrow(se0)))
+
+x1 <- SimpleList(
+  s1 = SimpleList(key = as.integer(c(NA, 1, NA, NA, 2, NA, 3, NA, 4, 5)),
+                  value = matrix(1:10, ncol = 2)),
+  s2 = SimpleList(key = as.integer(c(NA, NA, 1, 2, NA, NA, 3, 4, NA, NA)),
+                  value = matrix(8:1, ncol = 2)))
+y1 <- SimpleList(
+  s1 = SimpleList(key = as.integer(c(NA, 1, NA, NA, 2, NA, 3)),
+                  value = matrix(c(1:3, 6:8), ncol = 2)),
+  s2 = SimpleList(key = as.integer(c(NA, NA, 1, 2, NA, NA, 3)),
+                  value = matrix(c(8:6, 4:2), ncol = 2)))
+z1 <- SimpleList(
+  s2 = SimpleList(key = as.integer(c(NA, NA, 1, 2, NA, NA, 3, 4, NA, NA)),
+                  value = matrix(8:1, ncol = 2)))
+w1 <- SimpleList(
+  s2 = SimpleList(key = as.integer(c(NA, NA, 1, 2, NA, NA, 3)),
+                  value = matrix(c(8:6, 4:2), ncol = 2)))
+x2 <- SimpleList(
+  s1 = SimpleList(key = as.integer(c(NA, 1, NA, 2, 2, NA, 1, NA, NA, 1)),
+                  value = matrix(1:2, ncol = 1)),
+  s2 = SimpleList(key = as.integer(c(1, 1, 1, 2, NA, NA, NA, NA, NA, NA)),
+                  value = matrix(4:3, ncol = 1)))
+y2 <- SimpleList(
+  s1 = SimpleList(key = as.integer(c(NA, 1, NA, 2, 2, NA, 1)),
+                  value = matrix(1:2, ncol = 1)),
+  s2 = SimpleList(key = as.integer(c(1, 1, 1, 2, NA, NA, NA)),
+                  value = matrix(4:3, ncol = 1)))
+z2 <- SimpleList(
+  s2 = SimpleList(key = as.integer(c(1, 1, 1, 2, NA, NA, NA, NA, NA, NA)),
+                  value = matrix(4:3, ncol = 1)))
+w2 <- SimpleList(
+  s2 = SimpleList(key = as.integer(c(1, 1, 1, 2, NA, NA, NA)),
+                  value = matrix(4:3, ncol = 1)))
+x <- SparseAssays(SimpleList(sa1 = x1, sa2 = x2))
+y <- SparseAssays(SimpleList(sa1 = y1, sa2 = y2))
+z <- SparseAssays(SimpleList(sa1 = z1, sa2 = z2))
+w <- SparseAssays(SimpleList(sa1 = w1, sa2 = w2))

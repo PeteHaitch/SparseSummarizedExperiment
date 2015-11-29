@@ -1,5 +1,12 @@
 context("Functionality that probably belongs in the S4Vectors package")
 
+test_that("combine,DataFrame,DataFrame-method is compatible with generic", {
+  generic <- getGeneric("combine")
+  method <- getMethod("combine", c("DataFrame", "DataFrame"))
+  expect_identical(generic@signature, c("x", "y"))
+  expect_identical(formals(generic@.Data), formals(method@.Data))
+})
+
 test_that("combine,DataFrame,DataFrame-method works", {
   expect_identical(combine(S4Vectors::DataFrame(), S4Vectors::DataFrame()),
                    S4Vectors::DataFrame())

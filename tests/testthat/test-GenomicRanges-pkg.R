@@ -1,5 +1,12 @@
 context("Functionality that probably belongs in the GenomicRanges package")
 
+test_that("combine,GRanges,GRanges-method is compatible with generic", {
+  generic <- getGeneric("combine")
+  method <- getMethod("combine", c("GRanges", "GRanges"))
+  expect_identical(generic@signature, c("x", "y"))
+  expect_identical(formals(generic@.Data), formals(method@.Data))
+})
+
 test_that("combine,GRanges,GRanges-method works", {
   set.seed(666)
   x <- simGR(10)
@@ -9,6 +16,14 @@ test_that("combine,GRanges,GRanges-method works", {
   expect_identical(combine(x[1:7], x[3:9]), x[1:9])
   expect_identical(combine(x[10:5], x[4:1]), x[10:1])
 })
+
+test_that("combine,GRangesList,GRangesList-method is compatible with generic", {
+  generic <- getGeneric("combine")
+  method <- getMethod("combine", c("GRangesList", "GRangesList"))
+  expect_identical(generic@signature, c("x", "y"))
+  expect_identical(formals(generic@.Data), formals(method@.Data))
+})
+
 
 test_that("combine,GRangesList,GRangesList-method works", {
   set.seed(666)

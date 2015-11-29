@@ -1,5 +1,16 @@
 context("Functionality that probably belongs in the SummarizedExperiment
         package")
+
+# NOTE: This also coverage RangedSummarizedExperiment objects, since the method
+#       is defined for these via inheritance to SummarizedExperiment0.
+test_that("combine,SummarizedExperiment0,SummarizedExperiment0-method is compatible with generic", {
+  generic <- getGeneric("combine")
+  method <- getMethod("combine",
+                      c("SummarizedExperiment0", "SummarizedExperiment0"))
+  expect_identical(generic@signature, c("x", "y"))
+  expect_identical(formals(generic@.Data), formals(method@.Data))
+})
+
 test_that("combine,SummarizedExperiment0,SummarizedExperiment0-method works", {
   se0 <- se0[1:100, ]
   expect_identical(combine(se0, SummarizedExperiment::SummarizedExperiment()),

@@ -425,7 +425,6 @@ setMethod("[", "SimpleListSparseAssays",
 #     value[na.omit(unique(key)), , drop = FALSE]
 # (4) Sparsify the value
 # (5) Re-map the non-NA values of key by the "sparsified" key.
-#
 # NOTE: Steps 3-5 are "sparsifying" the value. The "expansion" of
 # (key, value) at (2) and (5) should be identical, even though the
 # individual elements may not be identical.
@@ -433,8 +432,6 @@ setMethod("[", "SimpleListSparseAssays",
 # IDEA (when missing(i)):
 # (1) Simply replace the j-th sample(s) (key, value)-pair by that given in
 #     value.
-# TODO: Should really inherit params from [,SparseAssays,ANY-method, but I
-#       can't get this to work.
 #' @importFrom methods validObject
 #' @importFrom S4Vectors SimpleList
 #' @importFrom stats na.omit
@@ -941,7 +938,10 @@ setMethod("combine", c("SimpleListSparseAssays", "SimpleListSparseAssays"),
       dimnames(val)[[3L]] <- colnames(sparse_assay[[1L]][["value"]])
 
       if (withRownames) {
-        dimnames(val)[[1L]] <- names(sparse_assay[[1L]][["key"]])
+        rn <- names(sparse_assay[[1L]][["key"]])
+        if (!is.null(rn)) {
+          dimnames(val)[[1L]] <- rn
+        }
       }
       val
     })
