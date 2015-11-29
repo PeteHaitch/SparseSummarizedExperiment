@@ -30,7 +30,7 @@ NULL
 #' |   |-- sample_2
 #' |   |   |-- key
 #' |   |   |-- value
-#' |   |-- sample3
+#' |   |-- sample_3
 #' |   |   |-- key
 #' |   |   |-- value
 #' |-- sparse_assay_2
@@ -432,18 +432,21 @@ setMethod("[", "SimpleListSparseAssays",
 # IDEA (when missing(i)):
 # (1) Simply replace the j-th sample(s) (key, value)-pair by that given in
 #     value.
+#' @param x A SimpleListSparseAssays object.
+#' @param i A numeric or character index.
+#' @param j A numeric or character index
+#' @param rbind If FALSE (default), i must be an in bounds subscript of x. If
+#'        TRUE, then i can be an out of bounds subscripts of x, in which case
+#'        these values will be appended to the end of x.
 #' @importFrom methods validObject
 #' @importFrom S4Vectors SimpleList
 #' @importFrom stats na.omit
 #' @importMethodsFrom S4Vectors mendoapply
 #'                              normalizeSingleBracketReplacementValue
-.replace_SimpleListSparseAssays_subset <- function(x, i, j, value) {
+.replace_SimpleListSparseAssays_subset <- function(x, i, j, value,
+                                                   rbind = FALSE) {
 
   if (!missing(i) && !missing(j)) {
-    # Sanity check j
-    if (length(j) != ncol(value)) {
-      stop("length(j) != ncol(value)")
-    }
 
     fun <- function(sparse_assay, v_sparse_assay) {
       sparse_assay[j] <- mendoapply(function(sample, v_sample) {
@@ -457,6 +460,10 @@ setMethod("[", "SimpleListSparseAssays",
         vsm_updated <- v_sample[["key"]] + nrow(sample[["value"]])
         key <- sample[["key"]]
         key[i] <- vsm_updated
+        # NOTE: Restore names; not necessary if 'i' is a character
+        if (!is.character(i)) {
+          names(key) <- names(sample[["key"]])
+        }
         # (3) and (4)
         sparsified <- sparsify(tmp_value[na.omit(unique(key)), , drop = FALSE],
                                 "SimpleList")
@@ -483,6 +490,10 @@ setMethod("[", "SimpleListSparseAssays",
         vsm_updated <- v_sample[["key"]] + nrow(sample[["value"]])
         key <- sample[["key"]]
         key[i] <- vsm_updated
+        # NOTE: Restore names; not necessary if 'i' is a character
+        if (!is.character(i)) {
+          names(key) <- names(sample[["key"]])
+        }
         # (3) and (4)
         sparsified <- sparsify(tmp_value[na.omit(unique(key)), , drop = FALSE],
                                "SimpleList")
@@ -496,23 +507,50 @@ setMethod("[", "SimpleListSparseAssays",
       sparse_assay
     }
   } else if (!missing(j)) {
-    # Sanity check j
-    if (length(j) > ncol(value)) {
-      stop("j > ncol(value)")
-    }
-    # Sanity check number of replacement rows
-    # NOTE: Only necessary if missing(i)
-    if (nrow(x) != nrow(value)) {
-      stop("Cannot replace on j if nrow(x) != nrow(value)")
-    }
-
     fun <- function(sparse_assay, v_sparse_assay) {
       sparse_assay[j] <- v_sparse_assay
       sparse_assay
     }
   }
 
-  # Normalize value
+  # Normalize i, j, and value
+  if (!missing(i) && !rbind) {
+    if (!is.character(i)) {
+      if (any(i > nrow(x))) {
+        stop("subscript out of bounds")
+      }
+    } else {
+      if (any(!(i %in% names(x[[1L]][[1L]][["key"]])))) {
+        stop("subscript out of bounds")
+      }
+    }
+  }
+  if (!missing(j)) {
+    if (!is.character(j)) {
+      if (any(j > ncol(x))) {
+        stop("subscript out of bounds")
+      }
+    } else {
+      if (any(!(j %in% names(x[[1L]])))) {
+        stop("subscript out of bounds")
+      }
+    }
+  }
+
+  # Check dims are compatible
+  value_dim <- dim(value)
+  if (!missing(i) && !missing(j)) {
+    x_dim <- c(length(i), length(j))
+  } else if (!missing(i)) {
+    x_dim <- c(length(i), ncol(x))
+  } else if (!missing(j)) {
+    x_dim <- c(nrow(x), length(j))
+  } else {
+    x_dim <- dim(x)
+  }
+  if (!identical(x_dim, value_dim)) {
+    stop("number of items to replace is not a multiple of replacement length")
+  }
   value <- normalizeSingleBracketReplacementValue(value, x, i)
 
   # Loop over each sparse assay and do replacement
@@ -536,7 +574,8 @@ setMethod("[", "SimpleListSparseAssays",
 #' @export
 setReplaceMethod("[", "SimpleListSparseAssays",
                  function(x, i, j, ..., value) {
-                   .replace_SimpleListSparseAssays_subset(x, i, j, value)
+                   .replace_SimpleListSparseAssays_subset(x, i, j, value,
+                                                          rbind = FALSE)
                  }
 )
 
@@ -573,7 +612,7 @@ setReplaceMethod("[", "SimpleListSparseAssays",
   sample_names <- lapply(lst, function(e) {
     lapply(e, names)
   })
-  # Don't need check the first element against itself
+  # NOTE: Don't need check the first element against itself
   sample_names_identical <- vapply(sample_names[-1L], function(sn, sn1) {
     identical(sn, sn1)
   }, FUN.VALUE = logical(1L), sn1 = sample_names[[1L]])
@@ -589,17 +628,17 @@ setReplaceMethod("[", "SimpleListSparseAssays",
       stop("Sample names (if present) must be identical when calling ",
            "'rbind()' on '", class(lst[[1L]]), "'")
     }
-  }
-  # If all sample names are NULL and rbind()-ing, need to check that the
-  # number of samples (ncol) in each SparseAssays object are identical.
-  if (all(is.null(unlist(sample_names, use.names = FALSE)))) {
-    nc <- lapply(lst, ncol)
-    nc_identical <- vapply(nc, function(nc, nc1) {
-      identical(nc, nc1)
-    }, FUN.VALUE = logical(1L), nc1 = nc[[1L]])
-    if (!all(nc_identical)) {
-      stop("Can only rbind '", class(lst[[1L]]), "' objects when each object ",
-           "has the same number of samples (ncol).")
+    # If all sample names are NULL and rbind()-ing, need to check that the
+    # number of samples (ncol) in each SparseAssays object are identical.
+    if (all(is.null(unlist(sample_names, use.names = FALSE)))) {
+      nc <- lapply(lst, ncol)
+      nc_identical <- vapply(nc, function(nc, nc1) {
+        identical(nc, nc1)
+      }, FUN.VALUE = logical(1L), nc1 = nc[[1L]])
+      if (!all(nc_identical)) {
+        stop("Can only rbind '", class(lst[[1L]]), "' objects when each object ",
+             "has the same number of samples (ncol).")
+      }
     }
   }
 
@@ -654,7 +693,13 @@ setReplaceMethod("[", "SimpleListSparseAssays",
       i <- seq.int(from = val_nrow + 1,
                    to = val_nrow + nrow(lst[[idx]]),
                    by = 1L)
-      val[i, ] <- lst[[idx]]
+      # NOTE: names taken from first elment only
+      names(i) <- names(lst[[idx]][[1L]][[1L]][["key"]])
+      # UP TO HERE: call
+      # .replace_SimpleListSparseAssays_subset(x, i, j, value, rbind = TRUE)
+      .replace_SimpleListSparseAssays_subset(val, i, value = lst[[idx]],
+                                             rbind = TRUE)
+      # val[i, ] <- lst[[idx]]
     }
   } else {
     # If cbind()-ing, need to check that all key elements have the same length.

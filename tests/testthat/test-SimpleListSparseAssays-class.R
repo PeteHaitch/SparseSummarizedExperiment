@@ -1,5 +1,8 @@
 context("SimpleListSparseAssays class")
 
+# NOTE: x, y, z, and w are defined in helper-make-test-data.R, as is
+#       identical_SparseAssays().
+
 test_that(".valid.SparseAssays() works", {
   expect_null(.valid.SparseAssays(sa))
   # NOTE: Not much to test here, almost anything it seems can be coerced to
@@ -160,9 +163,7 @@ test_that("dim,SimpleListSparseAssays-method works", {
   expect_identical(dim(sa[1:10, 3]), c(10L, 1L))
 })
 
-test_that("[,SimplelistSparseAssays-method works", {
-  # NOTE: x, y, z, and w are defined in helper-make-test-data.R, as is
-  #       identical_SparseAssays().
+test_that("[,SimplelistSparseAssays-method works (no index)", {
   # NOTE: Whenever [,SimpleListSparseAssays method is called with 'i', the
   #       value slot will be sorted using data.table::setkey(), whose
   #       sort-order is equivalent to base::sort(x, na.last = FALSE). There are
@@ -173,28 +174,26 @@ test_that("[,SimplelistSparseAssays-method works", {
   #       least one of i or j must be specified.
   expect_error(x[], "object 'fun' not found")
   expect_error(as(x, "ShallowSimpleListAssays")[], "object 'fun' not found")
-  # Test subsetting on i
+})
+
+test_that("[,SimplelistSparseAssays-method works (i only)", {
   expect_that(x, not(is_identical_to(x[seq_len(nrow(x)), ])))
   expect_true(identical_SparseAssays(x, x[seq_len(nrow(x)), ]))
   expect_that(x[1:7, ], not(is_identical_to(y)))
   expect_true(identical_SparseAssays(x[1:7, ], y))
-  # SparseAssays objects should be identical when only j is specified in subset
+})
+
+test_that("[,SimplelistSparseAssays-method works (j only)", {
   expect_that(x[, 2], is_identical_to(z))
   expect_true(identical_SparseAssays(x[, 2], z))
-  # Test subsetting on both i and j
+})
+
+test_that("[,SimplelistSparseAssays-method works (i and j)", {
   expect_that(x[1:7, 2], not(is_identical_to(w)))
   expect_true(identical_SparseAssays(x[1:7, 2], w))
-  # Testing non-contiguous i and j
-  XX <- matrix(1:10, ncol = 2, dimnames = list(letters[1:5], LETTERS[1:2]))
-  X <- SparseAssays(XX)
-  names(X[[1L]]) <- "X"
-  YY <- matrix(101:110, ncol = 2, dimnames = list(letters[1:5], LETTERS[1:2]))
-  Y <- SparseAssays(YY)
-  names(Y[[1L]]) <- "Y"
-  ZZ <- matrix(1001:1010, ncol = 2, dimnames = list(letters[1:5], LETTERS[1:2]))
-  Z <- SparseAssays(ZZ)
-  names(Z[[1L]]) <- "Z"
-  W <- cbind(X, Y, Z)
+})
+
+test_that("[,SimplelistSparseAssays-method works (non-contiguous i and j)", {
   expect_identical(densify(X[c(1, 4, 2), ], 1, 1)[[1]][[1]],
                    matrix(as.integer(c(1, 4, 2, 6, 9, 7)), ncol = 2,
                           dimnames = list(c("a", "d", "b"), c("A", "B"))))
@@ -209,8 +208,9 @@ test_that("[,SimplelistSparseAssays-method works", {
                                           ncol = 2,
                                           dimnames = list(c("a", "d", "b"),
                                                           c("A", "B")))))))
+})
 
-  # Testing non-numeric i and j
+test_that("[,SimplelistSparseAssays-method works (non-contiguous i and j)", {
   expect_identical(densify(X[c("a", "d", "b"), ], 1, 1)[[1]][[1]],
                    matrix(as.integer(c(1, 4, 2, 6, 9, 7)), ncol = 2,
                           dimnames = list(c("a", "d", "b"), c("A", "B"))))
@@ -225,7 +225,9 @@ test_that("[,SimplelistSparseAssays-method works", {
                                           ncol = 2,
                                           dimnames = list(c("a", "d", "b"),
                                                           c("A", "B")))))))
-  # Test out-of-bounds indices
+})
+
+test_that("[,SimplelistSparseAssays-method errors (out of bounds indices)", {
   msg <- "subscript contains NAs or out-of-bounds indices"
   expect_error(X[nrow(X) + 1, ], msg)
   expect_error(X["bad_idx", ], msg)
@@ -235,22 +237,23 @@ test_that("[,SimplelistSparseAssays-method works", {
   expect_error(X[, "bad_idx"], "subscript contains invalid names")
   expect_error(X[nrow(x) + 1, ncol(x) + 1], msg)
   expect_error(X["bad_idx", "another_bad_idx"], msg)
+})
 
-  # Trigger warning re drop argument
+test_that("[,SimplelistSparseAssays-method warning (drop)", {
   expect_warning(X[1, , drop = TRUE],
                  "'drop' ignored '\\[,SimpleListSparseAssays,ANY,ANY-method'")
 })
 
-# Test all code in R/SimpleListSparseAssays-class.R
-test_that("UP TO HERE: Test [<-, then rest of R/SimpleListSparseAssays-class.R", {
-  # NOTE: x, y, z, and w are defined in helper-make-test-data.R, as is
-  #       identical_SparseAssays().
+test_that("[<-,SimplelistSparseAssays-method errors (no index)", {
   # NOTE: While this might properly be considered a bug, subset replacing
   #       SparseAssays should be consistent with subsetting Assays in that at
   #       least one of i or j must be specified.
   expect_error(x[] <- x, "object 'fun' not found")
   expect_error(as(x, "ShallowSimpleListAssays")[] <-
                  as(x, "ShallowSimpleListAssays"))
+})
+
+test_that("[<-,SimplelistSparseAssays-method works (i only)", {
   # Test subsetting on i
   X <- x
   X[1:10, ] <- x[1:10, ]
@@ -260,6 +263,9 @@ test_that("UP TO HERE: Test [<-, then rest of R/SimpleListSparseAssays-class.R",
   Y[2, ] <- x[1, ]
   expect_identical(x[1, ], Y[2, ])
   expect_true(identical_SparseAssays(x[1, ], Y[2, ]))
+})
+
+test_that("[<-,SimplelistSparseAssays-method works (j only)", {
   # SparseAssays objects should be identical when only j is specified in subset
   # replacement
   X <- x
@@ -274,7 +280,9 @@ test_that("UP TO HERE: Test [<-, then rest of R/SimpleListSparseAssays-class.R",
   # But densified data should be identical
   expect_identical(densify(x[, 1], 1, 1)[[1L]][[1L]],
                    densify(Y[, 2], 1, 1)[[1L]][[1L]])
-  # Test subsetting on both i and j
+})
+
+test_that("[<-,SimplelistSparseAssays-method works (i and j)", {
   X <- x
   X[1:7, 2] <- x[1:7, 2]
   expect_that(x, not(is_identical_to(X)))
@@ -288,23 +296,14 @@ test_that("UP TO HERE: Test [<-, then rest of R/SimpleListSparseAssays-class.R",
   # But densified data should be identical
   expect_identical(densify(x[1, 1], 1, 1)[[1L]][[1L]],
                    densify(Y[2, 2], 1, 1)[[1L]][[1L]])
-  # Testing non-contiguous i and j
-  XX <- matrix(1:10, ncol = 2, dimnames = list(letters[1:5], LETTERS[1:2]))
-  X <- SparseAssays(XX)
-  names(X[[1L]]) <- "X"
-  YY <- matrix(101:110, ncol = 2, dimnames = list(letters[1:5], LETTERS[1:2]))
-  Y <- SparseAssays(YY)
-  names(Y[[1L]]) <- "Y"
-  ZZ <- matrix(1001:1010, ncol = 2, dimnames = list(letters[1:5], LETTERS[1:2]))
-  Z <- SparseAssays(ZZ)
-  names(Z[[1L]]) <- "Z"
-  W <- cbind(X, Y, Z)
+})
+
+test_that("[<-,SimplelistSparseAssays-method works (non-contiguous i and j)", {
   X2 <- X
   x2 <- matrix(as.integer(c(11, 14, 12, 16, 19, 7)),
                ncol = 2, dimnames = list(c("a", "d", "b"), c("A", "B")))
   X2[c(1, 4, 2), ] <- SparseAssays(unname(x2))
-  expect_identical(densify(X2[c(1, 4, 2), ], 1, 1)[[1L]][[1L]],
-                   x2)
+  expect_identical(densify(X2[c(1, 4, 2), ], 1, 1)[[1L]][[1L]], x2)
   W2 <- W
   W2[, c(3, 1)] <- W[, c(1, 3)]
   # Sample names differ, so shouldn't be identical
@@ -316,7 +315,9 @@ test_that("UP TO HERE: Test [<-, then rest of R/SimpleListSparseAssays-class.R",
     expect_identical(densify(W2, 1, 1:3)[[1L]][[i]],
                    densify(W[, 3:1], 1, 1:3)[[1L]][[i]])
   }
-  # TODO: Testing non-numeric i and j
+})
+
+test_that("[<-,SimplelistSparseAssays-method works (non-numeric i and j)", {
   X2 <- X
   x2 <- matrix(as.integer(c(11, 14, 12, 16, 19, 7)),
                ncol = 2, dimnames = list(c("a", "d", "b"), c("A", "B")))
@@ -334,28 +335,34 @@ test_that("UP TO HERE: Test [<-, then rest of R/SimpleListSparseAssays-class.R",
     expect_identical(densify(W2, 1, 1:3)[[1L]][[i]],
                      densify(W[, 3:1], 1, 1:3)[[1L]][[i]])
   }
-  # TODO: Test out-of-bounds indices
-  XX <- X
-  XX[nrow(X) + 1, ] <- X[1, ]
-  expect_true(identical_SparseAssays(XX, rbind(X, X[1, ])))
-  XX <- X
-  XXX <- X[1, ]
-  names(XXX[[1]][[1]][[1]]) <- "new_idx"
-  XX["new_idx", ] <- X[1, ]
-  # UP TO HERE: rbind doesn't preserve rownames; should it? Also, check cbind.
-  expect_true(identical_SparseAssays(XX, rbind(X, XXX)))
-  # TODO: Check the equivalent of the below, with subset replacement instead of
-  #       subsetting.
-  # expect_error(X[nrow(x) + 1, 1], msg)
-  # expect_error(X["bad_idx", 1], msg)
-  # expect_error(X[, ncol(x) + 1], msg)
-  # expect_error(X[, "bad_idx"], "subscript contains invalid names")
-  # expect_error(X[nrow(x) + 1, ncol(x) + 1], msg)
-  # expect_error(X["bad_idx", "another_bad_idx"], msg)
-
-
-  # TODO: Test incorrectly dimensioned value
-
-  # TODO: Trigger any warnings
-
 })
+
+test_that("[<-,SimplelistSparseAssays-method errors (out of bounds indices)", {
+  msg <- "subscript out of bounds"
+  XX <- X
+  expect_error(XX[nrow(X) + 1, ] <- X[1, ], msg)
+  XX <- X
+  expect_error(XX["bad_idx", ] <- X[1, ], msg)
+  XX <- X
+  expect_error(XX[nrow(X) + 1, 1] <- X[1, 1], msg)
+  XX <- X
+  expect_error(XX["bad_idx", 1] <- X[1, 1])
+  XX <- X
+  expect_error(XX[, ncol(X) + 1] <- X[, 1], msg)
+  XX <- X
+  expect_error(XX[, "bad_idx"] <- X[, 1], msg)
+  XX <- X
+  expect_error(XX[1, ncol(X) + 1] <- X[1, 1], msg)
+  XX <- X
+  expect_error(XX[1, "bad_idx"] <- X[1, 1], msg)
+})
+
+test_that("[<-,SimplelistSparseAssays-method errors (incorrectly dimensioned value)", {
+  msg <- "number of items to replace is not a multiple of replacement length"
+  expect_error(W[1, ] <- X[1, ], msg)
+  expect_error(X[1, ] <- X[1:2, ], msg)
+  expect_error(W[, 1] <- W[, 1:2], msg)
+  expect_error(W[1, 1] <- W[1:2, 1:2], msg)
+})
+
+# TODO: Test rest of R/SimpleListSparseAssays-class.R

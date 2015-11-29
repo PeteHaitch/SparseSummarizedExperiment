@@ -63,7 +63,7 @@ SimpleListSparseAssays
 |   |-- sample_2
 |   |   |-- key
 |   |   |-- value
-|   |-- sample3
+|   |-- sample_3
 |   |   |-- key
 |   |   |-- value
 |-- sparse_assay_2

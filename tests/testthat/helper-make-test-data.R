@@ -152,3 +152,14 @@ x <- SparseAssays(SimpleList(sa1 = x1, sa2 = x2))
 y <- SparseAssays(SimpleList(sa1 = y1, sa2 = y2))
 z <- SparseAssays(SimpleList(sa1 = z1, sa2 = z2))
 w <- SparseAssays(SimpleList(sa1 = w1, sa2 = w2))
+
+XX <- matrix(1:10, ncol = 2, dimnames = list(letters[1:5], LETTERS[1:2]))
+X <- SparseAssays(XX)
+names(X[[1L]]) <- "X"
+YY <- matrix(101:110, ncol = 2, dimnames = list(letters[1:5], LETTERS[1:2]))
+Y <- SparseAssays(YY)
+names(Y[[1L]]) <- "Y"
+ZZ <- matrix(1001:1010, ncol = 2, dimnames = list(letters[1:5], LETTERS[1:2]))
+Z <- SparseAssays(ZZ)
+names(Z[[1L]]) <- "Z"
+W <- cbind(X, Y, Z)
