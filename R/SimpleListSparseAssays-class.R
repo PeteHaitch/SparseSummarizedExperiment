@@ -340,6 +340,7 @@ setMethod("dim", "SimpleListSparseAssays",
         if (!is.null(attr(ii, "na.action"))) {
           key <- rep(NA_integer_, length(i))
           key[-attr(ii, "na.action")] <- sparsified[["key"]]
+          names(key) <- names(sample[["key"]][i])
         } else {
           key <- sparsified[["key"]]
         }
@@ -376,6 +377,7 @@ setMethod("dim", "SimpleListSparseAssays",
         if (!is.null(attr(ii, "na.action"))) {
           key <- rep(NA_integer_, length(i))
           key[-attr(ii, "na.action")] <- sparsified[["key"]]
+          names(key) <- names(sample[["key"]][i])
         } else {
           key <- sparsified[["key"]]
         }
@@ -610,27 +612,30 @@ setReplaceMethod("[", "SimpleListSparseAssays",
 
   # Check that samples names are unique for cbind and are identical for rbind
   sample_names <- lapply(lst, function(e) {
-    lapply(e, names)
+    unname(lapply(e, names))
   })
-  # NOTE: Don't need check the first element against itself
-  sample_names_identical <- vapply(sample_names[-1L], function(sn, sn1) {
-    identical(sn, sn1)
-  }, FUN.VALUE = logical(1L), sn1 = sample_names[[1L]])
   if (identical(bind, cbind)) {
+    sample_names_unique <- vapply(sample_names[-1L], function(sn, sn1) {
+      !anyDuplicated(c(unique(sn[[1L]]), unique(sn1[[1L]])))
+    }, FUN.VALUE = logical(1L), sn1 = sample_names[[1L]])
     # NOTE: Error not called if all sample names are NULL.
-    if (any(sample_names_identical) && !all(is.null(unlist(sample_names)))) {
+    if (!all(sample_names_unique) && !all(is.null(unlist(sample_names)))) {
       stop("Sample names (if present) must be unique when calling 'cbind()' ",
            "on '", class(lst[[1L]]), "'.")
     }
   } else {
     # NOTE: This allows all sample names to be NULL.
+    # NOTE: Don't need check the first element against itself
+    sample_names_identical <- vapply(sample_names[-1L], function(sn, sn1) {
+      identical(sn, sn1)
+    }, FUN.VALUE = logical(1L), sn1 = sample_names[[1L]])
     if (!all(sample_names_identical)) {
       stop("Sample names (if present) must be identical when calling ",
            "'rbind()' on '", class(lst[[1L]]), "'")
     }
     # If all sample names are NULL and rbind()-ing, need to check that the
     # number of samples (ncol) in each SparseAssays object are identical.
-    if (all(is.null(unlist(sample_names, use.names = FALSE)))) {
+    if (all(is.null(unlist(sample_names)))) {
       nc <- lapply(lst, ncol)
       nc_identical <- vapply(nc, function(nc, nc1) {
         identical(nc, nc1)
@@ -641,7 +646,6 @@ setReplaceMethod("[", "SimpleListSparseAssays",
       }
     }
   }
-
 
   # Check all elements of lst have the same sparse assay names
   sparse_assay_names <- lapply(lst, names)
@@ -695,8 +699,6 @@ setReplaceMethod("[", "SimpleListSparseAssays",
                    by = 1L)
       # NOTE: names taken from first elment only
       names(i) <- names(lst[[idx]][[1L]][[1L]][["key"]])
-      # UP TO HERE: call
-      # .replace_SimpleListSparseAssays_subset(x, i, j, value, rbind = TRUE)
       .replace_SimpleListSparseAssays_subset(val, i, value = lst[[idx]],
                                              rbind = TRUE)
       # val[i, ] <- lst[[idx]]
@@ -779,9 +781,12 @@ setMethod("cbind", "SimpleListSparseAssays",
 #' @importFrom stats complete.cases
 .combine_sample_level.SimpleListSparseAssays <- function(x, y) {
 
+  # NOTE: NULL_cn is a flag for whether the input colnames are NULL
+  NULL_cn <- FALSE
   xe <- .densify.SimpleListSparseAssays.sample(x)
   if (is.null(colnames(xe))) {
     colnames(xe) <- paste0("V", seq_len(ncol(xe)))
+    NULL_cn <- TRUE
   }
   ye <- .densify.SimpleListSparseAssays.sample(y)
   if (is.null(colnames(ye))) {
@@ -803,8 +808,12 @@ setMethod("cbind", "SimpleListSparseAssays",
   key <- sparsified[["key"]]
   names(key) <- rownames(z)
   value <- sparsified[["value"]]
-  colnames(value) <- colnames(z)
-  NA_idx <- which(!complete.cases(value))
+  if (NULL_cn) {
+    dimnames(value) <- NULL
+  } else {
+    colnames(value) <- colnames(z)
+  }
+  NA_idx <- which(rowSums(is.na(value)) == ncol(value))
   if (length(NA_idx)) {
     # Take care of NA rows
     stopifnot(length(NA_idx) == 1L)
@@ -855,7 +864,7 @@ setMethod("combine", c("SimpleListSparseAssays", "SimpleListSparseAssays"),
               stop("Cannot combine '", class(x), "' objects with unnamed ",
                    "'key' elements")
             }
-            y_unnamed <- lapply(x, function(sparse_assay) {
+            y_unnamed <- lapply(y, function(sparse_assay) {
               lapply(sparse_assay, function(sample) {
                 is.null(names(sample[["key"]]))
               })
@@ -881,10 +890,18 @@ setMethod("combine", c("SimpleListSparseAssays", "SimpleListSparseAssays"),
               ), use.names = FALSE))
 
               # Update shared samples
-              x_sa[shared_samples] <- mendoapply(
+              val <- mendoapply(
                 .combine_sample_level.SimpleListSparseAssays,
                 x_sa[shared_samples],
                 y_sa[shared_samples])
+              # Create ordered key
+              if (length(shared_samples)) {
+                ordered_key <- names(val[[1]][["key"]])
+              } else {
+                ordered_key <- NULL
+              }
+              x_sa[shared_samples] <- val
+
               # Update samples unique to x
               x_u <- setdiff(names(x_sa), shared_samples)
               fake <- endoapply(x_sa[x_u], function(e) {
@@ -892,17 +909,25 @@ setMethod("combine", c("SimpleListSparseAssays", "SimpleListSparseAssays"),
                 key <- rep(NA_integer_, length(missing_rownames))
                 names(key) <- missing_rownames
                 value <- matrix(ncol = ncol(e[["value"]]),
-                                dimnames =
-                                  list(NULL,
-                                       paste0("V",
-                                              seq_len(ncol(e[["value"]])))))
+                                dimnames = list(NULL, colnames(e[["value"]])))
                 storage.mode(value) <- storage.mode(e[["value"]])
                 SimpleList(key = key, value = value)
               })
-              x_sa[x_u] <- mendoapply(
-                .combine_sample_level.SimpleListSparseAssays,
-                x_sa[x_u],
-                fake)
+              val <- mendoapply(.combine_sample_level.SimpleListSparseAssays,
+                                x_sa[x_u], fake)
+              # Update key by ordered key (or create ordered key if it doesn't
+              # yet exist)
+              if (!is.null(ordered_key)) {
+                val <- endoapply(val, function(v, ordered_key) {
+                  key_idx <- match(ordered_key, names(v[["key"]]))
+                  v[["key"]] <- v[["key"]][key_idx]
+                  v
+                }, ordered_key = ordered_key)
+              } else {
+                ordered_key <- names(val[[1L]][["key"]])
+              }
+              x_sa[x_u] <- val
+
 
               # Update samples unique to y
               y_u <- setdiff(names(y_sa), shared_samples)
@@ -911,17 +936,20 @@ setMethod("combine", c("SimpleListSparseAssays", "SimpleListSparseAssays"),
                 key <- rep(NA_integer_, length(missing_rownames))
                 names(key) <- missing_rownames
                 value <- matrix(ncol = ncol(e[["value"]]),
-                                dimnames =
-                                  list(NULL,
-                                       paste0("V",
-                                              seq_len(ncol(e[["value"]])))))
+                                dimnames = list(NULL, colnames(e[["value"]])))
                 storage.mode(value) <- storage.mode(e[["value"]])
                 SimpleList(key = key, value = value)
               })
-              # NOTE: Append to x_sa
-              x_sa <- c(x_sa,
-                        mendoapply(.combine_sample_level.SimpleListSparseAssays,
-                                   y_sa[y_u], fake))
+              val <- mendoapply(.combine_sample_level.SimpleListSparseAssays,
+                                y_sa[y_u], fake)
+              # Update key by ordered key
+              val <- endoapply(val, function(v, ordered_key) {
+                key_idx <- match(ordered_key, names(v[["key"]]))
+                v[["key"]] <- v[["key"]][key_idx]
+                v
+              }, ordered_key = ordered_key)
+              # Append to x_sa
+              x_sa <- c(x_sa, val)
 
               x_sa
             }, x, y)

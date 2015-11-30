@@ -30,13 +30,12 @@ NULL
 #' @keywords internal
 .sparsify.SimpleList <- function(x) {
 
-
   # NOTE: Will otherwise get errors if data have zero rows.
   if (nrow(x)) {
 
     # Add an index for the original row number
-    if (any(c(".myI", ".myKey")  %in% colnames(x))) {
-      stop("'x' must not have a column named '.myI' or '.myKey'")
+    if (any(grepl(".my", colnames(x)))) {
+      stop("'x' must not have colnames beginning with '.my'")
     }
     x[, .myI := .I]
 
@@ -65,14 +64,15 @@ NULL
   }
   # NOTE: Need to NULL-ify rownames differently depending on colnames,
   #       otherwise some downstream identical() checks can fail.
-  if (identical(colnames(value), paste0("V", seq_len(ncol(value))))) {
+  # if (identical(colnames(value), paste0("V", seq_len(ncol(value))))) {
+  if (any(grepl(".MY", colnames(x)))) {
     dimnames(value) <- NULL
   } else {
     rownames(value) <- NULL
   }
 
   # Handle the NA-row
-  NA_idx <- which(!complete.cases(value))
+  NA_idx <- which(rowSums(is.na(value)) == ncol(value))
   if (length(NA_idx)) {
     # Take care of NA rows
     stopifnot(length(NA_idx) == 1L)
@@ -95,7 +95,7 @@ NULL
 #' @importFrom utils globalVariables
 globalVariables(c(".myI", ".myKey"))
 
-#' @importFrom data.table as.data.table
+#' @importFrom data.table as.data.table setnames
 #' @importFrom methods setMethod
 #'
 #' @keywords internal
@@ -108,7 +108,19 @@ setMethod("sparsify", c("matrix", "character"),
             if ("rn" %in% colnames(x)) {
               stop("'x' must not have a column named 'rn'")
             }
+            if (is.null(colnames(x))) {
+              cn <- paste0(".MYV", seq_len(ncol(x)))
+            } else {
+              cn <- NULL
+            }
             x <- as.data.table(x, keep.rownames = !is.null(rownames(x)))
+            if (!is.null(cn)) {
+              if ("rn" %in% colnames(x)) {
+                setnames(x, c("rn", cn))
+              } else {
+                setnames(x, cn)
+              }
+            }
             .sparsify.SimpleList(x = x)
 }
 )

@@ -163,7 +163,7 @@ test_that("dim,SimpleListSparseAssays-method works", {
   expect_identical(dim(sa[1:10, 3]), c(10L, 1L))
 })
 
-test_that("[,SimplelistSparseAssays-method works (no index)", {
+test_that("[,SimpleListSparseAssays-method works (no index)", {
   # NOTE: Whenever [,SimpleListSparseAssays method is called with 'i', the
   #       value slot will be sorted using data.table::setkey(), whose
   #       sort-order is equivalent to base::sort(x, na.last = FALSE). There are
@@ -176,24 +176,24 @@ test_that("[,SimplelistSparseAssays-method works (no index)", {
   expect_error(as(x, "ShallowSimpleListAssays")[], "object 'fun' not found")
 })
 
-test_that("[,SimplelistSparseAssays-method works (i only)", {
+test_that("[,SimpleListSparseAssays-method works (i only)", {
   expect_that(x, not(is_identical_to(x[seq_len(nrow(x)), ])))
   expect_true(identical_SparseAssays(x, x[seq_len(nrow(x)), ]))
   expect_that(x[1:7, ], not(is_identical_to(y)))
   expect_true(identical_SparseAssays(x[1:7, ], y))
 })
 
-test_that("[,SimplelistSparseAssays-method works (j only)", {
+test_that("[,SimpleListSparseAssays-method works (j only)", {
   expect_that(x[, 2], is_identical_to(z))
   expect_true(identical_SparseAssays(x[, 2], z))
 })
 
-test_that("[,SimplelistSparseAssays-method works (i and j)", {
+test_that("[,SimpleListSparseAssays-method works (i and j)", {
   expect_that(x[1:7, 2], not(is_identical_to(w)))
   expect_true(identical_SparseAssays(x[1:7, 2], w))
 })
 
-test_that("[,SimplelistSparseAssays-method works (non-contiguous i and j)", {
+test_that("[,SimpleListSparseAssays-method works (non-contiguous i and j)", {
   expect_identical(densify(X[c(1, 4, 2), ], 1, 1)[[1]][[1]],
                    matrix(as.integer(c(1, 4, 2, 6, 9, 7)), ncol = 2,
                           dimnames = list(c("a", "d", "b"), c("A", "B"))))
@@ -210,7 +210,7 @@ test_that("[,SimplelistSparseAssays-method works (non-contiguous i and j)", {
                                                           c("A", "B")))))))
 })
 
-test_that("[,SimplelistSparseAssays-method works (non-contiguous i and j)", {
+test_that("[,SimpleListSparseAssays-method works (non-contiguous i and j)", {
   expect_identical(densify(X[c("a", "d", "b"), ], 1, 1)[[1]][[1]],
                    matrix(as.integer(c(1, 4, 2, 6, 9, 7)), ncol = 2,
                           dimnames = list(c("a", "d", "b"), c("A", "B"))))
@@ -227,7 +227,7 @@ test_that("[,SimplelistSparseAssays-method works (non-contiguous i and j)", {
                                                           c("A", "B")))))))
 })
 
-test_that("[,SimplelistSparseAssays-method errors (out of bounds indices)", {
+test_that("[,SimpleListSparseAssays-method errors (out of bounds indices)", {
   msg <- "subscript contains NAs or out-of-bounds indices"
   expect_error(X[nrow(X) + 1, ], msg)
   expect_error(X["bad_idx", ], msg)
@@ -239,12 +239,12 @@ test_that("[,SimplelistSparseAssays-method errors (out of bounds indices)", {
   expect_error(X["bad_idx", "another_bad_idx"], msg)
 })
 
-test_that("[,SimplelistSparseAssays-method warning (drop)", {
+test_that("[,SimpleListSparseAssays-method warning (drop)", {
   expect_warning(X[1, , drop = TRUE],
                  "'drop' ignored '\\[,SimpleListSparseAssays,ANY,ANY-method'")
 })
 
-test_that("[<-,SimplelistSparseAssays-method errors (no index)", {
+test_that("[<-,SimpleListSparseAssays-method errors (no index)", {
   # NOTE: While this might properly be considered a bug, subset replacing
   #       SparseAssays should be consistent with subsetting Assays in that at
   #       least one of i or j must be specified.
@@ -253,7 +253,7 @@ test_that("[<-,SimplelistSparseAssays-method errors (no index)", {
                  as(x, "ShallowSimpleListAssays"))
 })
 
-test_that("[<-,SimplelistSparseAssays-method works (i only)", {
+test_that("[<-,SimpleListSparseAssays-method works (i only)", {
   # Test subsetting on i
   X <- x
   X[1:10, ] <- x[1:10, ]
@@ -265,7 +265,7 @@ test_that("[<-,SimplelistSparseAssays-method works (i only)", {
   expect_true(identical_SparseAssays(x[1, ], Y[2, ]))
 })
 
-test_that("[<-,SimplelistSparseAssays-method works (j only)", {
+test_that("[<-,SimpleListSparseAssays-method works (j only)", {
   # SparseAssays objects should be identical when only j is specified in subset
   # replacement
   X <- x
@@ -282,7 +282,7 @@ test_that("[<-,SimplelistSparseAssays-method works (j only)", {
                    densify(Y[, 2], 1, 1)[[1L]][[1L]])
 })
 
-test_that("[<-,SimplelistSparseAssays-method works (i and j)", {
+test_that("[<-,SimpleListSparseAssays-method works (i and j)", {
   X <- x
   X[1:7, 2] <- x[1:7, 2]
   expect_that(x, not(is_identical_to(X)))
@@ -298,7 +298,7 @@ test_that("[<-,SimplelistSparseAssays-method works (i and j)", {
                    densify(Y[2, 2], 1, 1)[[1L]][[1L]])
 })
 
-test_that("[<-,SimplelistSparseAssays-method works (non-contiguous i and j)", {
+test_that("[<-,SimpleListSparseAssays-method works (non-contiguous i and j)", {
   X2 <- X
   x2 <- matrix(as.integer(c(11, 14, 12, 16, 19, 7)),
                ncol = 2, dimnames = list(c("a", "d", "b"), c("A", "B")))
@@ -317,7 +317,7 @@ test_that("[<-,SimplelistSparseAssays-method works (non-contiguous i and j)", {
   }
 })
 
-test_that("[<-,SimplelistSparseAssays-method works (non-numeric i and j)", {
+test_that("[<-,SimpleListSparseAssays-method works (non-numeric i and j)", {
   X2 <- X
   x2 <- matrix(as.integer(c(11, 14, 12, 16, 19, 7)),
                ncol = 2, dimnames = list(c("a", "d", "b"), c("A", "B")))
@@ -337,7 +337,7 @@ test_that("[<-,SimplelistSparseAssays-method works (non-numeric i and j)", {
   }
 })
 
-test_that("[<-,SimplelistSparseAssays-method errors (out of bounds indices)", {
+test_that("[<-,SimpleListSparseAssays-method errors (out of bounds indices)", {
   msg <- "subscript out of bounds"
   XX <- X
   expect_error(XX[nrow(X) + 1, ] <- X[1, ], msg)
@@ -357,7 +357,7 @@ test_that("[<-,SimplelistSparseAssays-method errors (out of bounds indices)", {
   expect_error(XX[1, "bad_idx"] <- X[1, 1], msg)
 })
 
-test_that("[<-,SimplelistSparseAssays-method errors (incorrectly dimensioned value)", {
+test_that("[<-,SimpleListSparseAssays-method errors (incorrectly dimensioned value)", {
   msg <- "number of items to replace is not a multiple of replacement length"
   expect_error(W[1, ] <- X[1, ], msg)
   expect_error(X[1, ] <- X[1:2, ], msg)
@@ -365,4 +365,314 @@ test_that("[<-,SimplelistSparseAssays-method errors (incorrectly dimensioned val
   expect_error(W[1, 1] <- W[1:2, 1:2], msg)
 })
 
-# TODO: Test rest of R/SimpleListSparseAssays-class.R
+test_that(".bind_SimpleListSparseAssays works (empty input)", {
+  expect_identical(.bind_SimpleListSparseAssays(list(), rbind), SparseAssays())
+})
+
+test_that("rbind,SimpleListSparseAssays-method is compatible with generic", {
+  generic <- getGeneric("rbind")
+  method <- getMethod("rbind", "SimpleListSparseAssays")
+  expect_identical(generic@signature, "...")
+  expect_identical(formals(generic@.Data), formals(method@.Data))
+})
+
+test_that("rbind,SimpleListSparseAssays-method works", {
+  expect_identical(.bind_SimpleListSparseAssays(list(), rbind), SparseAssays())
+  expect_identical(rbind(x), x)
+  expect_error(rbind(x, X),
+               "elements in sparse assays must have the same length")
+  expect_identical(rbind(SparseAssays(),SparseAssays()), SparseAssays())
+  expect_error(rbind(X, W),
+               paste0("Sample names \\(if present\\) must be identical when ",
+                      "calling 'rbind\\(\\)' on 'SimpleListSparseAssays'"))
+  X2 <- X
+  names(X2[[1L]]) <- "X2"
+  expect_error(rbind(X, X2),
+               paste0("Sample names \\(if present\\) must be identical when ",
+                      "calling 'rbind\\(\\)' on 'SimpleListSparseAssays'"))
+  XNULL <- X
+  names(XNULL[[1L]]) <- NULL
+  expect_error(rbind(X, XNULL),
+               paste0("Sample names \\(if present\\) must be identical when ",
+                      "calling 'rbind\\(\\)' on 'SimpleListSparseAssays'"))
+  X2NULL <- X2
+  names(X2NULL[[1L]]) <- NULL
+  expect_that(val <- rbind(XNULL, X2NULL),
+              not(throws_error(
+                paste0("Sample names \\(if present\\) must be identical when ",
+                       "calling 'rbind\\(\\)' on 'SimpleListSparseAssays'"))))
+  expect_identical(dim(val), c(5L, 1L))
+  WNULL <- W
+  names(WNULL[[1L]]) <- NULL
+  expect_error(rbind(X, WNULL),
+               paste0("Sample names \\(if present\\) must be identical when ",
+                      "calling 'rbind\\(\\)' on 'SimpleListSparseAssays'"))
+  expect_error(rbind(XNULL, WNULL),
+               paste0("Can only rbind 'SimpleListSparseAssays' objects when ",
+                      "each object has the same number of samples \\(ncol\\)."))
+  XNULL2 <- cbind(XNULL, XNULL)
+  expect_error(rbind(XNULL, XNULL2),
+               paste0("Can only rbind 'SimpleListSparseAssays' objects when ",
+                      "each object has the same number of samples \\(ncol\\)."))
+  x2 <- x
+  names(x2) <- c("SA1", "SA2")
+  expect_error(rbind(x, x2),
+               paste0("All 'SimpleListSparseAssays' objects must have the ",
+                      "same sparse assay names."))
+  sa1 <- as(as(x, "SimpleList")["sa1"], "SimpleListSparseAssays")
+  names(sa1) <- "SA1"
+  sa2 <- as(as(x, "SimpleList")["sa2"], "SimpleListSparseAssays")
+  names(sa2) <- "SA1"
+  expect_error(rbind(sa1, sa2),
+               paste0("Can only rbind 'SimpleListSparseAssays' objects where ",
+                      "the 'value' elements within each sparse assay have the ",
+                      "same number of columns."))
+})
+
+test_that("cbind,SimpleListSparseAssays-method is compatible with generic", {
+  generic <- getGeneric("cbind")
+  method <- getMethod("cbind", "SimpleListSparseAssays")
+  expect_identical(generic@signature, "...")
+  expect_identical(formals(generic@.Data), formals(method@.Data))
+})
+
+test_that("cbind,SimpleListSparseAssays-method works", {
+  expect_identical(.bind_SimpleListSparseAssays(list(), cbind), SparseAssays())
+  expect_identical(cbind(x), x)
+  expect_error(cbind(x, X),
+               "elements in sparse assays must have the same length")
+  expect_identical(cbind(SparseAssays(),SparseAssays()), SparseAssays())
+  expect_error(cbind(X, X),
+               paste0("Sample names \\(if present\\) must be unique when ",
+                      "calling 'cbind\\(\\)' on 'SimpleListSparseAssays'"))
+  expect_error(cbind(X, W),
+               paste0("Sample names \\(if present\\) must be unique when ",
+                      "calling 'cbind\\(\\)' on 'SimpleListSparseAssays'"))
+  XNULL <- X
+  names(XNULL[[1L]]) <- NULL
+  expect_that(val <- cbind(X, XNULL),
+              not(throws_error(
+                paste0("Sample names \\(if present\\) must be identical when ",
+                       "calling 'rbind\\(\\)' on 'SimpleListSparseAssays'"))))
+  expect_identical(dim(val), c(5L, 2L))
+  X2 <- X
+  names(X2[[1L]]) <- "X2"
+  X2NULL <- X2
+  names(X2NULL[[1L]]) <- NULL
+  expect_that(val <- cbind(XNULL, X2NULL),
+              not(throws_error(
+                paste0("Sample names \\(if present\\) must be identical when ",
+                       "calling 'rbind\\(\\)' on 'SimpleListSparseAssays'"))))
+  expect_identical(dim(val), c(5L, 2L))
+  x2 <- x
+  names(x2) <- c("SA1", "SA2")
+  expect_error(cbind(x[, 1], y[, 2]),
+                     paste0("Can only cbind 'SimpleListSparseAssays' objects ",
+                            "where the 'key' elements within each sparse ",
+                            "assay have the same length."))
+})
+
+test_that(".combine_sample_level.SimpleListSparseAssays works (with no NAs)", {
+  Xx <- X[1:3, ][[1L]][[1L]]
+  Xy <- X[2:5, ][[1L]][[1L]]
+  expect_identical(.combine_sample_level.SimpleListSparseAssays(Xx, Xy),
+                   sparsify(XX, "SimpleList"))
+  Xx2 <- Xx
+  colnames(Xx2[[2L]]) <- NULL
+  Xy2 <- Xy
+  colnames(Xy2[[2L]]) <- NULL
+  XX2 <- XX
+  colnames(XX2) <- NULL
+  expect_identical(.combine_sample_level.SimpleListSparseAssays(Xx2, Xy2),
+                   sparsify(XX2, "SimpleList"))
+})
+
+test_that(".combine_sample_level.SimpleListSparseAssays works (with NAs)", {
+  XNA <- X
+  XNA[[1L]][[1L]][["key"]][5] <- NA
+  XNA[[1L]][[1L]][["value"]] <-  XNA[[1L]][[1L]][["value"]][1:4, ]
+  Xx <- X[1:4, ][[1L]][[1L]]
+  Xy <- XNA[5, ][[1L]][[1L]]
+  expect_identical(.combine_sample_level.SimpleListSparseAssays(Xx, Xy),
+                   XNA[[1L]][[1L]])
+})
+
+test_that("combine,SimpleListSparseAssays-method is compatible with generic", {
+  generic <- getGeneric("combine")
+  method <- getMethod("combine",
+                      c("SimpleListSparseAssays", "SimpleListSparseAssays"))
+  expect_identical(generic@signature, c("x", "y"))
+  expect_identical(formals(generic@.Data), formals(method@.Data))
+})
+
+test_that("combine,SimpleListSparseAssays-method works (zero length inputs)", {
+  expect_identical(combine(X, SparseAssays()), X)
+  expect_identical(combine(SparseAssays(), X), X)
+})
+
+test_that("combine,SimpleListSparseAssays-method errors (unnamed keys)", {
+  msg <- paste0("Cannot combine 'SimpleListSparseAssays' objects with unnamed ",
+                "'key' elements")
+  expect_error(combine(x, X), msg)
+  expect_error(combine(X, x), msg)
+  expect_error(combine(x, x), msg)
+})
+
+test_that("combine,SimpleListSparseAssays-method errors (unnamed samples)", {
+  msg <- paste0("sample names must be non-NULL when combining ",
+                "'SimpleListSparseAssays' objects")
+  X2 <- X
+  names(X2[[1L]]) <- NULL
+  expect_error(combine(X, X2), msg)
+  expect_error(combine(X2, X), msg)
+  expect_error(combine(X2, X2), msg)
+})
+
+test_that("combine,SimpleListSparseAssays-method works (good input)", {
+  expect_identical(combine(X[1:3, ], X[2:4, ]), X[1:4, ])
+  expect_identical(combine(W[1:4, 1:2], W[1:4, 2:3]), W[1:4, 1:3])
+  WC <- combine(W[1:3, 1:2], W[2:4, 2:3])
+  expect_identical(densify(WC, 1, 1)[[1L]][[1L]],
+                   matrix(c(1:3, NA, 6:8, NA), ncol = 2,
+                          dimnames = list(letters[1:4], LETTERS[1:2])))
+  expect_identical(densify(WC, 1, 2)[[1L]][[1L]],
+                   matrix(c(101:104, 106:109), ncol = 2,
+                          dimnames = list(letters[1:4], LETTERS[1:2])))
+  expect_identical(densify(WC, 1, 3)[[1L]][[1L]],
+                   matrix(c(NA, 1002:1004, NA, 1007:1009), ncol = 2,
+                          dimnames = list(letters[1:4], LETTERS[1:2])))
+})
+
+test_that(".densify.SimpleListSparseAssays.sample works", {
+  expect_identical(.densify.SimpleListSparseAssays.sample(X[[1L]][[1L]]), XX)
+  XX2 <- XX
+  rownames(XX2) <- NULL
+  expect_identical(
+    .densify.SimpleListSparseAssays.sample(X[[1L]][[1L]], withRownames = FALSE),
+    XX2)
+})
+
+test_that("densify,SimpleListSparseAssays,missing,missing-method errors", {
+  expect_error(densify(X),
+               paste0("It is strongly recommended that you specify at least ",
+                      "one of 'i' or 'j'; see \\?densify for reasons why. If ",
+                      "you still really want to densify all sparse assays ",
+                      "and samples, then use 'densify\\(x, ",
+                      "seq\\_along\\(x\\), seq\\_len\\(ncol\\(x\\)\\), ...",
+                      "\\)'"))
+})
+
+test_that("densify,SimpleListSparseAssays,numeric,missing-method works", {
+  expect_identical(densify(x, 1:2),
+                   densify(x, seq_along(x), seq_len(ncol(x))))
+  expect_identical(densify(x, 1:2, withRownames = FALSE),
+                   densify(x, seq_along(x), seq_len(ncol(x)),
+                           withRownames = FALSE))
+  expect_error(densify(x, length(x) + 1),
+               paste0("invalid subscript 'i'\nsubscript contains NAs or ",
+                      "out-of-bounds indices"))
+})
+
+test_that("densify,SimpleListSparseAssays,character,missing-method works", {
+  expect_identical(densify(x, c("sa1", "sa2")),
+                   densify(x, seq_along(x), seq_len(ncol(x))))
+  expect_identical(densify(x, c("sa1", "sa2"), withRownames = FALSE),
+                   densify(x, seq_along(x), seq_len(ncol(x)),
+                           withRownames = FALSE))
+  expect_error(densify(sa, "bad_idx"),
+               "invalid subscript 'i'\nsubscript contains invalid names")
+})
+
+test_that("densify,SimpleListSparseAssays,missing,numeric-method works", {
+  expect_identical(densify(x, j = 1:2),
+                   densify(x, seq_along(x), seq_len(ncol(x))))
+  expect_identical(densify(x, j = 1:2, withRownames = FALSE),
+                   densify(x, seq_along(x), seq_len(ncol(x)),
+                           withRownames = FALSE))
+  expect_error(densify(x, j = ncol(x) + 1),
+               paste0("invalid subscript 'j'\nsubscript contains NAs or ",
+                      "out-of-bounds indices"))
+})
+
+test_that("densify,SimpleListSparseAssays,missing,character-method works", {
+  expect_identical(densify(x, j = c("s1", "s2")),
+                   densify(x, seq_along(x), seq_len(ncol(x))))
+  expect_identical(densify(x, j = c("s1", "s2"), withRownames = FALSE),
+                   densify(x, seq_along(x), seq_len(ncol(x)),
+                           withRownames = FALSE))
+  expect_error(densify(x, j = "bad_idx"),
+               "invalid subscript 'j'\nsubscript contains invalid names")
+})
+
+test_that("densify,SimpleListSparseAssays,numeric,numeric-method errors", {
+  # NOTE: Testing of this method working is implicit in previous tests
+  expect_error(densify(x, i = length(x) + 1, j = 1),
+               paste0("invalid subscript 'i'\nsubscript contains NAs or ",
+                      "out-of-bounds indices"))
+  expect_error(densify(x, i = 1, j = ncol(x) + 1),
+               paste0("invalid subscript 'j'\nsubscript contains NAs or ",
+                      "out-of-bounds indices"))
+  # NOTE: Only j is flagged as out of bounds because method aborts at this
+  #       point and i is therefore not checked.
+  expect_error(densify(x, i = length(x) + 1, j = ncol(x) + 1),
+               paste0("invalid subscript 'j'\nsubscript contains NAs or ",
+                      "out-of-bounds indices"))
+})
+
+test_that("densify,SimpleListSparseAssays,numeric,character-method errors", {
+  expect_identical(densify(x, 1:2, c("s1", "s2")),
+                   densify(x, seq_along(x), seq_len(ncol(x))))
+  expect_identical(densify(x, 1:2, c("s1", "s2"), withRownames = FALSE),
+                   densify(x, seq_along(x), seq_len(ncol(x)),
+                           withRownames = FALSE))
+  expect_error(densify(x, i = length(x) + 1, j = c("s1", "s2")),
+               paste0("invalid subscript 'i'\nsubscript contains NAs or ",
+                      "out-of-bounds indices"))
+  expect_error(densify(x, i = 1, j = "bad_idx"),
+               "invalid subscript 'j'\nsubscript contains invalid names")
+  # NOTE: Only j is flagged as out of bounds because method aborts at this
+  #       point and i is therefore not checked.
+  expect_error(densify(x, i = length(x) + 1, j = "bad_idx"),
+               "invalid subscript 'j'\nsubscript contains invalid names")
+})
+
+test_that("densify,SimpleListSparseAssays,character,numeric-method errors", {
+  expect_identical(densify(x, c("sa1", "sa2"), 1:2),
+                   densify(x, seq_along(x), seq_len(ncol(x))))
+  expect_identical(densify(x, c("sa1", "sa2"), 1:2, withRownames = FALSE),
+                   densify(x, seq_along(x), seq_len(ncol(x)),
+                           withRownames = FALSE))
+  expect_error(densify(x, i = "bad_idx", j = 1),
+               "invalid subscript 'i'\nsubscript contains invalid names")
+  expect_error(densify(x, i = "sa1", j = ncol(x) + 1),
+               paste0("invalid subscript 'j'\nsubscript contains NAs or ",
+                      "out-of-bounds indices"))
+  # NOTE: Only j is flagged as out of bounds because method aborts at this
+  #       point and i is therefore not checked.
+  expect_error(densify(x, i = "bad_idx", j = ncol(x) + 1),
+               paste0("invalid subscript 'j'\nsubscript contains NAs or ",
+                      "out-of-bounds indices"))
+})
+
+test_that("densify,SimpleListSparseAssays,character,character-method errors", {
+  expect_identical(densify(x, c("sa1", "sa2"), c("s1", "s2")),
+                   densify(x, seq_along(x), seq_len(ncol(x))))
+  expect_identical(densify(x, c("sa1", "sa2"), c("s1", "s2"),
+                           withRownames = FALSE),
+                   densify(x, seq_along(x), seq_len(ncol(x)),
+                           withRownames = FALSE))
+  expect_error(densify(x, i = "bad_idx", j = "s1"),
+               "invalid subscript 'i'\nsubscript contains invalid names")
+  expect_error(densify(x, i = "sa1", j = "bad_idx"),
+               "invalid subscript 'j'\nsubscript contains invalid names")
+  # NOTE: Only j is flagged as out of bounds because method aborts at this
+  #       point and i is therefore not checked.
+  expect_error(densify(x, i = "bad_idx", j = "another_bad_idx"),
+               "invalid subscript 'j'\nsubscript contains invalid names")
+})
+
+test_that("SimpleListSparseAssays to ShallowSimpleListAssays coercion works", {
+  # UP TO HERE
+})
+
+
