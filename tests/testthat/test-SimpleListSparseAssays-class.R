@@ -672,7 +672,12 @@ test_that("densify,SimpleListSparseAssays,character,character-method errors", {
 })
 
 test_that("SimpleListSparseAssays to ShallowSimpleListAssays coercion works", {
-  # UP TO HERE
+  assays <- Assays(array(data = 1:10, dim = c(5, 1, 2),
+                       dimnames = list(letters[1:5], "X", LETTERS[1:2])))
+  expect_equal(as(X, "ShallowSimpleListAssays"), assays)
+  assays <- Assays(
+    array(data = c(1:5, 101:105, 1001:1005, 6:10, 106:110, 1006:1010),
+          dim = c(5, 3, 2),
+          dimnames = list(letters[1:5], c("X", "Y", "Z"), LETTERS[1:2])))
+  expect_equal(as(W, "ShallowSimpleListAssays"), assays)
 })
-
-
