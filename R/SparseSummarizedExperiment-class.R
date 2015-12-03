@@ -465,6 +465,18 @@ makeSEFromSSE <- function(x) {
   .SSE.to.SE(x)
 }
 
+.from_SSE_to_RSSE <- function(from) {
+  se0 <- as(from, "SummarizedExperiment0")
+  rse <- as(se0, "RangedSummarizedExperiment")
+  new("RangedSparseSummarizedExperiment",
+      rse,
+      sparseAssays = from@sparseAssays)
+}
+
+setAs("SparseSummarizedExperiment", "RangedSparseSummarizedExperiment",
+      .from_SSE_to_RSSE
+)
+
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Getters and setters
 ###

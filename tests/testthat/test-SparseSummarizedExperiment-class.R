@@ -48,7 +48,7 @@ test_that(".valid.SSE.sparseAssays_ncol() and above work", {
 test_that("makeSEFromSSE works", {
   se <- makeSEFromSSE(sse)
   expect_true(SSE_identical_to_SE(sse, se))
-  # TODO: RSSE to RSE coercion (should go in RSSE tests file)
+  # TODO: RSE to RSSE coercion (should go in RSSE tests file)
 })
 
 test_that("Implicit coercion from SSE to SE0 works", {
@@ -79,12 +79,13 @@ test_that("Implicit coercion from SSE to RSE works", {
   expect_identical(names(rr), slot(sse, "NAMES"))
 })
 
-test_that("Implicit coercion from SSE to RSSE works", {
+test_that("'Implicit' coercion from SSE to RSSE works", {
   rsse <- as(sse, "RangedSparseSummarizedExperiment")
-  # Check all slots except rowRanges, which is checked separately since the SSE
-  # object has norowRanges, are identical in the SSE and RSSE.
+  # Check all slots except rowRanges and NAMES, which are check separately
+  # since the SSE object has no rowRanges and NAMES are transferred to the
+  # rowRanges slot in the RSE object, are identical in the SSE and RSSE.
   slot_names <- slotNames(sse)
-  slot_names <- grep("rowRanges", slot_names, value = TRUE,
+  slot_names <- grep("rowRanges|NAMES", slot_names, value = TRUE,
                      invert = TRUE)
   expect_true(all(sapply(slot_names, function(sn, x, y) {
     identical(slot(x, sn), slot(y, sn))
