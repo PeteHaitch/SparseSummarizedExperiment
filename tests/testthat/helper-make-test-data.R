@@ -84,6 +84,7 @@ simSE0 <- function(m, n) {
 #' Two SparseAssays are considered identical if their densified forms are
 #' identical, i.e. identical_SparseAssays(x, y) is TRUE. Importantly, their
 #' sparsified forms need be identical, i.e, identical(x, y) may be FALSE.
+#'
 #' @param x A SparseAssays object.
 #' @param y A SparseAssays object.
 #'
@@ -92,6 +93,52 @@ identical_SparseAssays <- function(x, y) {
   xx <- densify(x, seq_along(x), seq_len(ncol(x)))
   yy <- densify(y, seq_along(y), seq_len(ncol(y)))
   identical(xx, yy)
+}
+
+#' Test whether a SparseSummarizedExperiment is equivalent to a
+#' SummarizedExperiment object.
+#'
+#' A SSE object is considered identical to a SE object if their colData,
+#' NAMES/rowRanges, elementMetadata, metadata slots are identical, and the
+#' SSE's sparseAssays + assays slot has equivalent data to the SE's assays slot.
+#'
+#' @param sse A SparseSummarizedExperiment or RangedSparseSummarizedExperiment
+#'        object.
+#' @param se A SummarizedExperiment0 or RangedSummarizedExperiment object.
+#'
+#' @return TRUE or FALSE
+SSE_identical_to_SE <- function(sse, se) {
+  if (!identical(sse@colData, se@colData)) {
+    return(FALSE)
+  }
+  if ("rowRanges" %in% c(slotNames(sse), slotNames(se))) {
+    if (!identical(sse@rowRanges, se@rowRanges)) {
+      return(FALSE)
+    }
+  }
+  if (!identical(sse@NAMES, se@NAMES)) {
+    return(FALSE)
+  }
+  if (!identical(sse@elementMetadata, se@elementMetadata)) {
+    return(FALSE)
+  }
+  if (!identical(sse@metadata, se@metadata)) {
+    return(FALSE)
+  }
+  # NOTE: Need to remove sample names from sparseAssays before doing comparison
+  #       since this is what makeSEFromSSE() does.
+  unnamed_sa <- sse@sparseAssays
+  unnamed_sa <- endoapply(unnamed_sa, function(x) {
+    names(x) <- NULL
+    x
+  })
+  # UP TO HERE: second has colnames (sample names)
+  if (!identical(as(se@assays, "SimpleList")[sparseAssayNames(sse)],
+                 as(as(unnamed_sa, "ShallowSimpleListAssays"),
+                    "SimpleList"))) {
+    return(FALSE)
+  }
+  return(TRUE)
 }
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

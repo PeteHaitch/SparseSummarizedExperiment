@@ -187,11 +187,12 @@ setClass("RangedSparseSummarizedExperiment",
 
 # TODO: Need to generalise so as to work with all concrete subclasses of
 #       SparseAssays objects.
-# TODO: Should this be an internal method (i.e. with a "." prefix).
 #' Get rownames of a SparseAssays object
 #'
 #' @param sparse_assays A SimpleListSparseAssays object.
-get_rownames_from_sparse_assays <- function(sparse_assays) {
+#'
+#' @keywords internal
+.get_rownames_from_sparse_assays <- function(sparse_assays) {
   if (length(sparse_assays) == 0L) {
     return(NULL)
   }
@@ -277,7 +278,7 @@ setMethod("SparseSummarizedExperiment", "SparseAssays",
             # NOTE: rownames are taken from sparseAssays.
             # WARNING: This will override rownames present in assays argument
             #          and used by the SummarizedExperiment constructor.
-            rownames(val) <- get_rownames_from_sparse_assays(sparseAssays)
+            rownames(val) <- .get_rownames_from_sparse_assays(sparseAssays)
             val
           }
 )

@@ -3,7 +3,6 @@
 export("sparseAssay<-")
 export("sparseAssayNames<-")
 export("sparseAssays<-")
-export()
 export(SAapply)
 export(SparseAssays)
 export(SparseSummarizedExperiment)

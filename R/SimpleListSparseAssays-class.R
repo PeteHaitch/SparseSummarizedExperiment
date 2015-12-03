@@ -1222,8 +1222,6 @@ setMethod("densify", c("SimpleListSparseAssays", "character", "character"),
 )
 
 #' @importFrom methods setAs
-#'
-#' @export
 setAs("SimpleListSparseAssays", "ShallowSimpleListAssays",
       function(from) {
         # TODO: Check whether dimanmes are subsequently stripped from assays

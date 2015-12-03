@@ -440,7 +440,6 @@ setValidity2("SparseSummarizedExperiment", .valid.SSE)
 
   # NOTE: Use withDimnames = TRUE so that sample names are retrieved, but then
   #       strip from extra_assays like the SummarizedExperiment() constructor.
-
   extra_assays <- sparseAssays(x, withDimnames = TRUE)
   extra_assays <- endoapply(extra_assays, function(sparse_assay) {
     names(sparse_assay) <- NULL
@@ -450,7 +449,7 @@ setValidity2("SparseSummarizedExperiment", .valid.SSE)
     })
   })
   extra_assays <- as(extra_assays, "ShallowSimpleListAssays")
-  assays <- Assays(c(assays(x),
+  assays <- Assays(c(assays(x, withDimnames = FALSE),
                      as(extra_assays, "SimpleList", strict = FALSE)))
   if (is(x, "RangedSparseSummarizedExperiment")) {
     x <- as(x, "RangedSummarizedExperiment")

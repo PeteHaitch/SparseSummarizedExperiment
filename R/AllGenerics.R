@@ -170,7 +170,8 @@ setGeneric("SparseSummarizedExperiment",
 ###
 ### NOTE: Documented in R/SparseAsaays-class.R
 
-# TODO: Will need to keep API up-to-date with BiocParallel::bplapply
+# TODO: Add unit test to check that SAapply() API is kept up-to-date with
+#       BiocParallel::bplappy()
 #' @importFrom methods setGeneric
 #'
 #' @export
