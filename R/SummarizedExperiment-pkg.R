@@ -3,8 +3,8 @@
 ### -------------------------------------------------------------------------
 ###
 ### The functionality in this file is concerned with the development of a
-### combine,SummarizedExperiment0,SummarizedExperiment0-method. This method
-### essentially applies combine() to each slot of the SummarizedExperiment0
+### combine,SummarizedExperiment,SummarizedExperiment-method. This method
+### essentially applies combine() to each slot of the SummarizedExperiment
 ### object. Some of these slots are objects with class definition in the
 ### SummarizedExperiment package. Therefore, the functionality in this file
 ### probably belongs in the SummarizedExperiment package.
@@ -18,13 +18,13 @@
 
 # TODO: Avoid unnecessary (and possibly costly) object validation where
 #       possible to safely do so.
-#' Combining SummarizedExperiment0/RangedSummarizedExperiment objects
+#' Combining SummarizedExperiment/RangedSummarizedExperiment objects
 #'
-#' Combine multiple \link[SummarizedExperiment]{SummarizedExperiment0} or
+#' Combine multiple \link[SummarizedExperiment]{SummarizedExperiment} or
 #' \link[SummarizedExperiment]{RangedSummarizedExperiment} objects using a
 #' union strategy.
 #'
-#' @details \link[SummarizedExperiment]{SummarizedExperiment0} objects are
+#' @details \link[SummarizedExperiment]{SummarizedExperiment} objects are
 #' combined based on the \code{names} of \code{x}, \code{y}, and \code{...},
 #' while \link[SummarizedExperiment]{RangedSummarizedExperiment} are combined
 #' based on finding matching genomic ranges. \strong{WARNING}: Does not
@@ -33,20 +33,20 @@
 #'
 #' @section Note for Developers:
 #' Any class that extends the
-#' \link[SummarizedExperiment]{SummarizedExperiment0} or
+#' \link[SummarizedExperiment]{SummarizedExperiment} or
 #' \link[SummarizedExperiment]{RangedSummarizedExperiment} class by adding
 #' additional slots will need to be careful when defining a combine() method
 #' for the new class if it wants to call
-#' \code{combine,SummarizedExperiment0-method} by inheritance through
+#' \code{combine,SummarizedExperiment-method} by inheritance through
 #' \code{callNextMethod()}. Specifically, the \code{combine()} method will need
 #' to first update these additional slots, update the corresponding slots in
 #' \code{x} (thus likely making \code{x} an invalid object), and then calling
 #' \code{callNextMethod()}. An alternative would be to set \code{check = FALSE}
 #' when replacing the slots in the
-#' \code{combine,SummarizedExperiment0,SummarizedExperiment0-method}, but this
+#' \code{combine,SummarizedExperiment,SummarizedExperiment-method}, but this
 #' would require that the validity of each slot was checked in some other way
 #' to guard against generally returning of unvalidated
-#' \link[SummarizedExperiment]{SummarizedExperiment0} or
+#' \link[SummarizedExperiment]{SummarizedExperiment} or
 #' \link[SummarizedExperiment]{RangedSummarizedExperiment} objects.
 #'
 #' @param x A \link[S4Vectors]{DataFrame} object.
@@ -62,20 +62,20 @@
 #' counts <- matrix(runif(nrows * ncols, 1, 1e4), nrows)
 #' colData <- DataFrame(Treatment=rep(c("ChIP", "Input"), 3),
 #'                      row.names=LETTERS[1:6])
-#' se0 <- SummarizedExperiment(assays=SimpleList(counts=counts),
+#' se <- SummarizedExperiment(assays=SimpleList(counts=counts),
 #'                             colData=colData)
-#' names(se0) <- paste0("f", 1:200)
-#' x <- se0[1:150, 1:4]
-#' y <- se0[30:170, 2:6]
+#' names(se) <- paste0("f", 1:200)
+#' x <- se[1:150, 1:4]
+#' y <- se[30:170, 2:6]
 #' combine(x, y)
 #' rowRanges <- GRanges(rep(c("chr1", "chr2"), c(50, 150)),
 #'                      IRanges(floor(runif(200, 1e5, 1e6)), width=100),
 #'                      strand=sample(c("+", "-"), 200, TRUE),
 #'                      feature_id=sprintf("ID%03d", 1:200))
-#' rse <- unname(se0)
+#' rse <- unname(se)
 #' rowRanges(rse) <- rowRanges
-#' x <- se0[1:150, 1:4]
-#' y <- se0[30:170, 2:6]
+#' x <- se[1:150, 1:4]
+#' y <- se[30:170, 2:6]
 #' combine(x, y)
 #'
 #' @importFrom methods is setMethod
@@ -84,7 +84,7 @@
 #' @importMethodsFrom S4Vectors mcols "mcols<-" metadata subjectHits
 #'
 #' @export
-setMethod("combine", c("SummarizedExperiment0", "SummarizedExperiment0"),
+setMethod("combine", c("SummarizedExperiment", "SummarizedExperiment"),
           function(x, y, ...) {
 
             if (any(dim(y) == 0L)) {
@@ -95,11 +95,11 @@ setMethod("combine", c("SummarizedExperiment0", "SummarizedExperiment0"),
 
             # Give a helpful error message if the user tries to combine a
             # RangedSummarizedExperiment object to an non-ranged
-            # SummarizedExperiment0.
+            # SummarizedExperiment.
             # NOTE: Can't simply check if object is SumamrizedExperiment0
             #       object since all RangedSummarizedExperiments are
-            #       SummarizedExperiment0 objects but not all
-            #       SummarizedExperiment0 objects are
+            #       SummarizedExperiment objects but not all
+            #       SummarizedExperiment objects are
             #       RangedSummarizedExperiment objects.
             if ((is(x, "RangedSummarizedExperiment") &&
                  !is(y, "RangedSummarizedExperiment")) ||
@@ -186,7 +186,7 @@ setMethod("combine", c("SummarizedExperiment0", "SummarizedExperiment0"),
               elementMetadata <- combine(mcols(x, use.names = TRUE),
                                          mcols(y, use.names = TRUE))
               # NOTE: Once combined, drop rownames of elementMetadata since these
-              #       are given by rownames(z) when z is a SummarizedExperiment0
+              #       are given by rownames(z) when z is a SummarizedExperiment
               #       object.
               rownames(elementMetadata) <- NULL
             }

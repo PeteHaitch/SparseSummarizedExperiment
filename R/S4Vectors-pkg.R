@@ -3,8 +3,8 @@
 ### -------------------------------------------------------------------------
 ###
 ### The functionality in this file is concerned with the development of a
-### combine,SummarizedExperiment0,SummarizedExperiment0-method. This method
-### essentially applies combine() to each slot of the SummarizedExperiment0
+### combine,SummarizedExperiment,SummarizedExperiment-method. This method
+### essentially applies combine() to each slot of the SummarizedExperiment
 ### object. Some of these slots are objects with class definition in the
 ### S4Vectors package. Therefore, the functionality in this file probably
 ### belongs in the S4Vectors package.

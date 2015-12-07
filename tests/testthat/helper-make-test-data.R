@@ -65,14 +65,14 @@ simRSE <- function(m, n) {
                        colData = colData)
 }
 
-#' Simulate data as a SummarizedExperiment0 object
+#' Simulate data as a SummarizedExperiment object
 #'
 #' @param m Integer scalar giving the number of features.
 #' @param n Integer scalar giving the number of samples (assumed/forced even).
 #'
-#' @return A SummarizedExperiment0 object.
-simSE0 <- function(m, n) {
-  as(simRSE(m, n), "SummarizedExperiment0")
+#' @return A SummarizedExperiment object.
+simSE <- function(m, n) {
+  as(simRSE(m, n), "SummarizedExperiment")
 }
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -104,7 +104,7 @@ identical_SparseAssays <- function(x, y) {
 #'
 #' @param sse A SparseSummarizedExperiment or RangedSparseSummarizedExperiment
 #'        object.
-#' @param se A SummarizedExperiment0 or RangedSummarizedExperiment object.
+#' @param se A SummarizedExperiment or RangedSummarizedExperiment object.
 #'
 #' @return TRUE or FALSE
 SSE_identical_to_SE <- function(sse, se) {
@@ -160,8 +160,8 @@ sa <- simSLSA(m, n, d, p)
 sparseAssays(rsse) <- sa
 sse <- as(rsse, "SparseSummarizedExperiment")
 names(sse) <- paste0("F", seq_len(nrow(sse)))
-se0 <- as(rse, "SummarizedExperiment0")
-names(se0) <- paste0("F", seq_len(nrow(se0)))
+se <- as(rse, "SummarizedExperiment")
+names(se) <- paste0("F", seq_len(nrow(se)))
 
 x1 <- SimpleList(
   s1 = SimpleList(key = as.integer(c(NA, 1, NA, NA, 2, NA, 3, NA, 4, 5)),

@@ -95,12 +95,12 @@ outlined in \sQuote{Details}.}
 }
 \description{
 The SparseSummarizedExperiment class extends the
-\link[SummarizedExperiment]{SummarizedExperiment0} class by adding the
+\link[SummarizedExperiment]{SummarizedExperiment} class by adding the
 \code{sparseAssays} slot, which contains a \link{SparseAssays} object.
 
-Note that \link[SummarizedExperiment]{SummarizedExperiment0} is the parent
+Note that \link[SummarizedExperiment]{SummarizedExperiment} is the parent
 of the SparseSummarizedExperiment class which means that all methods
-documented in \code{?}\link[SummarizedExperiment]{SummarizedExperiment0}
+documented in \code{?}\link[SummarizedExperiment]{SummarizedExperiment}
 also work on a SparseSummarizedExperiment. Note also that
 SparseSummarizedExperiment is a parent of the
 \link{RangedSparseSummarizedExperiment} class which means that all the
@@ -110,7 +110,7 @@ methods documented below also work on a
 }
 \details{
 These details assume familiarity with the
-\link[SummarizedExperiment]{SummarizedExperiment0} class; please first read
+\link[SummarizedExperiment]{SummarizedExperiment} class; please first read
 this linked documentation.
 
 The SparseSummarizedExperiment class is meant for \emph{sparse}
@@ -120,12 +120,12 @@ SparseSummarizedExperiment. In this instance, \emph{sparse} means data where
 there are multiple measurements per-feature, per-sample and where
 measurements with the same value (including missing values) are frequently
 observed. \strong{NOTE}: SparseSummarizedExperiment objects only payoff
-compared to \code{\link[SummarizedExperiment]{SummarizedExperiment0}} when
+compared to \code{\link[SummarizedExperiment]{SummarizedExperiment}} when
 this condition is satisfied.
 
 A SparseSummarizedExperiment object can also store non-sparse data by
 storing these data in the \code{assays} slot, as would be done in a
-\link[SummarizedExperiment]{SummarizedExperiment0} object.
+\link[SummarizedExperiment]{SummarizedExperiment} object.
 
 The \emph{sparse data} are accessed by using the \code{sparseAssays}
 funcion, described below. This returns a \link{SimpleList} object.
@@ -145,7 +145,7 @@ SparseSummarizedExperiment instances are constructed using the
 \section{Accessors}{
 
 All the accessors documented in
-\code{?}\link[SummarizedExperiment]{SummarizedExperiment0} are also
+\code{?}\link[SummarizedExperiment]{SummarizedExperiment} are also
 applicable to SparseSummarizedExperiment objects. In addition, when \code{x}
 is a SparseSummarizedExperiment objects, the following accessors are
 applicable.
@@ -181,8 +181,8 @@ applicable.
 \section{Subsetting}{
 
 Subsetting behaviour is inherited from methods defined for
-SummarizedExperiment0 methods; see
-\code{?}\link[SummarizedExperiment]{SummarizedExperiment0}.
+SummarizedExperiment methods; see
+\code{?}\link[SummarizedExperiment]{SummarizedExperiment}.
 }
 
 \section{Combining}{
@@ -197,14 +197,14 @@ SparseSummarizedExperiment objects can be combined in three different ways.
 }
 
 \code{cbind()} and \code{rbind()} behaviour is inherited from methods
-defined for SummarizedExperiment0 methods; see
-\code{?}\link[SummarizedExperiment]{SummarizedExperiment0}. The
+defined for SummarizedExperiment methods; see
+\code{?}\link[SummarizedExperiment]{SummarizedExperiment}. The
 \code{sparseAssays} slot is appropriately handled in a \code{cbind()} or
 \code{rbind()}; see \code{\link{cbind,SimpleListSparseAssays-method}} and
 \code{\link{rbind,SimpleListSparseAssays-method}} for details.
 Additionally, the \pkg{SparseSummarizedExperiment} defines
 \code{\link[BiocGenerics]{combine}} methods for both
-\link[SummarizedExperiment]{SummarizedExperiment0} and
+\link[SummarizedExperiment]{SummarizedExperiment} and
 SparseSummarizedExperiment objects. The \code{sparseAssays} slot is
 appropriately handled in a \code{combine()}; see
 \code{\link{combine,SimpleListSparseAssays,SimpleListSparseAssays-method}}
@@ -215,12 +215,12 @@ for details.
 
 Coercion from a SparseSummarizedExperiment (resp.
 \link{RangedSparseSummarizedExperiment}) to a
-\link[SummarizedExperiment]{SummarizedExperiment0} (resp.
+\link[SummarizedExperiment]{SummarizedExperiment} (resp.
 \link[SummarizedExperiment]{RangedSummarizedExperiment}) can be done in one
 of two ways. The first method uses implicit coercion, e.g., if \code{x} is a
 SparseSummarizedExperiment object then
-\code{as(x, "SparseSummarizedExperiment0")} coerces it to a
-\link[SummarizedExperiment]{SummarizedExperiment0} \strong{but drops the
+\code{as(x, "SparseSummarizedExperiment")} coerces it to a
+\link[SummarizedExperiment]{SummarizedExperiment} \strong{but drops the
 \code{sparseAssays} slot}. The second method uses an
 explicit coercion to coerce the \link{SparseAssays} object in
 \code{sparseAssays} slot into a \link{Assays} object and adds it to the
@@ -234,7 +234,7 @@ This section contains advanced material meant for package developers.
 The SparseSummarizedExperiment/RangedSparseSummarizedExperiment class
 hierarchy is as follows:
 \preformatted{
-SummarizedExperiment0
+SummarizedExperiment
 |-- RangedSummarizedExperiment
 |   |-- RangedSparseSummarizedExperiment
 |-- SparseSummarizedExperiment
@@ -298,7 +298,7 @@ sparseAssay(sse)
 # In general its a bad idea to use densify = TRUE, but these data are small
 # enough not to worry.
 # TODO: Should I use sparseAssay() or sparseAssays() in the example; check
-#       out SummarizedExperiment0 examples.
+#       out SummarizedExperiment examples.
 densify(sparseAssay(sse), 1, 1:2)[[1]]
 SAapply(sparseAssays(sse), function(x) x^2)
 \dontrun{
@@ -350,7 +350,7 @@ Peter Hickey, \email{peter.hickey@gmail.com}
 \seealso{
 \itemize{
  \item \link{RangedSparseSummarizedExperiment} objects.
- \item \link[SummarizedExperiment]{SummarizedExperiment0} objects in the
+ \item \link[SummarizedExperiment]{SummarizedExperiment} objects in the
    \pkg{SummarizedExperiment} package.
  \item \link{SparseAssays} and \link{SimpleListSparseAssays} objects.
 }

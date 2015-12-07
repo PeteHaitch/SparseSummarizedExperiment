@@ -1,14 +1,14 @@
 # Combining SummarizedExperiment objects
 Peter Hickey  
-20 October 2015  
+08 December 2015  
 
 
 
 # Motivation
 
-I often find myself with multiple `SE` objects (I'm using `SE` as a shorthand for the `SummarizedExperiment0` and `RangedSummarizedExeriment` classes), each with potentially non-distinct samples and potentially non-overlapping features/ranges. Currently, it is difficult to combine these objects; `rbind()` can only combine objects with the same samples but distinct features/ranges and `cbind()` can only combine objects with the same features/ranges but distinct samples. I think it would be useful to have a "combine" method for `SE` objects that handles the most general situation where each object has potentially non-distinct samples and potentially non-overlapping features/ranges.
+I often find myself with multiple `SE` objects (I'm using `SE` as a shorthand for the `SummarizedExperiment` and `RangedSummarizedExeriment` classes), each with potentially non-distinct samples and potentially non-overlapping features/ranges. Currently, it is difficult to combine these objects; `rbind()` can only combine objects with the same samples but distinct features/ranges and `cbind()` can only combine objects with the same features/ranges but distinct samples. I think it would be useful to have a "combine" method for `SE` objects that handles the most general situation where each object has potentially non-distinct samples and potentially non-overlapping features/ranges.
 
-__NOTE__: All `RangedSummarizedExperiment` objects are `SummarizedExperiment0` objects but the converse is not true.
+__NOTE__: All `RangedSummarizedExperiment` objects are `SummarizedExperiment` objects but the converse is not true.
 
 # Methods
 
@@ -17,7 +17,7 @@ My initial attempt was posted to [https://gist.github.com/PeteHaitch/8993b096cfa
 1. Provide a `combine()` method for each component of the `SE` object. This means I wrote: `combine,DataFrame,DataFrame-method` (for the `colData` and `elementMetadata` slots), `combine,GRanges,GRanges-method` and `combine,GRangesList,GRangesList-method` (for the `rowRanges` slot), and `combine,SimpleList,SimpleList-method` (for the `assays` slot). There is also a helper function `.combine.NAMES()` to combine the `NAMES` slot of a non-ranged `SE`.
 2. All `combine()` methods are initially designed to "combine" based on the `names`/`rownames`/`dimnames` of the objects. This follows the existing `combine,data.frame,data.frame-method` and `combine,matrix,matrix-method` from the _BiocGenerics_ package. 
 
-With respect to (2), in some cases I realised there were equivalent definitions that did not rely on these "names" that were faster, and other scenarios where it might be desirable not to rely on these "names". For example, in my experience, it is common for a `RangedSummarizedExperiment` to have `NULL` names, i.e. `identical(names(x), NULL)` is `TRUE` where `x` is a `RangedSummarizedExperiment` (note that `names(x)` calls `names(rowRanges(x))` and so it is the `rowRanges(x)` that commonly have `NULL` names). A consequence of this is that we cannot combine these `RangedSummarizedExperiment` objects based on "names" alone. However, there is an obvious way to construct meaningful `rownames` for these objects by a `findOverlaps()`-based naming scheme; this is implemented in `combine,SummarizedExperiment0,SummarizedExperiment0-method` for `RangedSummarizedExperiment` objects.
+With respect to (2), in some cases I realised there were equivalent definitions that did not rely on these "names" that were faster, and other scenarios where it might be desirable not to rely on these "names". For example, in my experience, it is common for a `RangedSummarizedExperiment` to have `NULL` names, i.e. `identical(names(x), NULL)` is `TRUE` where `x` is a `RangedSummarizedExperiment` (note that `names(x)` calls `names(rowRanges(x))` and so it is the `rowRanges(x)` that commonly have `NULL` names). A consequence of this is that we cannot combine these `RangedSummarizedExperiment` objects based on "names" alone. However, there is an obvious way to construct meaningful `rownames` for these objects by a `findOverlaps()`-based naming scheme; this is implemented in `combine,SummarizedExperiment,SummarizedExperiment-method` for `RangedSummarizedExperiment` objects.
 
 Comments on all aspects of the implementation are appreciated. I have highlighted particular concerns with __RFC__.
 
@@ -26,6 +26,7 @@ Comments on all aspects of the implementation are appreciated. I have highlighte
 
 ```r
 suppressPackageStartupMessages(library(SummarizedExperiment))
+#> Warning: multiple methods tables found for 'as.vector'
 ```
 
 ## `combine,DataFrame,DataFrame-method`
@@ -260,9 +261,9 @@ setMethod("combine", c("SimpleList", "SimpleList"),
 __RFC__: Should this be `combine,List,List-method` or might this make it too general?
 
 
-## `combine,SummarizedExperiment0,SummarizedExperiment0-method`
+## `combine,SummarizedExperiment,SummarizedExperiment-method`
 
-This applies the `combine` to each slot of the `SummarizedExperiment0` objects. There is a helper function, `.combine.NAMES()` to combine the `NAMES` slot of non-ranged `SummarizedExperiment0` objects; this isn't a method since the `NAMES` slot is `NULL` or a `character()` object rather than a formal S4 class.
+This applies the `combine` to each slot of the `SummarizedExperiment` objects. There is a helper function, `.combine.NAMES()` to combine the `NAMES` slot of non-ranged `SummarizedExperiment` objects; this isn't a method since the `NAMES` slot is `NULL` or a `character()` object rather than a formal S4 class.
 
 
 ```r
@@ -272,7 +273,7 @@ This applies the `combine` to each slot of the `SummarizedExperiment0` objects. 
 }
 ```
 
-There are two strategies available (let `x` and `y` be `SummarizedExperiment0` objects in what follows):
+There are two strategies available (let `x` and `y` be `SummarizedExperiment` objects in what follows):
 
 1. Rely on `dimnames(x)` and `dimnames(y)` to identify "shared" features/ranges and samples.
 2. If `x` and `y` are `RangedSummarizedExperiment`-based objects, then ignore `rownames(x)` and `rownames(y)` and simply identify unique ranges of a combined `x` with `y`. This still requires that both `x` and `y` have `colnames`. Currently, this will not work for a `RangedSummarizedExperiment`-based object with `GRangesList`-based `rowRanges` (this would require a version of `combine,GRangesList,GRangesList-method` that doesn't rely on `names`).
@@ -281,7 +282,7 @@ Each option has limitations.
 
 Option 1 is restrictive since it requires `dimnames(x)` and `dimnames(y)` to be non-`NULL`, but matches the behaviour of other `combine` methods that are defined in terms of the `names`/`rownames`/`dimnames` of the objects.
 
-Option 2 will work on wider class of `RangedSummarizedExperiments` objects since the `names` of such objects will commonly be `NULL` (it will not work for `RangedSummarizedExperiment` objects with `GRangesList`-derived `rowRanges` slots since the `combine` method only ).  This option is generally slower. The `names` of the "shared" elements are taken from `x` in the returned object. Option 2 will effectively use Option 1 for non-ranged `SummarizedExperiment0`-based objects.
+Option 2 will work on wider class of `RangedSummarizedExperiments` objects since the `names` of such objects will commonly be `NULL` (it will not work for `RangedSummarizedExperiment` objects with `GRangesList`-derived `rowRanges` slots since the `combine` method only ).  This option is generally slower. The `names` of the "shared" elements are taken from `x` in the returned object. Option 2 will effectively use Option 1 for non-ranged `SummarizedExperiment`-based objects.
 
 I prefer option 2 since it is more general for a common use case.
 
@@ -291,7 +292,7 @@ __RFC__: Which option is preferrable?
 
 
 ```r
-setMethod("combine", c("SummarizedExperiment0", "SummarizedExperiment0"),
+setMethod("combine", c("SummarizedExperiment", "SummarizedExperiment"),
           function(x, y, ...) {
 
             if (any(dim(y) == 0L)) {
@@ -302,11 +303,11 @@ setMethod("combine", c("SummarizedExperiment0", "SummarizedExperiment0"),
 
             # Give a helpful error message if the user tries to combine a
             # RangedSummarizedExperiment object to an non-ranged
-            # SummarizedExperiment0.
+            # SummarizedExperiment.
             # NOTE: Can't simply check if object is SumamrizedExperiment0
             #       object since all RangedSummarizedExperiments are
-            #       SummarizedExperiment0 objects but not all
-            #       SummarizedExperiment0 objects are
+            #       SummarizedExperiment objects but not all
+            #       SummarizedExperiment objects are
             #       RangedSummarizedExperiment objects.
             if ((is(x, "RangedSummarizedExperiment") &&
                  !is(y, "RangedSummarizedExperiment")) ||
@@ -356,7 +357,7 @@ setMethod("combine", c("SummarizedExperiment0", "SummarizedExperiment0"),
               elementMetadata <- combine(mcols(x, use.names = TRUE),
                                          mcols(y, use.names = TRUE))
               # NOTE: Once combined, drop rownames of elementMetadata since these 
-              #       are given by rownames(z) when z is a SummarizedExperiment0 
+              #       are given by rownames(z) when z is a SummarizedExperiment 
               #       object.
               rownames(elementMetadata) <- NULL
             }
@@ -387,7 +388,7 @@ setMethod("combine", c("SummarizedExperiment0", "SummarizedExperiment0"),
 
 
 ```r
-setMethod("combine", c("SummarizedExperiment0", "SummarizedExperiment0"),
+setMethod("combine", c("SummarizedExperiment", "SummarizedExperiment"),
           function(x, y, ...) {
 
             if (any(dim(y) == 0L)) {
@@ -398,11 +399,11 @@ setMethod("combine", c("SummarizedExperiment0", "SummarizedExperiment0"),
             
             # Give a helpful error message if the user tries to combine a
             # RangedSummarizedExperiment object to an non-ranged
-            # SummarizedExperiment0.
+            # SummarizedExperiment.
             # NOTE: Can't simply check if object is SumamrizedExperiment0
             #       object since all RangedSummarizedExperiments are
-            #       SummarizedExperiment0 objects but not all
-            #       SummarizedExperiment0 objects are
+            #       SummarizedExperiment objects but not all
+            #       SummarizedExperiment objects are
             #       RangedSummarizedExperiment objects.
             if ((is(x, "RangedSummarizedExperiment") &&
                  !is(y, "RangedSummarizedExperiment")) ||
@@ -484,7 +485,7 @@ setMethod("combine", c("SummarizedExperiment0", "SummarizedExperiment0"),
               elementMetadata <- combine(mcols(x, use.names = TRUE),
                                          mcols(y, use.names = TRUE))
               # NOTE: Once combined, drop rownames of elementMetadata since these 
-              #       are given by rownames(z) when z is a SummarizedExperiment0 
+              #       are given by rownames(z) when z is a SummarizedExperiment 
               #       object.
               rownames(elementMetadata) <- NULL
             }
@@ -513,15 +514,15 @@ setMethod("combine", c("SummarizedExperiment0", "SummarizedExperiment0"),
 #> [1] "combine"
 ```
 
-__RFC__: Should the check of whether the user is trying to combine a non-ranged `SummarizedExperiment0`-based object with a `RangedSummarizedExeriment`-based object be the more restrictive `if(class(x) != class(y)) stop()` (this is what `combine,eSet,eSet-method` uses)?
+__RFC__: Should the check of whether the user is trying to combine a non-ranged `SummarizedExperiment`-based object with a `RangedSummarizedExeriment`-based object be the more restrictive `if(class(x) != class(y)) stop()` (this is what `combine,eSet,eSet-method` uses)?
 
 __RFC__: Are non-`matrix` objects allowed as elements in an `Assays` object? If so, will need a `combine()` method for each of these allowed classes.
 
-__RFC__: `metadata` from all objects are combined into a list with no name checking (following `cbind,SummarizedExperiment0-method` and `rbind,SummarizedExperiment0-method`). Does this seem reasonable?
+__RFC__: `metadata` from all objects are combined into a list with no name checking (following `cbind,SummarizedExperiment-method` and `rbind,SummarizedExperiment-method`). Does this seem reasonable?
 
 __RFC__: If `nrow(x)` (resp. `nrow(y)`) is zero (i.e. no features/ranges in that object) or `ncol(x)` (resp. `ncol(y)`) is zero (i.e. no samples in that object) then `y` (resp. `x`) is returned (or `x` if the condition occurs for both samples); does this seem reasonable? In particular, the zero-column object could have features/ranges that the user wants to add to the other object (or the zero-row object could have samples that the user wants to add to the other object). How to handle these scenarios?
 
-__RFC__: I thought that `colnames` were a requirement of a `SummarizedExperiment0` object, but this is not true, at least according to the validity method (the `SummarizedExperiment()` constructor __does__ enforce non-`NULL` `colnames`). Is this a bug in the validity method?
+__RFC__: I thought that `colnames` were a requirement of a `SummarizedExperiment` object, but this is not true, at least according to the validity method (the `SummarizedExperiment()` constructor __does__ enforce non-`NULL` `colnames`). Is this a bug in the validity method?
 
 
 ```r
@@ -532,7 +533,7 @@ rse
 #> metadata(0):
 #> assays(1): counts
 #> rownames: NULL
-#> rowRanges metadata column names(1): feature_id
+#> rowData names(1): feature_id
 #> colnames(6): A B ... E F
 #> colData names(1): Treatment
 validObject(rse)
@@ -545,7 +546,7 @@ rse
 #> metadata(0):
 #> assays(1): counts
 #> rownames: NULL
-#> rowRanges metadata column names(1): feature_id
+#> rowData names(1): feature_id
 #> colnames: NULL
 #> colData names(1): Treatment
 validObject(rse)
@@ -589,7 +590,7 @@ __RFC__: Both Option 1 and 2 will return an error if either `x` or `y` contains 
 
 ## Discuss the signature of the `combine` generic
 
-My understanding is that the `combine()` generic defined in _BiocGenerics_ does not allow for additional arguments (at least, additional arguments that are not objects to be "combined"). It might be useful to be able to pass `ignore.mcols` to `combine,GRanges,GRanges-method`, `combine,GRangesList,GRangesList`, and `combine,SummarizedExperiment0,SummarizedExperiment0-method`. I believe this would require the `combine()` generic to be redefined.
+My understanding is that the `combine()` generic defined in _BiocGenerics_ does not allow for additional arguments (at least, additional arguments that are not objects to be "combined"). It might be useful to be able to pass `ignore.mcols` to `combine,GRanges,GRanges-method`, `combine,GRangesList,GRangesList`, and `combine,SummarizedExperiment,SummarizedExperiment-method`. I believe this would require the `combine()` generic to be redefined.
 
 # Examples
 
@@ -602,40 +603,40 @@ I use data from the `SummarizedExperiment::SummarizedExeriment` and `SummarizedE
 set.seed(667)
 ```
 
-## `SummarizedExperiment0`
+## `SummarizedExperiment`
 
 
 ```r
 # Get some example data
-example("SummarizedExperiment0", echo = FALSE)
+example("SummarizedExperiment", echo = FALSE)
 
-# NOTE: SummarizedExperiment0 objects must have non-NULL NAMES slot in order 
+# NOTE: SummarizedExperiment objects must have non-NULL NAMES slot in order 
 #       to combine
-names(se0) <- as.character(1:200)
+names(se) <- as.character(1:200)
 
 # Create data to combine
-A <- se0[1:4, "A"]
-B <- se0[3:6, "B"]
-C <- se0[5:8, "C"]
-BC <- se0[c(4:7, 9), c("B", "C")]
-D <- se0[7:10, "D"]
-E <- se0[9:12, "E"]
-F <- se0[11:14, "F"]
+A <- se[1:4, "A"]
+B <- se[3:6, "B"]
+C <- se[5:8, "C"]
+BC <- se[c(4:7, 9), c("B", "C")]
+D <- se[7:10, "D"]
+E <- se[9:12, "E"]
+F <- se[11:14, "F"]
 
 # Sanity check: identical to cbind when given compatible arguments
-all.equal(cbind(se0[, 1], se0[, 2], se0[, 3]),
-          combine(se0[, 1], se0[, 2], se0[, 3]))
+all.equal(cbind(se[, 1], se[, 2], se[, 3]),
+          combine(se[, 1], se[, 2], se[, 3]))
 #> [1] TRUE
 
 # Combining objects with non-overlapping features and non-distinct samples
 z <- combine(A, B, C, BC)
 z
-#> class: SummarizedExperiment0 
+#> class: RangedSummarizedExperiment 
 #> dim: 9 3 
 #> metadata(0):
 #> assays(1): counts
 #> rownames(9): 1 2 ... 8 9
-#> metadata column names(0):
+#> rowData names(1): feature_id
 #> colnames(3): A B C
 #> colData names(1): Treatment
 assay(z)
@@ -663,24 +664,24 @@ assay(z)
 #> 5       NA 7.065869
 #> 6       NA 9.552036
 mcols(z)
-#> DataFrame with 6 rows and 1 column
-#>           J
-#>   <integer>
-#> 1         1
-#> 2         2
-#> 3         3
-#> 4         4
-#> 5        NA
-#> 6        NA
+#> DataFrame with 6 rows and 2 columns
+#>           J  feature_id
+#>   <integer> <character>
+#> 1         1          NA
+#> 2         2          NA
+#> 3         3       ID003
+#> 4         4       ID004
+#> 5        NA       ID005
+#> 6        NA       ID006
 
 # "Internal duplicates" are not allowed
-x <- se0[1:2, 1]
+x <- se[1:2, 1]
 # Create an "internal duplicate" feature name
 names(x)[2] <- names(x)[1]
-y <- se0[10, 2]
+y <- se[10, 2]
 # Expect error
 combine(x, y)
-#> Error in combine(x, y): Cannot combine 'SummarizedExperiment0' with internal duplicate 'names'
+#> Error in `rownames<-`(`*tmp*`, value = c("1", "1")): duplicate rownames not allowed
 ```
 
 ## `RangedSummarizedExperiment`
@@ -712,20 +713,20 @@ z
 #> metadata(0):
 #> assays(1): counts
 #> rownames: NULL
-#> rowRanges metadata column names(1): feature_id
+#> rowData names(1): feature_id
 #> colnames(3): A B C
 #> colData names(1): Treatment
 assay(z)
 #>              A        B        C
-#>  [1,] 9.283199       NA       NA
-#>  [2,] 8.786685       NA       NA
-#>  [3,] 9.412699 8.916581       NA
-#>  [4,] 9.851115 9.261356 9.770541
-#>  [5,]       NA 9.248532 7.105869
-#>  [6,]       NA 9.225918 8.958373
-#>  [7,]       NA 8.642004 8.422512
-#>  [8,]       NA       NA 8.675099
-#>  [9,]       NA 8.332671 9.868225
+#>  [1,] 8.257307       NA       NA
+#>  [2,] 6.378278       NA       NA
+#>  [3,] 9.686589 9.883666       NA
+#>  [4,] 9.770541 8.775756 9.585409
+#>  [5,]       NA 6.651706 8.814927
+#>  [6,]       NA 8.819111 8.129262
+#>  [7,]       NA 6.344939 8.816540
+#>  [8,]       NA       NA 9.321034
+#>  [9,]       NA 9.425177 9.486555
 
 # Incomplete elementMetadata are elegantly handled
 a <- A
@@ -734,12 +735,12 @@ mcols(a) <- DataFrame(J = seq_len(nrow(a)))
 z <- combine(a, B)
 assay(z)
 #>             a        B
-#> [1,] 9.283199       NA
-#> [2,] 8.786685       NA
-#> [3,] 9.412699 8.916581
-#> [4,] 9.851115 9.261356
-#> [5,]       NA 9.248532
-#> [6,]       NA 9.225918
+#> [1,] 8.257307       NA
+#> [2,] 6.378278       NA
+#> [3,] 9.686589 9.883666
+#> [4,] 9.770541 8.775756
+#> [5,]       NA 6.651706
+#> [6,]       NA 8.819111
 mcols(z)
 #> DataFrame with 6 rows and 2 columns
 #>           J  feature_id
@@ -768,12 +769,12 @@ rownames(z)
 #> NULL
 assay(z)
 #>             A        B
-#> [1,] 9.283199       NA
-#> [2,] 8.786685       NA
-#> [3,] 9.412699 8.916581
-#> [4,] 9.851115 9.261356
-#> [5,]       NA 9.248532
-#> [6,]       NA 9.225918
+#> [1,] 8.257307       NA
+#> [2,] 6.378278       NA
+#> [3,] 9.686589 9.883666
+#> [4,] 9.770541 8.775756
+#> [5,]       NA 6.651706
+#> [6,]       NA 8.819111
 
 # "Shared" ranges have names taken from 'x'
 names(A) <- letters[seq_along(A)]
@@ -783,12 +784,12 @@ rownames(zz)
 #> [1] "a" "b" "c" "d" "C" "D"
 assay(zz)
 #>          A        B
-#> a 9.283199       NA
-#> b 8.786685       NA
-#> c 9.412699 8.916581
-#> d 9.851115 9.261356
-#> C       NA 9.248532
-#> D       NA 9.225918
+#> a 8.257307       NA
+#> b 6.378278       NA
+#> c 9.686589 9.883666
+#> d 9.770541 8.775756
+#> C       NA 6.651706
+#> D       NA 8.819111
 
 # elementMetadata are still combined even though rownames differ for "shared"
 # ranges
@@ -798,12 +799,12 @@ rownames(zzz)
 #> [1] "a" "b" "c" "d" "C" "D"
 assay(zzz)
 #>          A        B
-#> a 9.283199       NA
-#> b 8.786685       NA
-#> c 9.412699 8.916581
-#> d 9.851115 9.261356
-#> C       NA 9.248532
-#> D       NA 9.225918
+#> a 8.257307       NA
+#> b 6.378278       NA
+#> c 9.686589 9.883666
+#> d 9.770541 8.775756
+#> C       NA 6.651706
+#> D       NA 8.819111
 
 # Can end up with an object with "incomplete" rownames
 rownames(A) <- NULL
@@ -812,19 +813,19 @@ rownames(zzzz)
 #> [1] ""  ""  ""  ""  "C" "D"
 assay(zzzz)
 #>          A        B
-#>   9.283199       NA
-#>   8.786685       NA
-#>   9.412699 8.916581
-#>   9.851115 9.261356
-#> C       NA 9.248532
-#> D       NA 9.225918
+#>   8.257307       NA
+#>   6.378278       NA
+#>   9.686589 9.883666
+#>   9.770541 8.775756
+#> C       NA 6.651706
+#> D       NA 8.819111
 ```
 
 # Summary
 
 The `combine()` method for `SE` objects addresses the aim of being able to combine multiple `SE` objects when they have potentially different features/ranges and potentially different samples. Furthermore, I have also defined `combine,DataFrame,DataFrame-method`, `combine,GRanges,GRanges-method`, `combine,GRangesList,GRangesList-method`, and `combine,SimpleList,SimpleList-method`.
 
-The chief limitation is an incomplete `combine,GRangesList,GRangesList-method`; we need to be able to appropriately "combine" `GRangesList` objects when `names` are `NULL`. Without this, the `combine,SummarizedExperiment0,SummarizedExperiment0-method` is also incomplete.
+The chief limitation is an incomplete `combine,GRangesList,GRangesList-method`; we need to be able to appropriately "combine" `GRangesList` objects when `names` are `NULL`. Without this, the `combine,SummarizedExperiment,SummarizedExperiment-method` is also incomplete.
 
 It is perhaps worth noting that `identical(combine(x, y), combine(y, x))` is generally `FALSE`.
 
@@ -841,56 +842,56 @@ It is perhaps worth noting that `identical(combine(x, y), combine(y, x))` is gen
 devtools::session_info()
 #> Session info --------------------------------------------------------------
 #>  setting  value                                             
-#>  version  R Under development (unstable) (2015-10-13 r69511)
+#>  version  R Under development (unstable) (2015-11-28 r69714)
 #>  system   x86_64, darwin13.4.0                              
 #>  ui       X11                                               
 #>  language (EN)                                              
 #>  collate  en_AU.UTF-8                                       
 #>  tz       Australia/Melbourne                               
-#>  date     2015-10-20
+#>  date     2015-12-08
 #> Packages ------------------------------------------------------------------
 #>  package              * version date      
-#>  Biobase              * 2.31.0  2015-10-14
-#>  BiocGenerics         * 0.17.0  2015-10-14
+#>  Biobase              * 2.31.1  2015-12-06
+#>  BiocGenerics         * 0.17.2  2015-12-06
 #>  devtools               1.9.1   2015-09-11
 #>  digest                 0.6.8   2014-12-31
 #>  evaluate               0.8     2015-09-18
 #>  formatR                1.2.1   2015-09-18
-#>  GenomeInfoDb         * 1.7.0   2015-10-14
-#>  GenomicRanges        * 1.21.32 2015-10-14
+#>  GenomeInfoDb         * 1.7.3   2015-11-03
+#>  GenomicRanges        * 1.23.4  2015-11-25
 #>  htmltools              0.2.6   2014-09-08
-#>  IRanges              * 2.4.0   2015-10-14
+#>  IRanges              * 2.5.10  2015-12-07
 #>  knitr                  1.11    2015-08-14
 #>  magrittr               1.5     2014-11-22
 #>  memoise                0.2.1   2014-04-22
 #>  rmarkdown              0.8.1   2015-10-10
-#>  S4Vectors            * 0.9.1   2015-10-17
-#>  stringi                0.5-5   2015-06-29
+#>  S4Vectors            * 0.9.12  2015-12-07
+#>  stringi                1.0-1   2015-10-22
 #>  stringr                1.0.0   2015-04-30
-#>  SummarizedExperiment * 1.1.0   2015-10-14
-#>  XVector                0.11.0  2015-10-14
+#>  SummarizedExperiment * 1.1.6   2015-12-07
+#>  XVector                0.11.1  2015-11-19
 #>  yaml                   2.1.13  2014-06-12
 #>  zlibbioc               1.17.0  2015-10-14
-#>  source                                      
-#>  Bioconductor                                
-#>  Bioconductor                                
-#>  CRAN (R 3.3.0)                              
-#>  CRAN (R 3.3.0)                              
-#>  CRAN (R 3.3.0)                              
-#>  CRAN (R 3.3.0)                              
-#>  Bioconductor                                
-#>  Bioconductor                                
-#>  CRAN (R 3.3.0)                              
-#>  Github (Bioconductor-mirror/IRanges@b0b5fff)
-#>  CRAN (R 3.3.0)                              
-#>  CRAN (R 3.3.0)                              
-#>  CRAN (R 3.3.0)                              
-#>  CRAN (R 3.3.0)                              
-#>  Bioconductor                                
-#>  CRAN (R 3.3.0)                              
-#>  CRAN (R 3.3.0)                              
-#>  Bioconductor                                
-#>  Bioconductor                                
-#>  CRAN (R 3.3.0)                              
+#>  source                                                   
+#>  Bioconductor                                             
+#>  Bioconductor                                             
+#>  CRAN (R 3.3.0)                                           
+#>  CRAN (R 3.3.0)                                           
+#>  CRAN (R 3.3.0)                                           
+#>  CRAN (R 3.3.0)                                           
+#>  Bioconductor                                             
+#>  Bioconductor                                             
+#>  CRAN (R 3.3.0)                                           
+#>  Github (Bioconductor-mirror/IRanges@c935622)             
+#>  CRAN (R 3.3.0)                                           
+#>  CRAN (R 3.3.0)                                           
+#>  CRAN (R 3.3.0)                                           
+#>  CRAN (R 3.3.0)                                           
+#>  Github (Bioconductor-mirror/S4Vectors@800a65a)           
+#>  CRAN (R 3.3.0)                                           
+#>  CRAN (R 3.3.0)                                           
+#>  Github (Bioconductor-mirror/SummarizedExperiment@19b652b)
+#>  Bioconductor                                             
+#>  CRAN (R 3.3.0)                                           
 #>  Bioconductor
 ```

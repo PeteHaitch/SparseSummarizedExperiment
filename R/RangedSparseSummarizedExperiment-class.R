@@ -60,7 +60,7 @@ NULL
 #' @seealso
 #' \itemize{
 #'  \item \link{SparseSummarizedExperiment} objects.
-#'  \item \link[SummarizedExperiment]{SummarizedExperiment0} objects in the
+#'  \item \link[SummarizedExperiment]{SummarizedExperiment} objects in the
 #'    \pkg{SummarizedExperiment} package.
 #'  \item \link{SparseAssays} and \link{SimpleListSparseAssays} objects.
 #' }

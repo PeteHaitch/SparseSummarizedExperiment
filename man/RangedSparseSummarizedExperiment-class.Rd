@@ -33,7 +33,7 @@ SparseSummarizedExperiment(sparseAssays, ...)
     RangedSummarizedExperiment. The length of the \link{GRanges} or the
     \link{GRangesList} must equal the number of rows of the matrices in
     \code{assays}. If \code{rowRanges} is missing, a
-    \link{SummarizedExperiment0} instance is returned.}
+    \link{SummarizedExperiment} instance is returned.}
 
 \item{colData}{An optional \link{DataFrame} describing the
     samples. Row names, if present, become the column names of the
@@ -207,7 +207,7 @@ Peter Hickey, \email{peter.hickey@gmail.com}
 \seealso{
 \itemize{
  \item \link{SparseSummarizedExperiment} objects.
- \item \link[SummarizedExperiment]{SummarizedExperiment0} objects in the
+ \item \link[SummarizedExperiment]{SummarizedExperiment} objects in the
    \pkg{SummarizedExperiment} package.
  \item \link{SparseAssays} and \link{SimpleListSparseAssays} objects.
 }

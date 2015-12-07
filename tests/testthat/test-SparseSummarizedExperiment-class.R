@@ -1,7 +1,7 @@
 context("SparseSummarizedExperiment class")
 
 test_that("SparseSummarizedExperiment class definition is correct", {
-  expect_true(extends("SparseSummarizedExperiment", "SummarizedExperiment0"))
+  expect_true(extends("SparseSummarizedExperiment", "SummarizedExperiment"))
   expect_identical(slotNames("SparseSummarizedExperiment"),
                    c("sparseAssays", "colData", "assays", "NAMES",
                      "elementMetadata", "metadata"))
@@ -51,14 +51,14 @@ test_that("makeSEFromSSE works", {
   # TODO: RSE to RSSE coercion (should go in RSSE tests file)
 })
 
-test_that("Implicit coercion from SSE to SE0 works", {
-  se0 <- as(sse, "SummarizedExperiment0")
+test_that("Implicit coercion from SSE to SE works", {
+  se <- as(sse, "SummarizedExperiment")
   # Check all slots except sparseAssays, which is dropped in the coercion
   slot_names <- slotNames(sse)
   slot_names <- grep("sparseAssays", slot_names, value = TRUE, invert = TRUE)
   expect_true(all(sapply(slot_names, function(sn, x, y) {
     identical(slot(x, sn), slot(y, sn))
-  }, x = sse, y = se0)))
+  }, x = sse, y = se)))
 })
 
 test_that("Implicit coercion from SSE to RSE works", {
