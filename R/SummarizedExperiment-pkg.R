@@ -60,28 +60,29 @@
 #' @examples
 #' nrows <- 200; ncols <- 6
 #' counts <- matrix(runif(nrows * ncols, 1, 1e4), nrows)
-#' colData <- DataFrame(Treatment=rep(c("ChIP", "Input"), 3),
-#'                      row.names=LETTERS[1:6])
-#' se <- SummarizedExperiment(assays=SimpleList(counts=counts),
-#'                             colData=colData)
+#' colData <- DataFrame(Treatment = rep(c("ChIP", "Input"), 3),
+#'                      row.names = LETTERS[1:6])
+#' se <- SummarizedExperiment(assays = SimpleList(counts = counts),
+#'                             colData = colData)
 #' names(se) <- paste0("f", 1:200)
 #' x <- se[1:150, 1:4]
 #' y <- se[30:170, 2:6]
 #' combine(x, y)
 #' rowRanges <- GRanges(rep(c("chr1", "chr2"), c(50, 150)),
-#'                      IRanges(floor(runif(200, 1e5, 1e6)), width=100),
-#'                      strand=sample(c("+", "-"), 200, TRUE),
-#'                      feature_id=sprintf("ID%03d", 1:200))
-#' rse <- unname(se)
+#'                      IRanges(floor(runif(200, 1e5, 1e6)), width = 100),
+#'                      strand = sample(c("+", "-"), 200, TRUE),
+#'                      feature_id = sprintf("ID%03d", 1:200))
+#' rse <- se
+#' rownames(rse) <- NULL
 #' rowRanges(rse) <- rowRanges
-#' x <- se[1:150, 1:4]
-#' y <- se[30:170, 2:6]
+#' x <- rse[1:150, 1:4]
+#' y <- rse[30:170, 2:6]
 #' combine(x, y)
 #'
 #' @importFrom methods is setMethod
 #' @importFrom S4Vectors DataFrame
 #' @importMethodsFrom IRanges findOverlaps
-#' @importMethodsFrom S4Vectors mcols "mcols<-" metadata subjectHits
+#' @importMethodsFrom S4Vectors metadata subjectHits
 #'
 #' @export
 setMethod("combine", c("SummarizedExperiment", "SummarizedExperiment"),
@@ -109,106 +110,88 @@ setMethod("combine", c("SummarizedExperiment", "SummarizedExperiment"),
                    "' objects because only one of these has 'rowRanges'")
             }
 
+            # Check colnames are set
+            x_cn <- colnames(x)
+            y_cn <- colnames(y)
+            if (is.null(x_cn) || is.null(y_cn)) {
+              stop("Cannot combine '", class(x), "' objects with NULL ",
+                   "'colnames'")
+            }
+
+            # Cannot combine non-ranged SEs with NULL names
             if (!is(x, "RangedSummarizedExperiment") &&
                 (is.null(names(x)) || is.null(names(y)))) {
               stop("Cannot combine '", class(x), "' objects with NULL 'names'")
             }
 
-            # Check colnames are set
-            x_cn <- colnames(x)
-            y_cn <- colnames(y)
-            if (is.null(x_cn) || is.null(y_cn)) {
-              stop("Cannot combine '", class(x), "' objects with NULL 'colnames'")
+            # Cannot combine SummarizedExperiments with duplicate rows
+            if (is(x, "RangedSummarizedExperiment")) {
+              if (any(duplicated(x))) {
+                stop("'combine(x = \"", class(x), "\", y = \"", class(y),
+                     "\")'\n  any(duplicated(x)) must be FALSE")
+              }
+              if (any(duplicated(y))) {
+                stop("'combine(x = \"", class(x), "\", y = \"", class(y),
+                     "\")'\n  any(duplicated(y)) must be FALSE")
+              }
+            } else {
+              if (anyDuplicated(names(x))) {
+                stop("'combine(x = \"", class(x), "\", y = \"", class(y),
+                     "\")'\n  anyDuplicated(x) must be 0 (FALSE)")
+              }
+              if (anyDuplicated(names(y))) {
+                stop("'combine(x = \"", class(x), "\", y = \"", class(y),
+                     "\")'\n  anyDuplicated(y) must be 0 (FALSE)")
+              }
             }
 
             # Combine slots
             if (is(x, "RangedSummarizedExperiment")) {
-              # NOTE: This method doesn't work if rowRanges(x) or rowRanges(y)
+              # NOTE: combine,SummarizedExperiment,SummarizedExperiment-method
+              #       doesn't currently work if rowRanges(x) or rowRanges(y)
               #       are GRangesList-derived objects since the
               #       combine,GRangesList,GRangesList-method currently requires
-              #       that these have non-NULL names.
+              #       that these have non-NULL names, which the rowRanges of a
+              #       SummarizedExperiment rarely have.
               if (is(rowRanges(x), "GRangesList") ||
                   is(rowRanges(y), "GRangesList")) {
                 stop("Cannot combine '", class(x), "' objects with ",
                      "'GRangesList'-based 'rowRanges'")
               }
-              # NOTE: Can't handle internal duplicate ranges in x or y.
-              if (any(duplicated(rowRanges(x))) ||
-                  any(duplicated(rowRanges(y)))) {
-                stop("Cannot combine '", class(x), "' objects with internal ",
-                     "duplicate 'rowRanges'")
-              }
-              # NOTE: mcols(x) and mcols(y)
-              #       [i.e. mcols(rowRanges(x)) and mcols(rowRanges(y))]
-              #       are separately combined. This could be simplified
-              #       if combine,GRanges,GRanges-method had an
-              #       ignore.mcols argument.
-              x_em <- mcols(x, use.names = TRUE)
-              mcols(x) <- NULL
-              y_em <- mcols(y, use.names = TRUE)
-              mcols(y) <- NULL
-
-              # NOTE: names(rowRanges) are set to NULL
               rowRanges <- combine(rowRanges(x), rowRanges(y))
-              # Set rownames based on findOverlaps() of rowRanges()
-              # NOTE: We want ranges that are identical, hence
-              #       type = "equal". Also, we want to identify identical
-              #       zero-width ranges, hence minoverlap = 0
-              x_ol <- findOverlaps(rowRanges(x), rowRanges,
-                                   type = "equal", minoverlap = 0L)
-              rownames(x) <- subjectHits(x_ol)
-              rownames(x_em) <- subjectHits(x_ol)
-              y_ol <- findOverlaps(rowRanges(y), rowRanges,
-                                   type = "equal", minoverlap = 0L)
-              rownames(y) <- subjectHits(y_ol)
-              rownames(y_em) <- subjectHits(y_ol)
-              mcols(rowRanges) <- combine(x_em, y_em)
             } else {
-              if (anyDuplicated(names(x)) || anyDuplicated(names(y))) {
-                stop("Cannot combine '", class(x), "' objects with internal ",
-                     "duplicate 'names'")
-              }
-              NAMES <- .combine.NAMES(names(x), names(y))
+              rowData <- combine(rowData(x, use.names = TRUE),
+                                 rowData(y, use.names = TRUE))
             }
             colData <- combine(colData(x), colData(y))
-            assays <- Assays(combine(assays(x, withDimnames = TRUE),
-                                     assays(y, withDimnames = TRUE)))
-            if (is(x, "RangedSummarizedExperiment")) {
-              # NOTE: elementMetadata slot of a RangedSummarizedExperiment
-              #       object must be a zero-column DataFrame with nrow equal to
-              #       the length of the RangedSummarizedExperiment objects at
-              #       all times.
-              elementMetadata <- DataFrame()
-              elementMetadata@nrows <- length(rowRanges)
-            } else {
-              # NOTE: Using mcols() rather than slot(x, "elementMetadata") so
-              #       that the combined objects have rownames on which to combine.
-              elementMetadata <- combine(mcols(x, use.names = TRUE),
-                                         mcols(y, use.names = TRUE))
-              # NOTE: Once combined, drop rownames of elementMetadata since these
-              #       are given by rownames(z) when z is a SummarizedExperiment
-              #       object.
-              rownames(elementMetadata) <- NULL
+            # NOTE: If rownames(x) or rownames(y) is NULL then use
+            #       match()-based rownames.
+            x_assays <- assays(x, withDimnames = TRUE)
+            y_assays <- assays(y, withDimnames = TRUE)
+            if (is.null(rownames(x)) || is.null(rownames(y))) {
+              x_rn <- match(rowRanges(x), rowRanges)
+              y_rn <- match(rowRanges(y), rowRanges)
+              addRownames <- function(assay, rn) {
+                rownames(assay) <- rn
+                assay
+              }
+              x_assays <- endoapply(x_assays, addRownames, x_rn)
+              y_assays <- endoapply(y_assays, addRownames, y_rn)
             }
+            assays <- combine(x_assays, y_assays)
             metadata <- c(metadata(x), metadata(y))
 
             # Construct the combined SE
             if (is(x, "RangedSummarizedExperiment")) {
-              # NOTE: No need to update NAMES slot since it must be NULL in a
-              #       valid RangedSummarizedExperiment object.
-              BiocGenerics:::replaceSlots(x,
-                                          rowRanges = rowRanges,
-                                          colData = colData,
-                                          assays = assays,
-                                          elementMetadata = elementMetadata,
-                                          metadata = metadata)
+              SummarizedExperiment(assays = assays,
+                                   rowRanges = rowRanges,
+                                   colData = colData,
+                                   metadata = metadata)
             } else {
-              BiocGenerics:::replaceSlots(x,
-                                          colData = colData,
-                                          assays = assays,
-                                          NAMES = NAMES,
-                                          elementMetadata = elementMetadata,
-                                          metadata = metadata)
+              SummarizedExperiment(assays = assays,
+                                   rowData = rowData,
+                                   colData = colData,
+                                   metadata = metadata)
             }
           }
 )

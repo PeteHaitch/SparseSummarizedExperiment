@@ -1,8 +1,8 @@
 context("Functionality that probably belongs in the GenomicRanges package")
 
-test_that("combine,GRanges,GRanges-method is compatible with generic", {
+test_that("combine,GenomicRanges,GenomicRanges-method is compatible with generic", {
   generic <- getGeneric("combine")
-  method <- getMethod("combine", c("GRanges", "GRanges"))
+  method <- getMethod("combine", c("GenomicRanges", "GenomicRanges"))
   expect_identical(generic@signature, c("x", "y"))
   expect_identical(formals(generic@.Data), formals(method@.Data))
 })

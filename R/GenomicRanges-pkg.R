@@ -9,9 +9,12 @@
 ### GenomicRanges package. Therefore, the functionality in this file probably
 ### belongs in the GenomicRanges package.
 
+# TODO: Should this be a method defined for GRanges or GenomicRanges
+# TODO: Update docs - if both x and y are named then match on names, otherwise
+#       use match()
 #' Combining GRanges objects
 #'
-#' Combine multiple \link[GenomicRanges]{GRanges} objects using a union
+#' Combine multiple \link[GenomicRanges]{GenomicRanges} objects using a union
 #' strategy.
 #'
 #' @details Unlike other \code{combine} methods (e.g.,
@@ -38,9 +41,10 @@
 #' combine(x, y)
 #'
 #' @importFrom methods setMethod
+#' @importMethodsFrom S4Vectors mcols "mcols<-"
 #'
 #' @export
-setMethod("combine", c("GRanges", "GRanges"),
+setMethod("combine", c("GenomicRanges", "GenomicRanges"),
           function(x, y, ...) {
 
             if (length(y) == 0L) {
@@ -49,7 +53,51 @@ setMethod("combine", c("GRanges", "GRanges"),
               return(y)
             }
 
-            unique(c(x, y))
+            # NOTE: First combine the meat of the GenomicRanges object, i.e.,
+            #       everything except the mcols.
+            x_em <- mcols(x, use.names = FALSE)
+            y_em <- mcols(y, use.names = FALSE)
+            if (is.null(names(x)) || is.null(names(y))) {
+              # Use findOverlaps() based strategy to combine
+              if (!is.null(names(x))) {
+                warning("'combine(x = \"", class(x), "\", y = \"", class(y),
+                     "\")' ignoring 'names(x)' since 'names(y)' is NULL.")
+              }
+              if (!is.null(names(y))) {
+                warning("'combine(x = \"", class(x), "\", y = \"", class(y),
+                        "\")' ignoring 'names(y)' since 'names(x)' is NULL.")
+              }
+              # NOTE: The elementMetadata slot must be separately handled
+              #       because unique,GenomicRanges-method ignores this slot.
+              # NOTE: Don't use union(x, y) because it merges ranges.
+              z <- unique(c(x, y, ignore.mcols = TRUE))
+              rownames(x_em) <- match(x, z)
+              rownames(y_em) <- match(y, z)
+              tryCatch({
+                mcols(z) <- combine(x_em, y_em)
+              }, error = function(err) {
+                stop("\n'combine(x = \"", class(x), "\", y = \"", class(y),
+                     "\")'\n  'mcols(x)' and 'mcols(y)' are not compatible.")
+              })
+            } else {
+              mxy <- match(names(x), names(y))
+              myx <- match(names(y), names(x))
+              x_shared <- which(!is.na(mxy))
+              x_unique <- which(is.na(mxy))
+              y_shared <- which(!is.na(myx))
+              y_unique <- which(is.na(myx))
+              if (!identical(x[x_shared], y[y_shared])) {
+                stop("'combine(x = \"", class(x), "\", y = \"", class(y),
+                     "\")'\n  'names(x)' and 'names(y)' are not compatible.")
+              }
+              tryCatch({
+                z <- c(x, y[y_unique])
+              }, error = function(err) {
+                stop("\n'combine(x = \"", class(x), "\", y = \"", class(y),
+                     "\")'\n  'mcols(x)' and 'mcols(y)' are not compatible.")
+              })
+            }
+            z
           }
 )
 
