@@ -930,77 +930,27 @@ setReplaceMethod("[",
 ### Display.
 ###
 
-# NOTE: Based on show,SummarizedExperiment-method
-#' @importFrom methods is
-#' @importMethodsFrom S4Vectors mcols metadata
-#' @keywords internal
-.show.SSE <- function(object) {
-  selectSome <- S4Vectors:::selectSome
-  scat <- function(fmt, vals = character(), exdent = 2, ...) {
-    vals <- ifelse(nzchar(vals), vals, "''")
-    lbls <- paste(S4Vectors:::selectSome(vals), collapse = " ")
-    txt <- sprintf(fmt, length(vals), lbls)
-    cat(strwrap(txt, exdent = exdent, ...), sep = "\n")
-  }
-
-  cat("class:", class(object), "\n")
-  cat("dim:", dim(object), "\n")
-
-  # metadata()
-  expt <- names(metadata(object))
-  if (is.null(expt)) {
-    expt <- character(length(metadata(object)))
-  }
-  scat("metadata(%d): %s\n", expt)
-
-  # sparseAssays()
-  nms <- sparseAssayNames(object)
-  if (is.null(nms)) {
-    nms <- character(length(sparseAssays(object,
-                                         withDimnames = FALSE)))
-  }
-  scat("sparseAssays(%d): %s\n", nms)
-
-  # assays()
-  nms <- assayNames(object)
-  if (is.null(nms)) {
-    nms <- character(length(assays(object, withDimnames = FALSE)))
-  }
-  scat("assays(%d): %s\n", nms)
-
-  # rownames()
-  dimnames <- dimnames(object)
-  dlen <- sapply(dimnames, length)
-  if (dlen[[1]]) {
-    scat("rownames(%d): %s\n", dimnames[[1]])
-  } else {
-    scat("rownames: NULL\n")
-  }
-
-  # mcols()
-  mcolnames <- names(mcols(object))
-  fmt <- "metadata column names(%d): %s\n"
-  if (is(object, "RangedSummarizedExperiment")) {
-    fmt <- paste("rowRanges", fmt)
-  }
-  scat(fmt, mcolnames)
-
-  # colnames()
-  if (dlen[[2]]) {
-    scat("colnames(%d): %s\n", dimnames[[2]])
-  } else {
-    cat("colnames: NULL\n")
-  }
-
-  # colData()
-  scat("colData names(%d): %s\n", names(colData(object)))
-}
-
 #' @importFrom methods setMethod
 #'
 #' @export
 setMethod("show", "SparseSummarizedExperiment",
-          .show.SSE
+          function(object) {
+            callNextMethod()
+            # NOTE: scat() copied from show,SummarizedExperiment-method
+            scat <- function(fmt, vals = character(), exdent = 2, ...) {
+              vals <- ifelse(nzchar(vals), vals, "''")
+              lbls <- paste(S4Vectors:::selectSome(vals), collapse = " ")
+              txt <- sprintf(fmt, length(vals), lbls)
+              cat(strwrap(txt, exdent = exdent, ...), sep = "\n")
+            }
+            # sparseAssays()
+            nms <- sparseAssayNames(object)
+            if (is.null(nms)) {
+              nms <- character(length(sparseAssays(object,
+                                                   withDimnames = FALSE)))
+            }
+            scat("sparseAssays(%d): %s\n", nms)
+          }
 )
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
