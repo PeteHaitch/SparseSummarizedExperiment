@@ -8,25 +8,25 @@
 \S4method{combine}{GenomicRanges,GenomicRanges}(x, y, ...)
 }
 \arguments{
-\item{x}{A \link[GenomicRanges]{GRanges} object.}
+\item{x}{A \link[GenomicRanges]{GenomicRanges} object.}
 
-\item{y}{A \link[GenomicRanges]{GRanges} object.}
+\item{y}{A \link[GenomicRanges]{GenomicRanges} object.}
 
-\item{...}{One or more \link[GenomicRanges]{GRanges} objects.}
+\item{...}{One or more \link[GenomicRanges]{GenomicRanges} objects.}
 }
 \value{
-A \link[GenomicRanges]{GRanges} object.
+A \link[GenomicRanges]{GenomicRanges} object.
 }
 \description{
-Combine multiple \link[GenomicRanges]{GenomicRanges} objects using a union
-strategy.
+Combine multiple \link[GenomicRanges]{GenomicRanges} objects.
 }
 \details{
-Unlike other \code{combine} methods (e.g.,
-\code{\link[BiocGenerics]{combine,matrix,matrix-method}}), this does not
-make use of the \code{dimnames}/\code{names} of \code{x}, \code{y}, and
-\code{...}. In fact, the \code{names} are ignored entirely and the method
-effectively calls \code{unique(c(x, y, ...))}.
+If and only if all of \code{x}, \code{y}, and \code{...} have
+non-\code{NULL} \code{names()}, then objects are combined using these names.
+Otherwise, names are first created based on finding identical ranges (using
+\code{\link[S4Vectors]{findMatches}()}) and then the objects are combined
+using these names. All of \code{x}, \code{y}, and \code{...} must also have
+compatible \code{\link[S4Vectors]{mcols}()}.
 }
 \examples{
 x <- GRanges(seqnames = c("chr1", "chr2"),

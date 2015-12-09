@@ -1,8 +1,12 @@
 # Combining SummarizedExperiment objects
 Peter Hickey  
-08 December 2015  
+09 December 2015  
 
 
+
+# NOTE
+
+As of [11efea7](https://github.com/PeteHaitch/SparseSummarizedExperiment/commit/11efea7bd33ceb72506245bd64bc08a287485806), `combine,GRanges,GRanges-method` has been modified and generalised to `combine,GenomicRanges,GenomicRanges-method` and `combine,SummarizedExperiment,SummarizedExperiment-method` has been simplified. These changes are not yet reflected in the following.
 
 # Motivation
 
@@ -848,7 +852,7 @@ devtools::session_info()
 #>  language (EN)                                              
 #>  collate  en_AU.UTF-8                                       
 #>  tz       Australia/Melbourne                               
-#>  date     2015-12-08
+#>  date     2015-12-09
 #> Packages ------------------------------------------------------------------
 #>  package              * version date      
 #>  Biobase              * 2.31.1  2015-12-06
@@ -868,7 +872,7 @@ devtools::session_info()
 #>  S4Vectors            * 0.9.12  2015-12-07
 #>  stringi                1.0-1   2015-10-22
 #>  stringr                1.0.0   2015-04-30
-#>  SummarizedExperiment * 1.1.6   2015-12-07
+#>  SummarizedExperiment * 1.1.6   2015-12-09
 #>  XVector                0.11.1  2015-11-19
 #>  yaml                   2.1.13  2014-06-12
 #>  zlibbioc               1.17.0  2015-10-14
@@ -890,7 +894,7 @@ devtools::session_info()
 #>  Github (Bioconductor-mirror/S4Vectors@800a65a)           
 #>  CRAN (R 3.3.0)                                           
 #>  CRAN (R 3.3.0)                                           
-#>  Github (Bioconductor-mirror/SummarizedExperiment@19b652b)
+#>  Github (Bioconductor-mirror/SummarizedExperiment@c3de85c)
 #>  Bioconductor                                             
 #>  CRAN (R 3.3.0)                                           
 #>  Bioconductor

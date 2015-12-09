@@ -1,7 +1,7 @@
 ---
 title: "Combining SummarizedExperiment objects"
 author: "Peter Hickey"
-date: "08 December 2015"
+date: "09 December 2015"
 output: 
   html_document: 
     keep_md: yes
@@ -10,6 +10,10 @@ output:
 ```{r comment_char, echo = FALSE}
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
+
+# NOTE
+
+As of [11efea7](https://github.com/PeteHaitch/SparseSummarizedExperiment/commit/11efea7bd33ceb72506245bd64bc08a287485806), `combine,GRanges,GRanges-method` has been modified and generalised to `combine,GenomicRanges,GenomicRanges-method` and `combine,SummarizedExperiment,SummarizedExperiment-method` has been simplified. These changes are not yet reflected in the following.
 
 # Motivation
 
