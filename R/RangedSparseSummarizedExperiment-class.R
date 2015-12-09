@@ -110,7 +110,7 @@ NULL
 #' densify(sparseAssay(rsse), 1, 1:2)[[1]]
 #'
 #' rowRanges(rsse)
-#' mcols(rsse)  # same as mcols(rowRanges(rsse))
+#' rowData(rsse)  # same as 'mcols(rowRanges(rsse))'
 #'
 #' rsse[, rsse$Genotype == "WT"]
 #'
@@ -170,7 +170,7 @@ NULL
 #' stopifnot(identical(assays(sse), assays(rsse)))
 #' stopifnot(identical(dim(sse), dim(rsse)))
 #' stopifnot(identical(dimnames(sse), dimnames(rsse)))
-#' stopifnot(identical(mcols(sse), mcols(rsse)))
+#' stopifnot(identical(rowData(sse), rowData(rsse)))
 #' stopifnot(identical(colData(sse), colData(rsse)))
 #'
 #' @importFrom methods setClass
@@ -213,6 +213,7 @@ setClass("RangedSparseSummarizedExperiment",
 setMethod("SparseSummarizedExperiment", "SparseAssays",
           function(sparseAssays,
                    assays = SimpleList(),
+                   rowData = NULL,
                    rowRanges = GRangesList(),
                    colData = DataFrame(),
                    metadata = list()) {
@@ -231,13 +232,19 @@ setMethod("SparseSummarizedExperiment", "SparseAssays",
             # them from the sparseAssays object.
             sparseAssays <- endoapply(sparseAssays, unname)
 
+            if (is.null(rowData) && missing(rowRanges)) {
+              rowData <- new("DataFrame", nrows = nrow(sparseAssays))
+            }
+
             # Construct the SummarizedExperiment
             if (missing(rowRanges)) {
               se <- SummarizedExperiment(assays = assays,
+                                         rowData = rowData,
                                          colData = colData,
                                          metadata = metadata)
             } else {
               se <- SummarizedExperiment(assays = assays,
+                                         rowData = rowData,
                                          rowRanges = rowRanges,
                                          colData = colData,
                                          metadata = metadata)
@@ -257,7 +264,8 @@ setMethod("SparseSummarizedExperiment", "SparseAssays",
               }
             }
 
-            # TODO: strip dimnames from sparseAssays **except colnames of value**
+            # TODO: strip dimnames from sparseAssays **except colnames of value
+            #       element**
 
             if (missing(rowRanges)) {
               # Need to update elementMetadata slot to have the valid dimensions
@@ -275,6 +283,9 @@ setMethod("SparseSummarizedExperiment", "SparseAssays",
                          sparseAssays = sparseAssays)
             }
 
+            # TODO: Rather than override rownames present in assays argument,
+            #       check if these are compatible and, if not, throw a
+            #       warning or error.
             # NOTE: rownames are taken from sparseAssays.
             # WARNING: This will override rownames present in assays argument
             #          and used by the SummarizedExperiment constructor.

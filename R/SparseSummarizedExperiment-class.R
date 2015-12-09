@@ -381,8 +381,13 @@ setClass("SparseSummarizedExperiment",
     return(NULL)
   }
 
-  if (nrow(x@sparseAssays) != length(x)) {
-    return("'sparseAssays' nrow differs from 'mcols' nrow")
+  sparseAssays_nrow <- nrow(x@sparseAssays)
+  rowData_nrow <- length(x)
+  if (sparseAssays_nrow != rowData_nrow) {
+    txt <- sprintf(
+      "\n  nb of rows in 'sparseAssays' (%d) must equal nb of rows in 'rowData' (%d)",
+      sparseAssays_nrow, rowData_nrow)
+    return(txt)
   }
   NULL
 }

@@ -14,8 +14,8 @@
 SparseSummarizedExperiment(sparseAssays, ...)
 
 \S4method{SparseSummarizedExperiment}{SparseAssays}(sparseAssays,
-  assays = SimpleList(), rowRanges = GRangesList(), colData = DataFrame(),
-  metadata = list())
+  assays = SimpleList(), rowData = NULL, rowRanges = GRangesList(),
+  colData = DataFrame(), metadata = list())
 
 \S4method{SparseSummarizedExperiment}{missing}(sparseAssays, ...)
 }
@@ -28,12 +28,20 @@ SparseSummarizedExperiment(sparseAssays, ...)
     across elements and with the row names of \code{rowRanges} and
     \code{colData}.}
 
-\item{rowRanges}{A \link{GRanges} or \link{GRangesList} object describing 
-    the ranges of interest. Names, if present, become the row names of the
-    RangedSummarizedExperiment. The length of the \link{GRanges} or the
-    \link{GRangesList} must equal the number of rows of the matrices in
-    \code{assays}. If \code{rowRanges} is missing, a
-    \link{SummarizedExperiment} instance is returned.}
+\item{rowData}{A \link[S4Vectors]{DataFrame} object describing 
+    the rows. Row names, if present, become the row names of the
+    SummarizedExperiment object. The number of rows of the
+    \link[S4Vectors]{DataFrame} must equal the number of rows of the
+    matrices in \code{assays}.}
+
+\item{rowRanges}{A \link[GenomicRanges]{GRanges} or
+    \link[GenomicRanges]{GRangesList} object describing the ranges of
+    interest. Names, if present, become the row names of the
+    SummarizedExperiment object. The length of the
+    \link[GenomicRanges]{GRanges} or \link[GenomicRanges]{GRangesList}
+    must equal the number of rows of the matrices in \code{assays}.
+    If \code{rowRanges} is missing, a \link{SummarizedExperiment}
+    instance is returned.}
 
 \item{colData}{An optional \link{DataFrame} describing the
     samples. Row names, if present, become the column names of the
@@ -138,7 +146,7 @@ sparseAssay(rsse)
 densify(sparseAssay(rsse), 1, 1:2)[[1]]
 
 rowRanges(rsse)
-mcols(rsse)  # same as mcols(rowRanges(rsse))
+rowData(rsse)  # same as 'mcols(rowRanges(rsse))'
 
 rsse[, rsse$Genotype == "WT"]
 
@@ -197,7 +205,7 @@ sse  # RangedSparseSummarizedExperiment
 stopifnot(identical(assays(sse), assays(rsse)))
 stopifnot(identical(dim(sse), dim(rsse)))
 stopifnot(identical(dimnames(sse), dimnames(rsse)))
-stopifnot(identical(mcols(sse), mcols(rsse)))
+stopifnot(identical(rowData(sse), rowData(rsse)))
 stopifnot(identical(colData(sse), colData(rsse)))
 
 }
