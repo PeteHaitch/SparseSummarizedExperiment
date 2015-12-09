@@ -1,0 +1,231 @@
+---
+title: "_SparseSummarizedExperiment_: An Extension of _SummarizedExperiment_ for Sparse, Multivariate Data"
+author: "Peter Hickey"
+date: "Revised: 07 December, 2015"
+output:
+  BiocStyle::html_document:
+    toc: true
+vignette: >
+  %\VignetteIndexEntry{SparseSummarizedExperiment}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+```{r style, echo = FALSE, results = 'asis'}
+BiocStyle::markdown()
+```
+
+```{r include = FALSE}
+# download current version of SE diagram
+download.file("https://docs.google.com/feeds/download/drawings/Export?id=1kiC8Qlo1mhSnLDqkGiRNPSo6GWn3C2duBszCFbJCB-g&exportFormat=svg", "SE.svg")
+```
+
+![Summarized Experiment](SE.svg)
+
+__TODO__: A modified version of the above figure with `sparseAssays` added?
+
+# Background
+
+- We assume familiarity with [_SummarizedExperiment_](https://www.bioconductor.org/packages/SummarizedExperiment/) package
+- Sparse, multivariate data can be succinctly represented in "sparsified" form
+  - Several options, including hash tables, but opted for _SimpleListSparseAssays_ representation.
+
+# Motivating use case
+
+- Methylation patterns
+
+# Parts of a _SparseSummarizedExperiment_
+
+- Same as _SummarizedExperiment_ with the addition of the `sparseAssays` slot.
+
+## `sparseAssays`
+
+- Some example data as a _RSSE_?
+- The _SparseAssays_ virtual class
+  - Current implementation is _SimpleListSparseAssays_
+  - Link to notes for developers
+
+### _SimpleListSparseAssays_
+
+- `densify()`
+- `SAapply()`
+
+# Putting it together
+
+Often, _SparseSummarizedExperiment_ objects are returned by functions written
+by other packages. However it is possible to create a `SparseSummarizedExperiment` 'by
+hand'.
+
+```{r construct}
+# TODO: Do I want to demonstrate how to construct a SSE 'by hand' using 
+#       simulated or 'real' data? Simulated is clunky, real increases package 
+#       size.
+# 
+# NOTE: Need S4Vectors for DataFrame(), GenomicRanges for GRanges(),
+#       SummarizedExperiment for SummarizedExperiment(),
+#       SparseSummarizedExperiment for coercion methods.
+library(S4Vectors)
+library(GenomicRanges)
+library(SummarizedExperiment)
+library(SparseSummarizedExperiment)
+
+#' Simulate data as a SimpleListSparseAssays object
+#'
+#' @param m Integer scalar giving the number of features.
+#' @param n Integer scalar giving the number of samples.
+#' @param d Numeric scalar in [0, 1] giving the proportion of non-missing data.
+#' @param p A Integer scalar giving the ncol of the sparse assay.
+#'
+#' @return A SimpleListSparseAssays object
+simSLSA <- function(m, n, d, p) {
+  v <- replicate(n, {
+    val <- matrix(NA_integer_, ncol = p, nrow = m)
+    i <- sample(m, floor(d * m), replace = TRUE)
+    val[i, ] <- rpois(floor(d * m) * p, lambda = 10)
+    val
+  }, simplify = FALSE)
+  # Add sample names
+  v <- mapply(function(vv, i) {
+    tmp <- SparseAssays(vv)
+    names(tmp[[1]]) <- paste0("s", i)
+    tmp
+  }, vv = v, i = seq_along(v))
+  # Add sparse assay name
+  v <- lapply(v, function(vv) {
+    names(vv) <- "sa1"
+    vv
+  })
+  # cbind (don't need to combine because know each element of v is a single
+  # sample and has same dimensions by construction)
+  do.call(cbind, v)
+}
+
+#' Simulate data as a GRanges object
+#'
+#' @param m Integer scalar giving the number of genomic ranges.
+#'
+#' @return A GRanges object.
+simGR <- function(m) {
+  GRanges(sample(paste0("chr", 1:22), m, replace = TRUE),
+          IRanges(floor(runif(m, 1, 1e6)), width = 100),
+          strand = sample(c("+", "-"), m, TRUE),
+          feature_id = paste0("f", seq_len(m)))
+}
+
+#' Simulate data as a RangedSummarizedExperiment object
+#'
+#' @param m Integer scalar giving the number of genomic ranges.
+#' @param n Integer scalar giving the number of samples (assumed/forced even).
+#'
+#' @return A RangedSummarizedExperiment object.
+simRSE <- function(m, n) {
+  # Require n to be even
+  if (n %% 2 == 1) {
+    n <- n + 1
+  }
+  counts <- matrix(floor(runif(m * n, 0, 1e4)), m)
+  colData <- DataFrame(Genotype = rep(c("KO", "WT"), n / 2),
+                       row.names = paste0("s", seq_len(n)))
+  rowRanges <- simGR(m)
+  SummarizedExperiment(assays = SimpleList(counts = counts),
+                       rowRanges = rowRanges,
+                       colData = colData)
+}
+
+#' Simulate data as a SummarizedExperiment object
+#'
+#' @param m Integer scalar giving the number of features.
+#' @param n Integer scalar giving the number of samples (assumed/forced even).
+#'
+#' @return A SummarizedExperiment object.
+simSE <- function(m, n) {
+  as(simRSE(m, n), "SummarizedExperiment")
+}
+
+# NOTE: data are generated using pseudorandom numbers, so need to set the seed 
+#       to ensure reproducibility.
+set.seed(666)
+
+m <- 10000
+n <- 6
+d <- 0.7
+p <- 8
+
+rse <- simRSE(m, n)
+rse
+rsse <- as(rse, "RangedSparseSummarizedExperiment")
+rsse
+sa <- simSLSA(m, n, d, p)
+sa
+sparseAssays(rsse) <- sa
+rsse
+sse <- as(rsse, "SparseSummarizedExperiment")
+sse
+names(sse) <- paste0("F", seq_len(nrow(sse)))
+sse
+se <- as(rse, "SummarizedExperiment")
+se
+names(se) <- paste0("F", seq_len(nrow(se)))
+se
+```
+
+# Common operations on _SparseSummarizedExperiment_
+
+## Subsetting
+
+- `[` Performs two dimensional subsetting, just like subsetting a matrix
+    or data frame.
+```{r 2d}
+# subset the first five features and first three samples
+sse[1:5, 1:3]
+```
+- `$` operates on `colData()` columns, for easy sample extraction.
+```{r colDataExtraction}
+# Select knockout (KO) samples
+sse[, sse$Genotype == "KO"]
+```
+
+## Getters and setters
+
+- `rowRanges()` / (`rowData()`), `colData()`, `metadata()`
+```{r getSet}
+# TODO: Examples using rowRanges(), rowData(), colData(), and metadata()
+```
+
+- `sparseAssay()` versus `sparseAssays()`
+There exist two accessor functions to extract the sparse assay data from a
+`SparseSummarizedExperiment` object.  `sparseAssays()` operates on the entire list of sparse assay
+data as a whole, while `sparseAssay()` operates on only one assay at a time.
+__WARNING__: Unlike `assays()` and `assay()`, `sparseAssay(x, i)` is __not__ equivalent to `sparseAssays(x)[[i]]`. `sparseAssay(x, i)` is the recommended way to extract the i-th sparse assay from a _SparseSummarizedExperiment_ object.
+
+```{r sparseAssay_sparseAssays}
+# TODO: Illustrate the difference between sparseAssays() and sparseAssay, 
+#       and the effect of withDimnames
+```
+
+- Note that _SSE_ can also have `assays` slot?
+
+## Range-based operations
+
+- `subsetByOverlaps()`
+_SparseSummarizedExperiment_ objects support all of the `findOverlaps()` methods and
+associated functions.  This includes `subsetByOverlaps()`, which makes it easy
+to subset a _SparseSummarizedExperiment_ object by an interval.
+
+```{r overlap}
+# Subset for only rows which are in the interval 100,000 to 110,000 of
+# chromosome 1
+roi <- GRanges(seqnames = "chr1", ranges = 100000:1100000)
+subsetByOverlaps(rsse, roi)
+```
+
+# Case study revisited -- _SparseSummarizedExperiment_ in action
+
+__TODO__: Worth including?
+
+# Advanced: Extending _SparseSummarizedExperiment_
+
+__TODO__
+
+- Creating a new class that extends _SSE_
+- Adding a concrete subclasses of _SparseAssays_
