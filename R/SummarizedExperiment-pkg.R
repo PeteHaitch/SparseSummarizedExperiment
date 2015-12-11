@@ -88,60 +88,62 @@
 setMethod("combine", c("SummarizedExperiment", "SummarizedExperiment"),
           function(x, y, ...) {
 
-            if (any(dim(y) == 0L)) {
+            if (all(dim(y) == 0L)) {
               return(x)
-            } else if (any(dim(x) == 0L)) {
+            } else if (all(dim(x) == 0L)) {
               return(y)
             }
 
             # Give a helpful error message if the user tries to combine a
-            # RangedSummarizedExperiment object to an non-ranged
+            # RangedSummarizedExperiment object to a non-ranged
             # SummarizedExperiment.
-            # NOTE: Can't simply check if object is SumamrizedExperiment0
-            #       object since all RangedSummarizedExperiments are
-            #       SummarizedExperiment objects but not all
-            #       SummarizedExperiment objects are
-            #       RangedSummarizedExperiment objects.
             if ((is(x, "RangedSummarizedExperiment") &&
                  !is(y, "RangedSummarizedExperiment")) ||
                 (!is(x, "RangedSummarizedExperiment") &&
                  is(y, "RangedSummarizedExperiment"))) {
               stop("Cannot combine '", class(x), "' and '", class(y),
-                   "' objects because only one of these has 'rowRanges'")
+                   "' objects because only one of these has a 'rowRanges' ",
+                   "slot.")
             }
 
-            # Check colnames are set
+            # Check colnames are set (required for combining assays).
             x_cn <- colnames(x)
             y_cn <- colnames(y)
             if (is.null(x_cn) || is.null(y_cn)) {
               stop("Cannot combine '", class(x), "' objects with NULL ",
-                   "'colnames'")
+                   "'colnames()'")
             }
 
-            # Cannot combine non-ranged SEs with NULL names
+            # Cannot combine non-ranged SEs with NULL names (required for
+            # combining assays).
             if (!is(x, "RangedSummarizedExperiment") &&
                 (is.null(names(x)) || is.null(names(y)))) {
-              stop("Cannot combine '", class(x), "' objects with NULL 'names'")
+              stop("Cannot combine '", class(x), "' objects with NULL ",
+                   "'names()'")
             }
 
-            # Cannot combine SummarizedExperiments with duplicate rows
+            # NOTE: Currently, cannot combine SummarizedExperiments with
+            # duplicate rows; this would require first combining the assays at
+            # duplicate rows (e.g., summing the relevant rows). While this
+            # might be doable, it seems in general to be a bad idea to have
+            # duplicate rows in a SummarizedExperiment object.
             if (is(x, "RangedSummarizedExperiment")) {
               if (any(duplicated(x))) {
                 stop("'combine(x = \"", class(x), "\", y = \"", class(y),
-                     "\")'\n  any(duplicated(x)) must be FALSE")
+                     "\")'\n  'any(duplicated(x))' must be FALSE")
               }
               if (any(duplicated(y))) {
                 stop("'combine(x = \"", class(x), "\", y = \"", class(y),
-                     "\")'\n  any(duplicated(y)) must be FALSE")
+                     "\")'\n  'any(duplicated(y))' must be FALSE")
               }
             } else {
               if (anyDuplicated(names(x))) {
                 stop("'combine(x = \"", class(x), "\", y = \"", class(y),
-                     "\")'\n  anyDuplicated(x) must be 0 (FALSE)")
+                     "\")'\n  'anyDuplicated(x)' must be 0 (FALSE)")
               }
               if (anyDuplicated(names(y))) {
                 stop("'combine(x = \"", class(x), "\", y = \"", class(y),
-                     "\")'\n  anyDuplicated(y) must be 0 (FALSE)")
+                     "\")'\n  'anyDuplicated(y)' must be 0 (FALSE)")
               }
             }
 
@@ -149,10 +151,8 @@ setMethod("combine", c("SummarizedExperiment", "SummarizedExperiment"),
             if (is(x, "RangedSummarizedExperiment")) {
               # NOTE: combine,SummarizedExperiment,SummarizedExperiment-method
               #       doesn't currently work if rowRanges(x) or rowRanges(y)
-              #       are GRangesList-derived objects since the
-              #       combine,GRangesList,GRangesList-method currently requires
-              #       that these have non-NULL names, which the rowRanges of a
-              #       SummarizedExperiment rarely have.
+              #       are GRangesList-derived objects because there is
+              #       currently no combine,GRangesList,GRangesList-method.
               if (is(rowRanges(x), "GRangesList") ||
                   is(rowRanges(y), "GRangesList")) {
                 stop("Cannot combine '", class(x), "' objects with ",
@@ -164,11 +164,11 @@ setMethod("combine", c("SummarizedExperiment", "SummarizedExperiment"),
                                  rowData(y, use.names = TRUE))
             }
             colData <- combine(colData(x), colData(y))
-            # NOTE: If rownames(x) or rownames(y) is NULL then use
-            #       match()-based rownames.
             x_assays <- assays(x, withDimnames = TRUE)
             y_assays <- assays(y, withDimnames = TRUE)
-            if (is.null(rownames(x)) || is.null(rownames(y))) {
+            if (is(x, "RangedSummarizedExperiment")) {
+              # NOTE: assay rownames are constructed by finding matches between
+              #       the ranges of x (resp. y) and z.
               x_rn <- match(rowRanges(x), rowRanges)
               y_rn <- match(rowRanges(y), rowRanges)
               addRownames <- function(assay, rn) {

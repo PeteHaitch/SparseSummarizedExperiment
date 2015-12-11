@@ -26,21 +26,20 @@ test_that("combine,SummarizedExperiment,SummarizedExperiment-method works", {
   names(se_unnamed) <- NULL
   expect_error(combine(se_unnamed[, 1], se_unnamed[, 2]),
                paste0("Cannot combine 'SummarizedExperiment' objects with ",
-                      "NULL 'names'"))
+                      "NULL 'names\\(\\)'"))
   se_dupnames <- se
   names(se_dupnames) <- rep("A", nrow(se_dupnames))
   expect_error(combine(se_dupnames[, 2], se_dupnames[, 1]),
-               paste0("Cannot combine 'SummarizedExperiment' objects with ",
-                      "internal duplicate 'names'"))
+               "'anyDuplicated\\(x\\)' must be 0 \\(FALSE\\)")
   se_nullcn <- se
   colnames(se_nullcn) <- NULL
   expect_error(combine(se_nullcn[, 1], se_nullcn[, 2]),
                paste0("Cannot combine 'SummarizedExperiment' objects with ",
-                      "NULL 'colnames'"))
+                      "NULL 'colnames\\(\\)'"))
   expect_error(combine(se, rse),
                paste0("Cannot combine 'SummarizedExperiment' and ",
                       "'RangedSummarizedExperiment' objects because only one ",
-                      "of these has 'rowRanges'"))
+                      "of these has a 'rowRanges' slot."))
 })
 
 test_that("combine,RangedSummarizedExperiment,RangedSummarizedExperiment-method works", {
@@ -57,13 +56,12 @@ test_that("combine,RangedSummarizedExperiment,RangedSummarizedExperiment-method 
   rse_dupranges <- rse
   rse_dupranges <- rbind(rse_dupranges[1:10, ], rse_dupranges[1:10, ])
   expect_error(combine(rse_dupranges[, 2], rse_dupranges[, 1]),
-               paste0("Cannot combine 'RangedSummarizedExperiment' objects ",
-                      "with internal duplicate 'rowRanges'"))
+               "'any\\(duplicated\\(x\\)\\)' must be FALSE")
   rse_nullcn <- rse
   colnames(rse_nullcn) <- NULL
   expect_error(combine(rse_nullcn[, 1], rse_nullcn[, 2]),
                paste0("Cannot combine 'RangedSummarizedExperiment' objects ",
-                      "with NULL 'colnames'"))
+                      "with NULL 'colnames\\(\\)'"))
   rse_grl <- rse
   rowRanges(rse_grl) <- as(rowRanges(rse_grl), "GRangesList")
   expect_error(combine(rse_grl[1:40, 1:4], rse_grl[30:100, 3:6]),
@@ -74,5 +72,26 @@ test_that("combine,RangedSummarizedExperiment,RangedSummarizedExperiment-method 
   expect_error(combine(rse, se),
                paste0("Cannot combine 'RangedSummarizedExperiment' and ",
                       "'SummarizedExperiment' objects because only one of ",
-                      "these has 'rowRanges'"))
+                      "these has a 'rowRanges' slot."))
+})
+
+test_that("colnames are stripped from assays upon construction ", {
+  # See https://stat.ethz.ch/pipermail/bioc-devel/2015-December/008410.html
+  # This test is to keep track of the current behaviour in SummarizedExperiment
+  m1 <- matrix(1:10, ncol = 2)
+  m2 <- m1
+  colnames(m2) <- c("A", "B")
+  se1 <- SummarizedExperiment(m1, colData = DataFrame(row.names = c("A", "B")))
+  se2 <- SummarizedExperiment(m2)
+  se3 <- SummarizedExperiment(m2, colData = DataFrame(row.names = c("C", "D")))
+  # colnames correctly set to c("A", "B") and stripped from assays
+  expect_identical(colnames(se1), c("A", "B"))
+  expect_null(colnames(se1@assays[[1L]]))
+  # colnames correctly set to c("A", "B") set and but not stripped from assays
+  expect_identical(colnames(se2), c("A", "B"))
+  expect_identical(colnames(se2@assays[[1L]]), c("A", "B"))
+  # colnames set to c("C", "D") (without warning about mismatch) and stripped
+  # from assays
+  expect_identical(colnames(se3), c("C", "D"))
+  expect_null(colnames(se3@assays[[1L]]))
 })

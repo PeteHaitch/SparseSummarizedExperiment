@@ -7,7 +7,7 @@ test_that("combine,GenomicRanges,GenomicRanges-method is compatible with generic
   expect_identical(formals(generic@.Data), formals(method@.Data))
 })
 
-test_that("combine,GRanges,GRanges-method works", {
+test_that("combine,GenomicRanges,GenomicRanges-method works on duplicate-free inputs", {
   set.seed(666)
   x <- simGR(10)
   expect_identical(combine(x, GRanges()), x)
@@ -17,32 +17,23 @@ test_that("combine,GRanges,GRanges-method works", {
   expect_identical(combine(x[10:5], x[4:1]), x[10:1])
 })
 
-test_that("combine,GRangesList,GRangesList-method is compatible with generic", {
-  generic <- getGeneric("combine")
-  method <- getMethod("combine", c("GRangesList", "GRangesList"))
-  expect_identical(generic@signature, c("x", "y"))
-  expect_identical(formals(generic@.Data), formals(method@.Data))
+test_that("combine,GenomicRanges,GenomicRanges-method handles duplicate elements", {
+  set.seed(666)
+  x <- simGR(10)
+  expect_identical(combine(x[c(1, 1)], x[1]), x[1])
 })
 
-
-test_that("combine,GRangesList,GRangesList-method works", {
+test_that("combine,GenomicRanges,GenomicRanges-method errors on 'non-identical' duplicate elements", {
   set.seed(666)
-  gr <- simGR(10)
-  x <- GenomicRanges::GRangesList(gr[1:4], gr[5:10])
-  expect_identical(combine(x, GRangesList()), x)
-  expect_identical(combine(GRangesList(), x), x)
-  x1 <- x[1]
-  x2 <- x[2]
-  expect_error(combine(x1, x2),
-               paste0("'names' of 'x' and 'y' must be non-NULL when combining ",
-                      "'GRangesList' object"))
-  xn <- x
-  names(xn) <- c("A", "B")
-  x1 <- xn[1]
-  x2 <- xn[2]
-  expect_identical(combine(x1, x2), xn)
-  expect_identical(combine(x1, x1), x1)
-  x1a <- GenomicRanges::GRangesList(A = gr[1:3])
-  x1b <- GenomicRanges::GRangesList(A = gr[2:4])
-  expect_identical(combine(x1a, x1b), x1)
+  x <- simGR(10)
+  xx <- x[c(1, 1)]
+  mcols(xx)[2, 1] <- mcols(x)[2, 1]
+  expect_error(combine(xx, x),
+               "x contains duplicate ranges whose 'mcols\\(\\)' differ")
+  expect_error(combine(x, xx),
+               "y contains duplicate ranges whose 'mcols\\(\\)' differ")
+  expect_error(suppressWarnings(combine(xx[1], xx[2])),
+               "'mcols\\(x\\)' and 'mcols\\(y\\)' are not compatible.")
+  expect_warning(try(combine(xx[1], xx[2]), silent = TRUE),
+                 "data frame column 'feature_id' shared rows not all equal")
 })

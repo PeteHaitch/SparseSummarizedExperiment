@@ -9,19 +9,24 @@
 ### GenomicRanges package. Therefore, the functionality in this file probably
 ### belongs in the GenomicRanges package.
 
-# TODO: Should this be a method defined for GRanges or GenomicRanges
-# TODO: Update docs - if both x and y are named then match on names, otherwise
-#       use match()
+# TODO: A ignore.mcols/use.mcols argument might be useful
 #' Combining GRanges objects
 #'
 #' Combine multiple \link[GenomicRanges]{GenomicRanges} objects.
 #'
-#' @details If and only if all of \code{x}, \code{y}, and \code{...} have
-#' non-\code{NULL} \code{names()}, then objects are combined using these names.
-#' Otherwise, names are first created based on finding identical ranges (using
-#' \code{\link[S4Vectors]{findMatches}()}) and then the objects are combined
-#' using these names. All of \code{x}, \code{y}, and \code{...} must also have
-#' compatible \code{\link[S4Vectors]{mcols}()}.
+#' @details Combines two or more \link[GenomicRanges]{GenomicRanges} objects
+#' so that the resulting \link[GenomicRanges]{GenomicRanges} object contains
+#' all elements of the original objects. Elements in the returned value are
+#' unique, that is, an element represented in multiple arguments is represented
+#' only only in the result. To perform this operation, \code{combine()} makes
+#' sure that data in shared elements, \strong{including metadata columns
+#' accessible with \code{\link[S4Vectors]{mcols}()}}, are identical in all the
+#' \link[GenomicRanges]{GenomicRanges} objects. Data differences in shared
+#' elements usually cause an error.
+#'
+#' \strong{WARNING}: \code{names()} of the \link[GenomicRanges]{GenomicRanges}
+#' inputs are removed prior to combining, hence the returned value has
+#' \code{names()} set to \code{NULL}.
 #'
 #' @param x A \link[GenomicRanges]{GenomicRanges} object.
 #' @param y A \link[GenomicRanges]{GenomicRanges} object.
@@ -38,118 +43,58 @@
 #' y <- GRanges(seqnames = c("chr2", "chr3"),
 #'                ranges = IRanges(c(11, 21), c(20, 30)),
 #'                seqinfo = Seqinfo(c("chr1", "chr2", "chr3")))
+#' # x[2] (resp. y[1]) is only included once in the combined object
 #' combine(x, y)
 #'
 #' @importFrom methods setMethod
-#' @importMethodsFrom S4Vectors mcols "mcols<-"
+#' @importMethodsFrom S4Vectors findMatches mcols "mcols<-" queryHits
 #'
 #' @export
 setMethod("combine", c("GenomicRanges", "GenomicRanges"),
           function(x, y, ...) {
 
-            if (length(y) == 0L) {
-              return(x)
-            } else if (length(x) == 0L) {
-              return(y)
+            # NOTE: For each of x and y, need to check that any duplicate
+            #       elements have identical mcols.
+            x <- unname(x)
+            x_is_dup <- duplicated(x)
+            x_unique <- x[!x_is_dup]
+            x_dup <- x[x_is_dup]
+            x_ol <- findMatches(x_unique, x_dup)
+            if (!identical(mcols(x_unique[queryHits(x_ol)]),
+                           mcols(x_dup[subjectHits(x_ol)]))) {
+              stop("'combine(x = \"", class(x), "\", y = \"", class(y),
+                   "\")'\n  x contains duplicate ranges whose 'mcols()' ",
+                   "differ.")
+            }
+            y <- unname(y)
+            y_is_dup <- duplicated(y)
+            y_unique <- y[!y_is_dup]
+            y_dup <- y[y_is_dup]
+            y_ol <- findMatches(y_unique, y_dup)
+            if (!identical(mcols(y_unique[queryHits(y_ol)]),
+                           mcols(y_dup[subjectHits(y_ol)]))) {
+              stop("'combine(y = \"", class(y), "\", y = \"", class(y),
+                   "\")'\n  y contains duplicate ranges whose 'mcols()' ",
+                   "differ.")
             }
 
-            x_names <- names(x)
-            y_names <- names(y)
-            # NOTE: If either x or y has NULL names, use a findMatches()-based
-            #       strategy to create the names.
-            if (is.null(x_names) || is.null(y_names)) {
-              if (!is.null(x_names)) {
-                warning("'combine(x = \"", class(x), "\", y = \"", class(y),
-                     "\")'\n  using 'findMatches()'-based naming strategy ",
-                     "since 'names()' of some objects are NULL.")
-              }
-              # NOTE: ignore.mcols = TRUE since unique() ignores mcols.
-              z <- unique(c(x, y, ignore.mcols = TRUE))
-              x_names <- match(x, z)
-              y_names <- match(y, z)
-            }
-            mxy <- match(x_names, y_names)
-            myx <- match(y_names, x_names)
-            x_shared <- which(!is.na(mxy))
-            x_unique <- which(is.na(mxy))
-            y_shared <- which(!is.na(myx))
-            y_unique <- which(is.na(myx))
-            if (!identical(x[x_shared], y[y_shared])) {
-              # NOTE: names() should always be compatible if created using
-              #       findMatches()-based strategy, but no guarantees about
-              #       mcols().
-              stop("'combine(x = \"", class(x), "\", y = \"", class(y),
-                   "\")'\n  'names()' or 'mcols()' are not compatible.")
-            }
+            # NOTE: unique() ignores mcols, so have to process these separately
+            z <- unique(c(x_unique, y_unique, ignore.mcols = TRUE))
+            x_unique_mcols <- mcols(x_unique, use.names = FALSE)
+            y_unique_mcols <- mcols(y_unique, use.names = FALSE)
+            # Create rownames for mcols based on z
+            rownames(x_unique_mcols) <- match(x_unique, z)
+            rownames(y_unique_mcols) <- match(y_unique, z)
             tryCatch({
-              c(x, y[y_unique])
+              mcols(z) <- combine(x_unique_mcols, y_unique_mcols)
             }, error = function(err) {
               stop("\n'combine(x = \"", class(x), "\", y = \"", class(y),
                    "\")'\n  'mcols(x)' and 'mcols(y)' are not compatible.")
             })
+            z
           }
 )
 
-# NOTE: Errors if any of the GRangesList objects have NULL names().
-# TODO: How to handle unnamed GRangesList objects?
-#' Combining GRangesList objects
-#'
-#' Combine multiple \link[GenomicRanges]{GRangesList} objects using a union
-#' strategy.
-#'
-#' @details Objects are combined based on the \code{names} of \code{x},
-#' \code{y}, and \code{...}.
-#'
-#' @param x A \link[GenomicRanges]{GRangesList} object.
-#' @param y A \link[GenomicRanges]{GRangesList} object.
-#' @param ... One or more \link[GenomicRanges]{GRangesList} objects.
-#'
-#' @return A \link[GenomicRanges]{GRanges} object.
-#'
-#' @author Peter Hickey, \email{peter.hickey@@gmail.com}
-#'
-#' @examples
-#' x <- GRangesList(
-#'   "a" = GRanges(seqnames = "chr1",
-#'                 ranges = IRanges(1, 10),
-#'                 seqinfo = Seqinfo(c("chr1", "chr2", "chr3"))),
-#'   "b" = GRanges(seqnames = "chr2",
-#'                 ranges = IRanges(11, 20),
-#'                 seqinfo = Seqinfo(c("chr1", "chr2", "chr3"))))
-#' # NOTE: y$b is slightly different to x$b
-#' y <- GRangesList(
-#'   "b" = GRanges(seqnames = "chr2",
-#'                 ranges = IRanges(12, 21),
-#'                 seqinfo = Seqinfo(c("chr1", "chr2", "chr3"))),
-#'   "c" = GRanges(seqnames = "chr3",
-#'                 ranges = IRanges(21, 30),
-#'                 seqinfo = Seqinfo(c("chr1", "chr2", "chr3"))))
-#' # NOTE: the 'b' element of the combined object include both x$b and y$b
-#' combine(x, y)
-#'
-#' @importFrom methods setMethod
-#' @importMethodsFrom S4Vectors mendoapply
-#'
-#' @export
-setMethod("combine", c("GRangesList", "GRangesList"),
-          function(x, y, ...) {
-
-            if (length(y) == 0L) {
-              return(x)
-            } else if (length(x) == 0L) {
-              return(y)
-            }
-
-            if (is.null(names(x)) || is.null(names(y))) {
-              stop("'names' of 'x' and 'y' must be non-NULL when combining '",
-                   class(x), "' objects")
-            }
-
-            shared_elements <- intersect(names(x), names(y))
-            if (length(shared_elements)) {
-              x[shared_elements] <- mendoapply(combine, x[shared_elements],
-                                             y[shared_elements])
-            }
-            c(x, y[setdiff(names(y), shared_elements)])
-          }
-)
+# TODO: Would like a combine,GRangesList,GRangesList-method. However, I am not
+#       familiar enough with GRangesList objects to come up with a useful
+#       definition of what it means for these objects to be combine()-d.

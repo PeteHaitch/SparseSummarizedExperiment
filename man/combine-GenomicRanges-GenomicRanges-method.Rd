@@ -21,12 +21,19 @@ A \link[GenomicRanges]{GenomicRanges} object.
 Combine multiple \link[GenomicRanges]{GenomicRanges} objects.
 }
 \details{
-If and only if all of \code{x}, \code{y}, and \code{...} have
-non-\code{NULL} \code{names()}, then objects are combined using these names.
-Otherwise, names are first created based on finding identical ranges (using
-\code{\link[S4Vectors]{findMatches}()}) and then the objects are combined
-using these names. All of \code{x}, \code{y}, and \code{...} must also have
-compatible \code{\link[S4Vectors]{mcols}()}.
+Combines two or more \link[GenomicRanges]{GenomicRanges} objects
+so that the resulting \link[GenomicRanges]{GenomicRanges} object contains
+all elements of the original objects. Elements in the returned value are
+unique, that is, an element represented in multiple arguments is represented
+only only in the result. To perform this operation, \code{combine()} makes
+sure that data in shared elements, \strong{including metadata columns
+accessible with \code{\link[S4Vectors]{mcols}()}}, are identical in all the
+\link[GenomicRanges]{GenomicRanges} objects. Data differences in shared
+elements usually cause an error.
+
+\strong{WARNING}: \code{names()} of the \link[GenomicRanges]{GenomicRanges}
+inputs are removed prior to combining, hence the returned value has
+\code{names()} set to \code{NULL}.
 }
 \examples{
 x <- GRanges(seqnames = c("chr1", "chr2"),
@@ -35,6 +42,7 @@ x <- GRanges(seqnames = c("chr1", "chr2"),
 y <- GRanges(seqnames = c("chr2", "chr3"),
                ranges = IRanges(c(11, 21), c(20, 30)),
                seqinfo = Seqinfo(c("chr1", "chr2", "chr3")))
+# x[2] (resp. y[1]) is only included once in the combined object
 combine(x, y)
 
 }

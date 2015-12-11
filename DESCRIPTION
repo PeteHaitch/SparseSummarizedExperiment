@@ -1,6 +1,6 @@
 Package: SparseSummarizedExperiment
 Title: SparseSummarizedExperiment Container
-Version: 0.0.0.9018
+Version: 0.0.0.9019
 Authors@R: c(person("Peter", "Hickey", role = c("aut", "cre"),
     email = "peter.hickey@gmail.com"))
 Description: An experimental implementation of a container modeled on the
@@ -13,7 +13,7 @@ Depends:
     R (>= 3.3.0),
     GenomicRanges (>= 1.23.4),
     S4Vectors (>= 0.9.12),
-    SummarizedExperiment (>= 1.1.6)
+    SummarizedExperiment (>= 1.1.7)
 Imports:
     methods,
     BiocGenerics (>= 0.17.1),
