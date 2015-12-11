@@ -85,6 +85,8 @@ setGeneric("sparsify",
 
 # NOTE: Following assays(), sparseAssays() will not strip the dimnames if
 #       withDimnames = FALSE but will simply fail to add them.
+# TODO: Write unit tests for the above NOTE in case this behaviour changes in
+#       SummarizedExperiment.
 # NOTE: If the user wants sparseAssays as a ShallowSimpleListAssays object then
 #       they should run as(sparseAssays(x), "ShallowSimpleListAssays"). The
 #       returned object will not have rownames regardless of the value of

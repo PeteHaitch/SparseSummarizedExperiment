@@ -57,7 +57,7 @@ simRSE <- function(m, n) {
     n <- n + 1
   }
   counts <- matrix(floor(runif(m * n, 0, 1e4)), m)
-  colData <- DataFrame(Treatment = rep(c("ChIP", "Input"), n / 2),
+  colData <- DataFrame(Genotype = rep(c("KO", "WT"), n / 2),
                        row.names = paste0("s", seq_len(n)))
   rowRanges <- simGR(m)
   SummarizedExperiment(assays = SimpleList(counts = counts),
@@ -79,10 +79,10 @@ simSE <- function(m, n) {
 ### Helper functions
 ###
 
-#' Test whether 2 SparseAssays are identical.
+#' Test whether 2 SparseAssays objects are identical.
 #'
-#' Two SparseAssays are considered identical if their densified forms are
-#' identical, i.e. identical_SparseAssays(x, y) is TRUE. Importantly, their
+#' Two SparseAssays objects are considered identical if their densified forms
+#' are identical, i.e. identical_SparseAssays(x, y) is TRUE. Importantly, their
 #' sparsified forms need be identical, i.e, identical(x, y) may be FALSE.
 #'
 #' @param x A SparseAssays object.
@@ -93,6 +93,40 @@ identical_SparseAssays <- function(x, y) {
   xx <- densify(x, seq_along(x), seq_len(ncol(x)))
   yy <- densify(y, seq_along(y), seq_len(ncol(y)))
   identical(xx, yy)
+}
+
+#' Test whether 2 SummarizedExperiment objects are identical.
+#'
+#' First, convert the assays slot to a SimpleListAssays object, and then check
+#' identical().
+#'
+#' @param x A SummarizedExperiment object.
+#' @param y A SummarizedExperiment object.
+#'
+#' @return TRUE or FALSE
+identical_SummarizedExperiment <- function(x, y) {
+  x@assays <- as(assays(x), "SimpleListAssays")
+  y@assays <- as(assays(y), "SimpleListAssays")
+  identical(x, y)
+}
+
+#' Test whether 2 SparseSummarizedExperiment objects are identical.
+#'
+#' Two SparseSummarizedExperiment objects are considered identical if their
+#' sparseAssays slots pass identical_SparseAssays() and the rest of the object
+#' passes identical_SummarizedExperiment().
+#'
+#' @param x A SparseSummarizedExperiment object.
+#' @param y A SparseSummarizedExperiment object.
+#'
+#' @return TRUE or FALSE
+identical_SparseSummarizedExperiment <- function(x, y) {
+  xx <- x
+  xx@sparseAssays <- SparseAssays()
+  yy <- y
+  yy@sparseAssays <- SparseAssays()
+  identical_SparseAssays(x@sparseAssays, y@sparseAssays) &&
+    identical_SummarizedExperiment(xx, yy)
 }
 
 #' Test whether a SparseSummarizedExperiment is equivalent to a
@@ -125,16 +159,8 @@ SSE_identical_to_SE <- function(sse, se) {
   if (!identical(sse@metadata, se@metadata)) {
     return(FALSE)
   }
-  # NOTE: Need to remove sample names from sparseAssays before doing comparison
-  #       since this is what makeSEFromSSE() does.
-  unnamed_sa <- sse@sparseAssays
-  unnamed_sa <- endoapply(unnamed_sa, function(x) {
-    names(x) <- NULL
-    x
-  })
-  # UP TO HERE: second has colnames (sample names)
   if (!identical(as(se@assays, "SimpleList")[sparseAssayNames(sse)],
-                 as(as(unnamed_sa, "ShallowSimpleListAssays"),
+                 as(as(sse@sparseAssays, "ShallowSimpleListAssays"),
                     "SimpleList"))) {
     return(FALSE)
   }
