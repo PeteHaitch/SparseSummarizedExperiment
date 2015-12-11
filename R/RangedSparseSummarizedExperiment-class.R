@@ -80,7 +80,6 @@ NULL
 #'                   value = matrix(1:2, ncol = 1)),
 #'   s2 = SimpleList(key = as.integer(c(1, 1, 1, 2, NA, NA, NA, NA, NA, NA)),
 #'                   value = matrix(4:3, ncol = 1)))
-#' # TODO: Need to require(?) that sparse assays are named
 #' sa <- SparseAssays(SimpleList(sa1 = sl1, sa2 = sl2))
 #' colData <- DataFrame(Genotype = c("WT", "KO"),
 #'                      row.names = c("s1", "s2"))
@@ -199,13 +198,28 @@ setClass("RangedSparseSummarizedExperiment",
   names(sparse_assays[[1L]][[1L]][["key"]])
 }
 
+# TODO: Need to generalise so as to work with all concrete subclasses of
+#       SparseAssays objects.
+#' Set rownames of a SparseAssays object
+#'
+#' @param sparse_assays A SimpleListSparseAssays object.
+#'
+#' @keywords internal
+.set_rownames_from_sparse_assays <- function(sparse_assays, rn) {
+  if (length(sparse_assays) == 0L) {
+    return(sparse_assays)
+  }
+  names(sparse_assays[[1L]][[1L]][["key"]]) <- rn
+  sparse_assays
+}
+
 # # TODO: Comment on dimnames (see ?SummarizedExperiment)
 #' @param sparseAssays A \link{SparseAssays} object.
 #' @inheritParams SummarizedExperiment::SummarizedExperiment
 #'
 #' @rdname RangedSparseSummarizedExperiment-class
 #' @importFrom GenomicRanges GRangesList
-#' @importFrom methods new setMethod
+#' @importFrom methods is new setMethod
 #' @importFrom S4Vectors DataFrame SimpleList
 #' @importMethodsFrom S4Vectors endoapply
 #'
@@ -218,23 +232,113 @@ setMethod("SparseSummarizedExperiment", "SparseAssays",
                    colData = DataFrame(),
                    metadata = list()) {
 
-            # Get sample names from sparseAssays if no colData supplied
-            if (missing(colData) && length(sparseAssays) != 0L) {
-              nms <- names(sparseAssays[[1]])
-              if (is.null(nms) && length(sparseAssays[[1]]) != 0L)
-                stop("'SparseSummarizedExperiment' sparse assay names must ", "
-                     not be NULL")
-              colData <- DataFrame(row.names = nms)
+            # Ensure assays is a SimpleList object.
+            # NOTE: This code is based on that for the various
+            #       SummarizedExperiment constructor methods.
+            if (is.list(assays) && !is.matrix(assays)) {
+              assays <- do.call(SimpleList, assays)
+            } else if (is.matrix(assays)) {
+              if (is.list(assays)) {
+                # NOTE: special case -- matrix of lists
+                assays <- list(assays)
+              }
+              assays <- SimpleList(assays)
             }
 
-            # NOTE: The cannonical location for dimnames, including sample
-            # names, is in the colData. Therefore, to simplify things, we strip
-            # them from the sparseAssays object.
+            # Get colnames, set in canonical location, and strip from elsewhere.
+            # NOTE: These may be specified in one of three locations:
+            #       1. rownames of colData,
+            #       2. in the sparseAssays object
+            #       3. in the assays object
+            #       However, 1 is the canonical location in a
+            #       SparseSummarizedExperiment object. Therefore, we check
+            #       each location, check the compatibility of these names,
+            #       and, if compatible, store these in 1 and strip from 2 and 3.
+            cn1 <- rownames(colData)
+            if (length(sparseAssays)) {
+              cn2 <- unique(unlist(lapply(sparseAssays, names),
+                                   use.names = FALSE))
+            } else {
+              cn2 <- NULL
+            }
+            if (length(assays)) {
+              cn3 <- unique(unlist(lapply(assays, colnames), use.names = FALSE))
+            } else {
+              cn3 <- NULL
+            }
+            if (!identical(cn1, cn2) && !is.null(cn1) && !is.null(cn2)) {
+              stop("'rownames(colData)' not identical to names of samples in ",
+                   "'sparseAssays'.")
+            }
+            if (!identical(cn1, cn3) && !is.null(cn1) && !is.null(cn3)) {
+              stop("'rownames(colData)' not identical to colnames of 'assays'.")
+            }
+            cn <- unique(c(cn1, cn2, cn3))
+            if (is.null(cn) && (length(assays) || length(sparseAssays))) {
+              stop("'SparseSummarizedExperiment' colnames must not be NULL.",
+                   "\n  Please specify using 'row.names' of 'colData'.")
+            }
+            if (!missing(colData)) {
+              rownames(colData) <- cn
+            } else {
+              colData <- DataFrame(row.names = cn)
+            }
             sparseAssays <- endoapply(sparseAssays, unname)
+            assays <- endoapply(assays, function(assay) {
+              colnames(assay) <- NULL
+            })
 
-            if (is.null(rowData) && missing(rowRanges)) {
-              rowData <- new("DataFrame", nrows = nrow(sparseAssays))
+            # Get rownames, set in canonical location, and strip from elsewhere.
+            # NOTE: These may be specified in one of three locations:
+            #       1. names of rowRanges (resp. rownames of rowData) for RSE
+            #          (resp. non-ranged SE).
+            #       2. in the sparseAssays object
+            #       3. in the assays object
+            #       However, 1 is the canonical location in a
+            #       SparseSummarizedExperiment object. Therefore, we check
+            #       each location, check the compatibility of these names,
+            #       and, if compatible, store these in 1 and strip from 2 and 3.
+            if (!missing(rowRanges)) {
+              rn1 <- names(rowRanges)
+            } else {
+              rn1 <- rownames(rowData)
             }
+            # TODO: .get_rownames_from_sparse_assays() only works for
+            #       SimpleListSparseAssays objects. Might be useful to define
+            #       a dimnames() getter for each concrete subclass of
+            #       SparseAssays.
+            rn2 <- .get_rownames_from_sparse_assays(sparseAssays)
+            rn3 <- SummarizedExperiment:::get_rownames_from_assays(assays)
+            if (!identical(rn1, rn2) && !is.null(rn1) && !is.null(rn2)) {
+              stop("'names(rowRanges)' or 'rownames(rowData)' not identical ",
+                   "to ranges or feature names in 'sparseAssays'.")
+            }
+            if (!identical(rn1, rn3) && !is.null(rn1) && !is.null(rn3)) {
+              stop("'names(rowRanges)' or 'rownames(rowData)' not identical ",
+                   "to ranges or feature names in 'assays'.")
+            }
+            rn <- unique(c(rn1, rn2, rn3))
+            if (!missing(rowRanges)) {
+              names(rowRanges) <- rn
+            } else {
+              if (is.null(rowData)) {
+                rowData <- new("DataFrame", nrows = nrow(sparseAssays))
+              }
+              rownames(rowData) <- rn
+            }
+            # TODO: .set_rownames_from_sparse_assays() only works for
+            #       SimpleListSparseAssays objects. Might be useful to define
+            #       a dimnames() setter for each concrete subclass of
+            #       SparseAssays.
+            sparseAssays <- .set_rownames_from_sparse_assays(sparseAssays, rn)
+            assays <- endoapply(assays, function(assay) {
+              rownames(assay) <- rn
+            })
+
+            # NOTE: We don't strip colnames from 'value' elements of the
+            #       SparseAssays object in the sparseAssays slot because these
+            #       are not stored elsewhere (these might be used to name the
+            #       measurement, e.g., MM MU UM UU for methylation patterns)
 
             # Construct the SummarizedExperiment
             if (missing(rowRanges)) {
@@ -250,29 +354,36 @@ setMethod("SparseSummarizedExperiment", "SparseAssays",
                                          metadata = metadata)
             }
 
-            # Check that dimensions of assays and sparseAssays are compatible
-            if (nrow(se) && nrow(sparseAssays)) {
-              if (!identical(dim(se), dim(sparseAssays))) {
-                stop("dimensions of 'assays' (", nrow(se), " x ", ncol(se),
-                     ") and 'sparseAssays' (", nrow(sparseAssays), " x ",
-                     ncol(sparseAssays), ") are not compatible")
+            # Check that dimensions of SummarizedExperiment and sparseAssays
+            # are compatible.
+            if (nrow(se) > 0 && (nrow(se) != nrow(sparseAssays))) {
+              if (length(assays)) {
+                stop("'nrow(sparseAssays)' != 'nrow(assays)' (",
+                     nrow(sparseAssays), " != ", nrow(se), ").")
+              } else {
+                if (is(se, "RangedSummarizedExperiment")) {
+                  stop("'nrow(sparseAssays)' != 'length(rowRanges)' (",
+                       nrow(sparseAssays), " != ", nrow(se), ").")
+                } else {
+                  stop("'nrow(sparseAssays)' != 'nrow(rowData)' (",
+                       nrow(sparseAssays), " != ", nrow(se), ").")
+                }
               }
-            } else {
-              if (ncol(se) != ncol(sparseAssays)) {
-                stop("ncol of 'assays' (", ncol(se), ") and 'sparseAssays' (",
-                     ncol(sparseAssays), ") are not compatible")
+            } else if (ncol(se) != ncol(sparseAssays)) {
+              if (length(assays)) {
+                stop("'ncol(sparseAssays)' != 'ncol(assays)' (",
+                     ncol(sparseAssays), " != ", ncol(se), ").")
+              } else {
+                stop("'ncol(sparseAssays)' != 'nrow(colData)' (",
+                     ncol(sparseAssays), " != ", nrow(colData), ").")
               }
             }
 
-            # TODO: strip dimnames from sparseAssays **except colnames of value
-            #       element**
-
-            if (missing(rowRanges)) {
-              # Need to update elementMetadata slot to have the valid dimensions
-              se@elementMetadata <- DataFrame()
-              se@elementMetadata@nrows <- nrow(sparseAssays)
-            }
-
+            # TODO: Test if rowData is supplied with names
+            # if (missing(rowRanges)) {
+            #   # Need to update elementMetadata slot to have the valid dimensions
+            #   se@elementMetadata <- rowData
+            # }
             if (missing(rowRanges)) {
               val <- new("SparseSummarizedExperiment",
                          se,
@@ -282,14 +393,6 @@ setMethod("SparseSummarizedExperiment", "SparseAssays",
                          se,
                          sparseAssays = sparseAssays)
             }
-
-            # TODO: Rather than override rownames present in assays argument,
-            #       check if these are compatible and, if not, throw a
-            #       warning or error.
-            # NOTE: rownames are taken from sparseAssays.
-            # WARNING: This will override rownames present in assays argument
-            #          and used by the SummarizedExperiment constructor.
-            rownames(val) <- .get_rownames_from_sparse_assays(sparseAssays)
             val
           }
 )
@@ -304,9 +407,6 @@ setMethod("SparseSummarizedExperiment", "missing",
             SparseSummarizedExperiment(SparseAssays(), ...)
           }
 )
-
-# TODO: Add SparseSummarizedExperiment,SimpleList-method and
-#       SparseSummarizedExperiment,list-method.
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Miscellaneous NOTEs

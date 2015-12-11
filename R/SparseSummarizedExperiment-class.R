@@ -523,7 +523,7 @@ setMethod("sparseAssays", "SparseSummarizedExperiment",
 
   ok <- vapply(value, function(sa, x_dimnames) {
     # TODO: Replace with dimnames() if/when there is a
-    # dimnames,SparseAssay[[1]]-method (i.e., one that acts on an element
+    # dimnames,SparseAssays[[1]]-method (i.e., one that acts on an element
     # of a SparseAssays object).
     sa_dimnames <- list(names(sa[[1]][["key"]]),
                         names(sa))
@@ -536,6 +536,14 @@ setMethod("sparseAssays", "SparseSummarizedExperiment",
   if (!all(ok)) {
     stop("current and replacement 'dimnames' differ")
   }
+
+  # NOTE: strip sample names from value since the canonical location for these
+  #       are in colnames(x), i.e., the rownames of the colData slot.
+  value <- endoapply(value, function(sa) {
+    names(sa) <- NULL
+    sa
+  })
+
   # NOTE: .SummarizedExperiment.assays.replace uses check = FALSE due to
   #       some unusual behaviour by packages that depend on the
   #       SummarizedExperiment package.
