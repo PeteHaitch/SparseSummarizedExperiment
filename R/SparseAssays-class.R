@@ -105,9 +105,9 @@ NULL
 #'  not) validate the returned object.
 #'  \item (c) \code{\link{length}}, \code{\link{NROW}}, \code{\link{names}},
 #'  \code{\link{names<-}}, \code{\link{[[}}, \code{\link{[[<-}}.
-#'  \item (d) \code{\link{dim}}, \code{\link{[}}, \code{\link{[<-}},
-#'  \code{\link{rbind}}, \code{\link{cbind}}, \code{\link{combine}},
-#'  \code{\link{densify}}, \code{\link{SAapply}}.
+#'  \item (d) \code{\link{dim}}, \code{\link{dimnames}}, \code{\link{[}},
+#'  \code{\link{[<-}}, \code{\link{rbind}}, \code{\link{cbind}},
+#'  \code{\link{combine}}, \code{\link{densify}}, \code{\link{SAapply}}.
 #' }
 #'
 #' A SparseAssays concrete subclass needs to implement (b) (required) plus

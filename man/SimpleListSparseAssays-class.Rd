@@ -9,10 +9,13 @@
 \alias{cbind,SimpleListSparseAssays-method}
 \alias{combine,SimpleListSparseAssays,SimpleListSparseAssays-method}
 \alias{dim,SimpleListSparseAssays-method}
+\alias{dimnames,SimpleListSparseAssays-method}
 \alias{rbind,SimpleListSparseAssays-method}
 \title{SimpleListSparseAssays objects}
 \usage{
 \S4method{dim}{SimpleListSparseAssays}(x)
+
+\S4method{dimnames}{SimpleListSparseAssays}(x)
 
 \S4method{[}{SimpleListSparseAssays,ANY}(x, i, j, ..., drop = FALSE)
 
@@ -117,6 +120,7 @@ sa2
 length(sa2)
 sa2[[2]]
 dim(sa2)
+dimnames(sa2)
 
 names(sa)
 names(sa) <- c("sa1", "sa2")

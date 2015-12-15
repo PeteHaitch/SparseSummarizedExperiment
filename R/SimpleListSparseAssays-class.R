@@ -95,6 +95,7 @@ NULL
 #' length(sa2)
 #' sa2[[2]]
 #' dim(sa2)
+#' dimnames(sa2)
 #'
 #' names(sa)
 #' names(sa) <- c("sa1", "sa2")
@@ -127,6 +128,32 @@ setClass("SimpleListSparseAssays",
 ### Validity
 ###
 
+# Check that dimnames are compatible, i.e., check that the names() of 'key'
+# elements and "sample names" are identical across sparse assays.
+.valid.SimpleListSparseAssays.dimnames <- function(x) {
+  rn <- rownames(x)
+  rn_identical <- vapply(x, function(sparse_assay) {
+    vapply(sparse_assay, function(sample, rn) {
+      identical(names(sample[["key"]]), rn)
+    }, logical(1L), rn = rn, USE.NAMES = FALSE)
+  }, logical(ncol(x)), USE.NAMES = FALSE)
+
+  if (!all(rn_identical)) {
+    return(paste0("rownames mismatch: all names() of 'key' elements of a '",
+                  class(x), "' object must be identical."))
+  }
+  cn <- colnames(x)
+  cn_identical <- vapply(x, function(sparse_assay, cn) {
+    identical(names(sparse_assay), cn)
+  }, logical(1L), cn = cn, USE.NAMES = FALSE)
+  if (!all(cn_identical)) {
+    return(paste0("colnames mismatch: all names() of elements of a '",
+                  class(x), "' object must be identical."))
+  }
+  return(NULL)
+}
+
+# TODO: Might be worth breaking this up into smaller functions
 .valid.SimpleListSparseAssays <- function(x) {
 
   if (length(x) == 0L) {
@@ -195,17 +222,6 @@ setClass("SimpleListSparseAssays",
                   "numeric matrix objects."))
   }
 
-  # Check sample names are identical across sparse assays.
-  sample_names <- lapply(sparse_assays, function(sparse_assay) {
-    names(sparse_assay)
-  })
-  if (any(vapply(sample_names, function(sn, sn1) {
-    !identical(sn, sn1)
-  }, logical(1L), sn1 = sample_names[[1L]]))) {
-    return(paste0("All sparse assays of a '", class(x), "' object must have ",
-                  "identical sample names."))
-  }
-
   # Check all key elements have the same length.
   key_length <- lapply(sparse_assays, function(sparse_assay) {
     lapply(sparse_assay, function(sample) {
@@ -255,7 +271,8 @@ setClass("SimpleListSparseAssays",
                   "element of a '", class(x), "' object."))
   }
 
-  NULL
+  # Finally, check that dimnames are compatible.
+  .valid.SimpleListSparseAssays.dimnames(x)
 }
 
 
@@ -268,7 +285,7 @@ setValidity2("SimpleListSparseAssays", .valid.SimpleListSparseAssays)
 ### NOTE: The following are defined via inheritance to the SparseAssays-method:
 ###       length, NROW, names, names<-, [[, [[<-
 ###       The following are specifically defined for SimpleListSparseAssays
-###       objects: dim, [, [<-, rbind, cbind, combine, densify
+###       objects: dim, dimnames, [, [<-, rbind, cbind, combine, densify
 
 ### dim
 
@@ -292,17 +309,25 @@ setMethod("dim", "SimpleListSparseAssays",
 
 ### dimnames
 
-# TODO: Remove if not used in code.
 .dimnames.SimpleListSparseAssays <- function(x) {
 
-  # NOTE: Uses rownames from first sparse assay-sample with no check
-  #       that these are the same across other sparse assay-sample
-  #       combinations
-  # NOTE: Uses colnames from first sparse assay with no check that
-  #       these are the same across other sparse assays
+  # NOTE: Uses rownames and colnames from first sparse assay-sample with no
+  #       check that these are the same across other sparse assay-sample
+  #       combinations.
+  if (length(x) == 0L) {
+    return(list(NULL, NULL))
+  }
   list(names(x[[1L]][[1L]][["key"]]),
        names(x[[1L]]))
 }
+
+#' @rdname SimpleListSparseAssays-class
+#'
+#' @importFrom methods setMethod
+#'
+#' @export
+setMethod("dimnames", "SimpleListSparseAssays",
+          .dimnames.SimpleListSparseAssays)
 
 ### [
 
