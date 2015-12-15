@@ -443,16 +443,7 @@ setValidity2("SparseSummarizedExperiment", .valid.SSE)
 #' @importFrom methods as is
 .SSE.to.SE <- function(x) {
 
-  # NOTE: Use withDimnames = TRUE so that sample names are retrieved, but then
-  #       strip from extra_assays like the SummarizedExperiment() constructor.
-  extra_assays <- sparseAssays(x, withDimnames = TRUE)
-  extra_assays <- endoapply(extra_assays, function(sparse_assay) {
-    names(sparse_assay) <- NULL
-    endoapply(sparse_assay, function(sample) {
-      names(sample[["key"]]) <- NULL
-      sample
-    })
-  })
+  extra_assays <- sparseAssays(x, withDimnames = FALSE)
   extra_assays <- as(extra_assays, "ShallowSimpleListAssays")
   assays <- Assays(c(assays(x, withDimnames = FALSE),
                      as(extra_assays, "SimpleList", strict = FALSE)))
@@ -461,8 +452,7 @@ setValidity2("SparseSummarizedExperiment", .valid.SSE)
   } else {
     x <- as(x, "SummarizedExperiment")
   }
-  BiocGenerics:::replaceSlots(x,
-                              assays = assays)
+  BiocGenerics:::replaceSlots(x, assays = assays)
 }
 
 #' @export
@@ -522,9 +512,6 @@ setMethod("sparseAssays", "SparseSummarizedExperiment",
   # names(sparseAssays(se, withDimnames = FALSE)) <- value
 
   ok <- vapply(value, function(sa, x_dimnames) {
-    # TODO: Replace with dimnames() if/when there is a
-    # dimnames,SparseAssays[[1]]-method (i.e., one that acts on an element
-    # of a SparseAssays object).
     sa_dimnames <- list(names(sa[[1]][["key"]]),
                         names(sa))
     (is.null(sa_dimnames[[1L]]) ||
@@ -537,19 +524,11 @@ setMethod("sparseAssays", "SparseSummarizedExperiment",
     stop("current and replacement 'dimnames' differ")
   }
 
-  # NOTE: strip sample names from value since the canonical location for these
-  #       are in colnames(x), i.e., the rownames of the colData slot.
-  value <- endoapply(value, function(sa) {
-    names(sa) <- NULL
-    sa
-  })
-
   # NOTE: .SummarizedExperiment.assays.replace uses check = FALSE due to
   #       some unusual behaviour by packages that depend on the
-  #       SummarizedExperiment package.
-  x <- BiocGenerics:::replaceSlots(x, sparseAssays = value, check = TRUE)
-
-  x
+  #       SummarizedExperiment package. But .sparseAssaysReplace.SSE can
+  #       simply use check = TRUE.
+  BiocGenerics:::replaceSlots(x, sparseAssays = value, check = TRUE)
 }
 
 # TODO: Unsure whether this should be SparseAssays or SimpleListSparseAssays

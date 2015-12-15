@@ -74,24 +74,3 @@ test_that("combine,RangedSummarizedExperiment,RangedSummarizedExperiment-method 
                       "'SummarizedExperiment' objects because only one of ",
                       "these has a 'rowRanges' slot."))
 })
-
-test_that("colnames are stripped from assays upon construction ", {
-  # See https://stat.ethz.ch/pipermail/bioc-devel/2015-December/008410.html
-  # This test is to keep track of the current behaviour in SummarizedExperiment
-  m1 <- matrix(1:10, ncol = 2)
-  m2 <- m1
-  colnames(m2) <- c("A", "B")
-  se1 <- SummarizedExperiment(m1, colData = DataFrame(row.names = c("A", "B")))
-  se2 <- SummarizedExperiment(m2)
-  se3 <- SummarizedExperiment(m2, colData = DataFrame(row.names = c("C", "D")))
-  # colnames correctly set to c("A", "B") and stripped from assays
-  expect_identical(colnames(se1), c("A", "B"))
-  expect_null(colnames(se1@assays[[1L]]))
-  # colnames correctly set to c("A", "B") set and but not stripped from assays
-  expect_identical(colnames(se2), c("A", "B"))
-  expect_identical(colnames(se2@assays[[1L]]), c("A", "B"))
-  # colnames set to c("C", "D") (without warning about mismatch) and stripped
-  # from assays
-  expect_identical(colnames(se3), c("C", "D"))
-  expect_null(colnames(se3@assays[[1L]]))
-})

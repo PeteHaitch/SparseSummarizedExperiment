@@ -119,13 +119,13 @@ test_that(".valid.SimpleListSparseAssays and validObject work", {
   expect_identical(.valid.SimpleListSparseAssays(bad_sa), msg)
   expect_error(validObject(bad_sa), msg)
 
-  msg <- paste0("All sparse assays of a 'SimpleListSparseAssays' object must ",
-                "have identical sample names.")
+  msg <- paste0("colnames mismatch: all names\\(\\) of elements of a ",
+                "'SimpleListSparseAssays' object must be identical.")
   bad_sa <- c(sa, sa)
-  expect_error(names(bad_sa[[1]]) <- paste0("S", 1:6),
-               msg)
+  expect_error(names(bad_sa[[1]]) <- paste0("S", 1:6), msg)
   names(bad_sa@listData[[1]]) <- paste0("S", 1:6)
-  expect_identical(.valid.SimpleListSparseAssays(bad_sa), msg)
+  expect_identical(.valid.SimpleListSparseAssays(bad_sa),
+                   gsub("\\\\", "", msg))
   expect_error(validObject(bad_sa), msg)
 
   msg <- paste0("All 'key' elements of a 'SimpleListSparseAssays' object must ",
