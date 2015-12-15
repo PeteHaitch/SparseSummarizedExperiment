@@ -27,9 +27,10 @@
 #' @details \link[SummarizedExperiment]{SummarizedExperiment} objects are
 #' combined based on the \code{names} of \code{x}, \code{y}, and \code{...},
 #' while \link[SummarizedExperiment]{RangedSummarizedExperiment} are combined
-#' based on finding matching genomic ranges. \strong{WARNING}: Does not
-#' currently work if the \code{rowRanges} slot of \code{x}, \code{y}, or
-#' \code{...} is a \link[GenomicRanges]{GRangesList} objets.
+#' based on finding matching \code{rowRanges()} of \code{x}, \code{y}, and
+#' \code{...}. \strong{WARNING}: Does not currently work if the
+#' \code{rowRanges} slot of \code{x}, \code{y}, or \code{...} is a
+#' \link[GenomicRanges]{GRangesList} objects.
 #'
 #' @section Note for Developers:
 #' Any class that extends the
@@ -166,19 +167,35 @@ setMethod("combine", c("SummarizedExperiment", "SummarizedExperiment"),
             colData <- combine(colData(x), colData(y))
             x_assays <- assays(x, withDimnames = TRUE)
             y_assays <- assays(y, withDimnames = TRUE)
-            if (is(x, "RangedSummarizedExperiment")) {
-              # NOTE: assay rownames are constructed by finding matches between
-              #       the ranges of x (resp. y) and z.
-              x_rn <- match(rowRanges(x), rowRanges)
-              y_rn <- match(rowRanges(y), rowRanges)
-              addRownames <- function(assay, rn) {
-                rownames(assay) <- rn
-                assay
+
+            x_assays_rn <-
+              SummarizedExperiment:::.get_rownames_from_assays(x_assays)
+            y_assays_rn <-
+              SummarizedExperiment:::.get_rownames_from_assays(y_assays)
+
+            assays_rm_rn <- FALSE
+            if (is.null(x_assays_rn) || is.null(y_assays_rn)) {
+              if (is(x, "RangedSummarizedExperiment")) {
+                # NOTE: assay rownames are constructed by finding matches
+                #       between the ranges of x (resp. y) and z.
+                x_rn <- match(rowRanges(x), rowRanges)
+                y_rn <- match(rowRanges(y), rowRanges)
+                addRownames <- function(assay, rn) {
+                  rownames(assay) <- rn
+                  assay
+                }
+                x_assays <- endoapply(x_assays, addRownames, x_rn)
+                y_assays <- endoapply(y_assays, addRownames, y_rn)
               }
-              x_assays <- endoapply(x_assays, addRownames, x_rn)
-              y_assays <- endoapply(y_assays, addRownames, y_rn)
+              assays_rm_rn <- TRUE
             }
             assays <- combine(x_assays, y_assays)
+            if (assays_rm_rn) {
+              assays <- endoapply(assays, function(x) {
+                rownames(x) <- NULL
+                x
+              })
+            }
             metadata <- c(metadata(x), metadata(y))
 
             # Construct the combined SE

@@ -26,9 +26,10 @@ union strategy.
 \link[SummarizedExperiment]{SummarizedExperiment} objects are
 combined based on the \code{names} of \code{x}, \code{y}, and \code{...},
 while \link[SummarizedExperiment]{RangedSummarizedExperiment} are combined
-based on finding matching genomic ranges. \strong{WARNING}: Does not
-currently work if the \code{rowRanges} slot of \code{x}, \code{y}, or
-\code{...} is a \link[GenomicRanges]{GRangesList} objets.
+based on finding matching \code{rowRanges()} of \code{x}, \code{y}, and
+\code{...}. \strong{WARNING}: Does not currently work if the
+\code{rowRanges} slot of \code{x}, \code{y}, or \code{...} is a
+\link[GenomicRanges]{GRangesList} objects.
 }
 \section{Note for Developers}{
 

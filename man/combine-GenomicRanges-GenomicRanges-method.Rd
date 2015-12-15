@@ -27,13 +27,12 @@ all elements of the original objects. Elements in the returned value are
 unique, that is, an element represented in multiple arguments is represented
 only only in the result. To perform this operation, \code{combine()} makes
 sure that data in shared elements, \strong{including metadata columns
-accessible with \code{\link[S4Vectors]{mcols}()}}, are identical in all the
+accessible with \code{\link[S4Vectors]{mcols}()} and names accessible with
+\code{names()}}, are identical in all the
 \link[GenomicRanges]{GenomicRanges} objects. Data differences in shared
-elements usually cause an error.
-
-\strong{WARNING}: \code{names()} of the \link[GenomicRanges]{GenomicRanges}
-inputs are removed prior to combining, hence the returned value has
-\code{names()} set to \code{NULL}.
+elements usually cause an error. Shared elements are identified
+using
+\code{\link[=GenomicRanges-comparison]{findMatches}()}.
 }
 \examples{
 x <- GRanges(seqnames = c("chr1", "chr2"),
