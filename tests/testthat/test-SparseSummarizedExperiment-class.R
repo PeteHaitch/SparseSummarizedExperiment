@@ -140,9 +140,12 @@ test_that("sparseAssays<-,SparseSummarizedExperiment,SimpleList-method is compat
 })
 
 test_that("sparseAssays<-,SparseSummarizedExperiment,SimpleList-method works", {
-  # UP TO HERE: Reuse
-  # "sparseAssays<-,SparseSummarizedExperiment,SparseAssays-method works"
-  # example but with value as a SimpleList.
+  SSE <- SparseSummarizedExperiment(x)
+  sa1 <- SparseAssays(SimpleList(sa1 = as(x, "SimpleList")[[1]]))
+  SSE2 <- SparseSummarizedExperiment(sa1)
+  SSE1 <- SSE
+  sparseAssays(SSE1) <- as(sa1, "SimpleList")
+  expect_true(identical_SparseSummarizedExperiment(SSE1, SSE2))
 })
 
 test_that("sparseAssays<-,SparseSummarizedExperiment,list-method is compatible with generic", {
@@ -153,7 +156,12 @@ test_that("sparseAssays<-,SparseSummarizedExperiment,list-method is compatible w
 })
 
 test_that("sparseAssays<-,SparseSummarizedExperiment,list-method works", {
-
+  SSE <- SparseSummarizedExperiment(x)
+  sa1 <- SparseAssays(SimpleList(sa1 = as(x, "SimpleList")[[1]]))
+  SSE2 <- SparseSummarizedExperiment(sa1)
+  SSE1 <- SSE
+  sparseAssays(SSE1) <- as(sa1, "list")
+  expect_true(identical_SparseSummarizedExperiment(SSE1, SSE2))
 })
 
 test_that("sparseAssay,SparseSummarizedExperiment,missing-method is compatible with generic", {
@@ -165,7 +173,14 @@ test_that("sparseAssay,SparseSummarizedExperiment,missing-method is compatible w
 })
 
 test_that("sparseAssay,SparseSummarizedExperiment,missing-method", {
-
+  SSE <- SparseSummarizedExperiment(x)
+  expect_true(identical_SparseAssays(sparseAssay(SSE),
+                                     SparseAssays(SimpleList(sa1 = x1))))
+  SSE0 <- SparseSummarizedExperiment()
+  msg <- paste0("'sparseAssay\\(<SparseSummarizedExperiment>, i=\"missing\"",
+                ", ...\\)' length\\(sparseAssays\\(",
+                "<SparseSummarizedExperiment>\\)\\) is 0\n")
+  expect_error(sparseAssay(SSE0), msg)
 })
 
 test_that("sparseAssay,SparseSummarizedExperiment,numeric-method is compatible with generic", {
@@ -177,7 +192,14 @@ test_that("sparseAssay,SparseSummarizedExperiment,numeric-method is compatible w
 })
 
 test_that("sparseAssay,SparseSummarizedExperiment,numeric-method", {
-
+  SSE <- SparseSummarizedExperiment(x)
+  expect_true(identical_SparseAssays(sparseAssay(SSE, 1),
+                                     SparseAssays(SimpleList(sa1 = x1))))
+  expect_true(identical_SparseAssays(sparseAssay(SSE, 2),
+                                     SparseAssays(SimpleList(sa2 = x2))))
+  msg <- paste0("'sparseAssay\\(<SparseSummarizedExperiment>, i=\"numeric\"",
+                ", ...\\)' invalid subscript 'i'\n")
+  expect_error(sparseAssay(SSE, 3), msg)
 })
 
 test_that("sparseAssay,SparseSummarizedExperiment,character-method is compatible with generic", {
@@ -189,7 +211,14 @@ test_that("sparseAssay,SparseSummarizedExperiment,character-method is compatible
 })
 
 test_that("sparseAssay,SparseSummarizedExperiment,character-method", {
-
+  SSE <- SparseSummarizedExperiment(x)
+  expect_true(identical_SparseAssays(sparseAssay(SSE, "sa1"),
+                                     SparseAssays(SimpleList(sa1 = x1))))
+  expect_true(identical_SparseAssays(sparseAssay(SSE, "sa2"),
+                                     SparseAssays(SimpleList(sa2 = x2))))
+  msg <- paste0("'sparseAssay\\(<SparseSummarizedExperiment>, i=\"character\"",
+                ", ...\\)' invalid subscript 'i'\n")
+  expect_error(sparseAssay(SSE, "sa3"), msg)
 })
 
 test_that("sparseAssay<-,SparseSummarizedExperiment,missing,SimpleList-method is compatible with generic", {
@@ -201,7 +230,18 @@ test_that("sparseAssay<-,SparseSummarizedExperiment,missing,SimpleList-method is
 })
 
 test_that("sparseAssay<-,SparseSummarizedExperiment,missing,SimpleList-method", {
-
+  SSE1 <- SparseSummarizedExperiment(X)
+  X2 <- SparseAssays(matrix(100, ncol = ncol(X), nrow = nrow(Y),
+                            dimnames = dimnames(X)))
+  names(X2[[1L]]) <- names(X[[1L]])
+  SSE2 <- SparseSummarizedExperiment(X2)
+  sparseAssay(SSE1) <- as(X2, "SimpleList")[[1L]]
+  expect_true(identical_SparseSummarizedExperiment(SSE1, SSE2))
+  SSE0 <- SparseSummarizedExperiment()
+  msg <- paste0("'sparseAssay\\(<SparseSummarizedExperiment>\\) <- value' ",
+                "length\\(sparseAssays\\(",
+                "<SparseSummarizedExperiment>\\)\\) is 0\n")
+  expect_error(sparseAssay(SSE0) <- sparseAssays(SSE1), msg)
 })
 
 test_that("sparseAssay<-,SparseSummarizedExperiment,numeric,SimpleList-method is compatible with generic", {
@@ -213,7 +253,27 @@ test_that("sparseAssay<-,SparseSummarizedExperiment,numeric,SimpleList-method is
 })
 
 test_that("sparseAssay<-,SparseSummarizedExperiment,numeric,SimpleList-method", {
-
+  SSE1 <- SparseSummarizedExperiment(X)
+  X2 <- SparseAssays(matrix(100, ncol = ncol(X), nrow = nrow(Y),
+                            dimnames = dimnames(X)))
+  names(X2[[1L]]) <- names(X[[1L]])
+  SSE2 <- SparseSummarizedExperiment(X2)
+  sparseAssay(SSE1, 1) <- as(X2, "SimpleList")[[1L]]
+  expect_true(identical_SparseSummarizedExperiment(SSE1, SSE2))
+  # NOTE: Can add assay to end using sparseAssay<- method by effectively
+  #       replacing a previously non-existant element.
+  sparseAssay(SSE1, 2) <- as(X2, "SimpleList")[[1L]]
+  expect_true(identical_SparseAssays(sparseAssay(SSE1, 1),
+                                     sparseAssay(SSE1, 2)))
+  # NOTE: But can't add assay beyond end using sparseAssay<- method (although
+  #       the error message isn't very informative).
+  msg <- paste0("All sparse assays of a 'SimpleListSparseAssays' object must ",
+                "have an identical number of samples.")
+  expect_error(sparseAssay(SSE1, 20) <- as(X2, "SimpleList")[[1L]], msg)
+  # NOTE: names() must match
+  msg <- paste0("colnames mismatch: all names\\(\\) of elements of a ",
+                "'SimpleListSparseAssays' object must be identical.")
+  expect_error(sparseAssay(SSE1, 1) <- as(Y, "SimpleList")[[1L]], msg)
 })
 
 test_that("sparseAssay<-,SparseSummarizedExperiment,character,SimpleList-method is compatible with generic", {
@@ -225,7 +285,24 @@ test_that("sparseAssay<-,SparseSummarizedExperiment,character,SimpleList-method 
 })
 
 test_that("sparseAssay<-,SparseSummarizedExperiment,character,SimpleList-method", {
-
+  SSE1 <- SparseSummarizedExperiment(X)
+  sparseAssayNames(SSE1) <- "kraken"
+  X2 <- SparseAssays(matrix(100, ncol = ncol(X), nrow = nrow(Y),
+                            dimnames = dimnames(X)))
+  names(X2[[1L]]) <- names(X[[1L]])
+  SSE2 <- SparseSummarizedExperiment(X2)
+  sparseAssayNames(SSE2) <- "kraken"
+  sparseAssay(SSE1, "kraken") <- as(X2, "SimpleList")[[1L]]
+  expect_true(identical_SparseSummarizedExperiment(SSE1, SSE2))
+  # NOTE: Can add sparse assay by name using sparseAssay<- method by
+  #       effectively replacing a previously non-existant element.
+  sparseAssay(SSE1, "godzilla") <- as(X2, "SimpleList")[[1L]]
+  expect_true(identical_SparseAssays(unname(sparseAssay(SSE1, "kraken")),
+                                     unname(sparseAssay(SSE1, "godzilla"))))
+  # NOTE: names() must match
+  msg <- paste0("colnames mismatch: all names\\(\\) of elements of a ",
+                "'SimpleListSparseAssays' object must be identical.")
+  expect_error(sparseAssay(SSE1, "kraken") <- as(Y, "SimpleList")[[1L]], msg)
 })
 
 test_that("sparseAssayNames,SparseSummarizedExperiment-method is compatible with generic", {
@@ -236,7 +313,11 @@ test_that("sparseAssayNames,SparseSummarizedExperiment-method is compatible with
 })
 
 test_that("sparseAssayNames,SparseSummarizedExperiment-method works", {
-
+  expect_identical(sparseAssayNames(sse), "sa1")
+  expect_null(sparseAssayNames(SparseSummarizedExperiment()))
+  expect_identical(sparseAssayNames(rsse), "sa1")
+  expect_null(sparseAssayNames(
+    SparseSummarizedExperiment(rowRanges = simGR(10L))))
 })
 
 test_that("sparseAssayNames<-,SparseSummarizedExperiment,character-method is compatible with generic", {
@@ -248,7 +329,14 @@ test_that("sparseAssayNames<-,SparseSummarizedExperiment,character-method is com
 })
 
 test_that("sparseAssayNames<-,SparseSummarizedExperiment,character-method works", {
-
+  sparseAssayNames(sse) <- "kraken"
+  expect_identical(sparseAssayNames(sse), "kraken")
+  sparseAssayNames(rsse) <- "kraken"
+  expect_identical(sparseAssayNames(rsse), "kraken")
+  msg <- "invalid \\(NULL\\) left side of assignment"
+  expect_error(sparseAssayNames(SparseSummarizedExperiment() <- "kraken"), msg)
+  msg <- "'names' attribute \\[2\\] must be the same length as the vector"
+  expect_error(sparseAssayNames(sse) <- c("kraken", "godzilla"), msg)
 })
 
 test_that("[,SparseSummarizedExperiment-method is compatible with generic", {
@@ -260,7 +348,7 @@ test_that("[,SparseSummarizedExperiment-method is compatible with generic", {
 })
 
 test_that("[,SparseSummarizedExperiment-method works", {
-
+  # UP TO HERE
 })
 
 test_that("[<-,SparseSummarizedExperiment-method is compatible with generic", {

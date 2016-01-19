@@ -584,8 +584,8 @@ setReplaceMethod("sparseAssays",
   sparse_assays <- sparseAssays(x, ...)
   # }
   if (length(sparse_assays) == 0L)
-    stop("'sparseAssay(<", class(x), ">, i=\"missing\", ...) ",
-         "length(sparseAssays(<", class(x), ">)) is 0'")
+    stop("'sparseAssay(<", class(x), ">, i=\"missing\", ...)' ",
+         "length(sparseAssays(<", class(x), ">)) is 0")
   subclass <- class(x@sparseAssays)
   # NOTE: Need strict = TRUE otherwise [,SimpleListSparseAssays-method is
   #       called instead of [,SimpleList-method
@@ -629,7 +629,7 @@ setMethod("sparseAssay", c("SparseSummarizedExperiment", "numeric"),
 .sparseAssay.SSE.character <- function(x, i, ...) {
 
   msg <- paste0("'sparseAssay(<", class(x), ">, i=\"character\",",
-                "...)' invalid subscript 'i'")
+                " ...)' invalid subscript 'i'")
   val <- tryCatch({
     subclass <- class(x@sparseAssays)
     # NOTE: Need strict = TRUE otherwise [,SimpleListSparseAssays-method is

@@ -260,7 +260,8 @@ setMethod("SparseSummarizedExperiment", "SparseAssays",
 
             # Check that dimensions of SummarizedExperiment and sparseAssays
             # are compatible.
-            if (nrow(se) > 0 && (nrow(se) != nrow(sparseAssays))) {
+            if (nrow(se) > 0 && nrow(sparseAssays) != 0 &&
+                (nrow(se) != nrow(sparseAssays))) {
               if (length(assays)) {
                 stop("'nrow(sparseAssays)' != 'nrow(assays)' (",
                      nrow(sparseAssays), " != ", nrow(se), ").")
