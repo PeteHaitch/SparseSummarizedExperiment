@@ -4,6 +4,7 @@
 
 # TODO: How to pass down BPREDO and BPPARAM in a sensible fashion
 # TODO: Only SerialParam backend is currently working; why?
+# TODO: Should SAapply() return a list or a SimpleList when sparsify = FALSE?
 #' @importFrom methods setMethod
 #' @importFrom S4Vectors isTRUEorFALSE
 #' @importFrom BiocParallel bplapply bpparam SerialParam

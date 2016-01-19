@@ -11,8 +11,7 @@ This is an __experimental__ package that defines S4 classes and methods for
 sparse genomic data. The API (and, indeed, much of the infrastructure) is based 
 on the [_SummarizedExperiment_ Bioconductor package](http://bioconductor.org/packages/SummarizedExperiment/).
 
-Fair warning, there is currently zero documentation or unit tests for this 
-package (I will add these if I think the experiment is a success).
+Fair warning, while the package is now reasonably stable with most functionality documented and ever-improving test coverage, the final API is not locked in.
 
 ---
 
@@ -30,7 +29,7 @@ devtools::install_github("PeteHaitch/SparseSummarizedExperiment")
 
 The MIT License (MIT)
 
-Copyright (c) 2015 Peter Hickey
+Copyright (c) 2015-2016 Peter Hickey
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
